@@ -13,14 +13,14 @@
     <groupId>se.sundsvall</groupId>
     <artifactId>api-service-citizen-assets</artifactId>
     <version>1.0</version>
-    <name>installbase-private</name>
+    <name>citizen-assets</name>
     <properties>
         <!-- Pipeline properties -->
         <docker.image.name>ms-citizen-assets</docker.image.name>
         <exposed.app.port>8080</exposed.app.port>
-        <published.container.port.sandbox>xxx</published.container.port.sandbox>
-        <published.container.port.test>xxx</published.container.port.test>
-        <published.container.port.production>xxx</published.container.port.production>
+        <published.container.port.sandbox>8720</published.container.port.sandbox>
+        <published.container.port.test>8720</published.container.port.test>
+        <published.container.port.production>8720</published.container.port.production>
     </properties>
     <dependencies>
         <dependency>
