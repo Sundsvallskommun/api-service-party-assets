@@ -9,13 +9,13 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 
 @MappedSuperclass
-public abstract class BaseEntity {
+abstract class BaseEntity {
 
-   private Timestamp created;
-   private Timestamp updated;
+    private Timestamp created;
+    private Timestamp updated;
 
     @PrePersist
-    void setCreated(){
+    void setCreated() {
         created = Timestamp.valueOf(LocalDateTime.now());
     }
 

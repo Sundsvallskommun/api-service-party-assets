@@ -1,7 +1,6 @@
 package se.sundsvall.citizenassets.api;
 
 import static org.springframework.http.HttpHeaders.LOCATION;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +35,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping(value = "/assets", produces = MediaType.APPLICATION_JSON_VALUE)
 @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class)))
-@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(schema = @Schema(implementation = Problem.class)))
 @Tag(name = "Assets")
 public class AssetResource {
@@ -47,13 +45,14 @@ public class AssetResource {
     }
 
 
-    @GetMapping(path = "{id}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = "{id}")
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Asset.class)))
+    @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
     public ResponseEntity<Asset> getAsset(@PathVariable("id") @ValidUuid UUID id) {
         return ResponseEntity.ok(service.getAsset(id));
     }
 
-    @GetMapping( produces = APPLICATION_JSON_VALUE)
+    @GetMapping
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Asset.class)))
     public ResponseEntity<List<Asset>> getAssets( @ParameterObject @Valid AssetRequest request) {
         return ResponseEntity.ok(service.getAssets( request));
@@ -73,6 +72,7 @@ public class AssetResource {
 
     @PutMapping(path = "{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponse(responseCode = "204", description = "No content - Successful operation")
+    @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
     public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid UUID id, @Valid @RequestBody AssetRequest asset) {
         service.updateAsset(id, asset);
         return ResponseEntity.noContent().build();
