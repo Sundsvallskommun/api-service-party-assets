@@ -4,7 +4,8 @@ package se.sundsvall.citizenassets.api.model;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
+import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -14,11 +15,12 @@ import lombok.Getter;
 @Getter
 @Builder(setterPrefix = "with")
 @AllArgsConstructor
-public class Asset {
+public class AssetCreateRequest {
+    @ValidUuid
+    @Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String partyId;
     @Schema(description = "Asset id", example = "PRH-123456789")
     private String assetId;
-    @Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000")
-    private UUID partyId;
     @Schema(description = "Case reference ids", example = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
     private List<String> caseReferenceIds;
     @Schema(description = "Asset type", example = "PERMIT")

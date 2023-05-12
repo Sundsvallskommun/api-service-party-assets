@@ -9,16 +9,15 @@ import jakarta.persistence.criteria.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
-import se.sundsvall.citizenassets.api.model.AssetRequest;
+import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity_;
 
 
 @Component
 public class AssetSpecification {
-    public Specification<AssetEntity> createAssetSpecification(AssetRequest request) {
+    public Specification<AssetEntity> createAssetSpecification(AssetSearchRequest request) {
         return ((root, query, criteriaBuilder) -> {
 
             List<Predicate> predicates = new ArrayList<>();
@@ -26,9 +25,8 @@ public class AssetSpecification {
 
             predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.PARTY_ID), request.getPartyId()));
 
-            if(!CollectionUtils.isEmpty(request.getCaseReferenceIds())) {
-                predicates.add(criteriaBuilder.in(root.get(AssetEntity_.CASE_REFERENCE_IDS)).value(request.getCaseReferenceIds().get(0)));
-
+            if (StringUtils.isNotBlank(request.getAssetId())) {
+                predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.ASSET_ID), request.getAssetId()));
             }
 
             if (StringUtils.isNotBlank(request.getType())) {
