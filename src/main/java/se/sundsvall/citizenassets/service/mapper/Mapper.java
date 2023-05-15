@@ -3,11 +3,13 @@ package se.sundsvall.citizenassets.service.mapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
 import se.sundsvall.citizenassets.api.model.Asset;
-import se.sundsvall.citizenassets.api.model.AssetRequest;
+import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
+import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
 
 @Component
@@ -17,7 +19,7 @@ public class Mapper {
     public Asset toDto(AssetEntity entity) {
         return
             Asset.builder()
-                .withId(entity.getId())
+                .withAssetId(entity.getAssetId())
                 .withPartyId(entity.getPartyId())
                 .withCaseReferenceIds(entity.getCaseReferenceIds())
                 .withType(entity.getType())
@@ -29,9 +31,10 @@ public class Mapper {
                 .build();
     }
 
-    public AssetEntity toEntity(AssetRequest request) {
+    public AssetEntity toEntity(AssetCreateRequest request) {
         return AssetEntity.builder()
-            .withPartyId(request.getPartyId())
+            .withPartyId(UUID.fromString(request.getPartyId()))
+            .withAssetId(request.getAssetId())
             .withCaseReferenceIds(request.getCaseReferenceIds())
             .withType(request.getType())
             .withIssued(request.getIssued())
@@ -42,11 +45,7 @@ public class Mapper {
             .build();
     }
 
-    public AssetEntity updateEntity(AssetEntity old, AssetRequest request) {
-
-        if (request.getDescription() != null) {
-            old.setDescription(request.getDescription());
-        }
+    public AssetEntity updateEntity(AssetEntity old, AsssetUpdateRequest request) {
 
         if (request.getAdditionalParameters() != null) {
 
@@ -62,24 +61,12 @@ public class Mapper {
             old.setCaseReferenceIds(list);
         }
 
-        if (request.getIssued() != null) {
-            old.setIssued(request.getIssued());
-        }
-
         if (request.getStatus() != null) {
             old.setStatus(request.getStatus());
         }
 
-        if (request.getType() != null) {
-            old.setType(request.getType());
-        }
-
         if (request.getValidTo() != null) {
             old.setValidTo(request.getValidTo());
-        }
-
-        if (request.getDescription() != null) {
-            old.setDescription(request.getDescription());
         }
 
         return old;

@@ -1,8 +1,6 @@
 package se.sundsvall.citizenassets.api.model;
 
-
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -16,11 +14,11 @@ import lombok.Setter;
 @Setter
 @Builder(setterPrefix = "with")
 @AllArgsConstructor
-public class AssetRequest {
+public class AssetSearchRequest {
     @Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.REQUIRED)
     private UUID partyId;
-    @Schema(description = "Case reference ids", example = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
-    private List<String> caseReferenceIds;
+    @Schema(description = "Asset id", example = "PRH-123456789")
+    private String assetId;
     @Schema(description = "Asset type", example = "PERMIT")
     private String type;
     @Schema(description = "Issued date", example = "2021-01-01")

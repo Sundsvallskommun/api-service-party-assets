@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
@@ -22,7 +23,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.zalando.problem.Problem;
 
 import se.sundsvall.citizenassets.api.model.Asset;
-import se.sundsvall.citizenassets.api.model.AssetRequest;
+import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
+import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
+import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
 import se.sundsvall.citizenassets.service.AssetService;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
@@ -44,23 +47,15 @@ public class AssetResource {
         this.service = service;
     }
 
-
-    @GetMapping(path = "{id}")
-    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Asset.class)))
-    @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
-    public ResponseEntity<Asset> getAsset(@PathVariable("id") @ValidUuid UUID id) {
-        return ResponseEntity.ok(service.getAsset(id));
-    }
-
     @GetMapping
     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = Asset.class)))
-    public ResponseEntity<List<Asset>> getAssets( @ParameterObject @Valid AssetRequest request) {
+    public ResponseEntity<List<Asset>> getAssets( @ParameterObject @Valid AssetSearchRequest request) {
         return ResponseEntity.ok(service.getAssets( request));
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
-    public ResponseEntity<String> createAsset(@Valid @RequestBody AssetRequest asset, UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<String> createAsset(@Valid @RequestBody AssetCreateRequest asset, UriComponentsBuilder uriComponentsBuilder) {
         var result = service.createAsset(asset);
         return ResponseEntity
             .created(uriComponentsBuilder
@@ -70,11 +65,11 @@ public class AssetResource {
             .build();
     }
 
-    @PutMapping(path = "{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "{partyid}/{assetid}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponse(responseCode = "204", description = "No content - Successful operation")
     @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
-    public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid UUID id, @Valid @RequestBody AssetRequest asset) {
-        service.updateAsset(id, asset);
+    public ResponseEntity<Void> updateAsset(@PathVariable("partyid") @ValidUuid UUID partyId,  @NotEmpty  @PathVariable("assetid") String assetid, @Valid @RequestBody AsssetUpdateRequest asset) {
+        service.updateAsset(partyId, assetid, asset);
         return ResponseEntity.noContent().build();
     }
 
