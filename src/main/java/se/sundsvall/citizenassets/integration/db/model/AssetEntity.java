@@ -1,5 +1,8 @@
 package se.sundsvall.citizenassets.integration.db.model;
 
+import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.GenerationType.AUTO;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +11,8 @@ import java.util.UUID;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -32,7 +33,7 @@ import se.sundsvall.citizenassets.api.model.Status;
 public class AssetEntity extends BaseEntity {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = AUTO)
 	private UUID id;
 
 	@Column(unique = true)
@@ -49,7 +50,7 @@ public class AssetEntity extends BaseEntity {
 
 	private LocalDate validTo;
 
-	@Enumerated(EnumType.STRING)
+	@Enumerated(STRING)
 	private Status status;
 
 	private String description;
