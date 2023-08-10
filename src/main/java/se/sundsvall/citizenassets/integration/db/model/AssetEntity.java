@@ -14,15 +14,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import se.sundsvall.citizenassets.api.model.Status;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import se.sundsvall.citizenassets.api.model.Status;
 
 @Entity
 @Getter
@@ -32,20 +30,30 @@ import lombok.Setter;
 @AllArgsConstructor
 @Table(name = "asset")
 public class AssetEntity extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
-    @Column(unique=true)
-    private String assetId;
-    private UUID partyId;
-    @ElementCollection
-    private List<String> caseReferenceIds;
-    private String type;
-    private LocalDate issued;
-    private LocalDate validTo;
-    @Enumerated(EnumType.STRING)
-    private Status status;
-    private String description;
-    @ElementCollection
-    private Map<String, String> additionalParameters;
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private UUID id;
+
+	@Column(unique = true)
+	private String assetId;
+
+	private UUID partyId;
+
+	@ElementCollection
+	private List<String> caseReferenceIds;
+
+	private String type;
+
+	private LocalDate issued;
+
+	private LocalDate validTo;
+
+	@Enumerated(EnumType.STRING)
+	private Status status;
+
+	private String description;
+
+	@ElementCollection
+	private Map<String, String> additionalParameters;
 }
