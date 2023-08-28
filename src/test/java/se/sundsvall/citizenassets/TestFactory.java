@@ -11,9 +11,9 @@ import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
 import se.sundsvall.citizenassets.api.model.Status;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
 
-public class TestFactory {
+public final class TestFactory {
 
-	public static AssetEntity getAssetEntity(UUID uuid) {
+	public static AssetEntity getAssetEntity(final String uuid) {
 		return AssetEntity.builder()
 			.withStatus(Status.ACTIVE)
 			.withType("type")
@@ -33,7 +33,7 @@ public class TestFactory {
 			.withStatus(Status.ACTIVE)
 			.withType("type")
 			.withAssetId("assetId")
-			.withPartyId(UUID.randomUUID())
+			.withPartyId(UUID.randomUUID().toString())
 			.withValidTo(LocalDate.of(2010, 1, 1))
 			.withIssued(LocalDate.of(2010, 1, 1))
 			.withCaseReferenceIds(List.of("caseReferenceId"))
@@ -42,7 +42,7 @@ public class TestFactory {
 			.build();
 	}
 
-	public static AssetCreateRequest getAssetCreateRequest(UUID uuid) {
+	public static AssetCreateRequest getAssetCreateRequest(final String uuid) {
 		return AssetCreateRequest.builder()
 			.withStatus(Status.ACTIVE)
 			.withType("type")

@@ -2,7 +2,6 @@ package se.sundsvall.citizenassets.service.mapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
@@ -14,7 +13,7 @@ import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
 @Component
 public class Mapper {
 
-	public Asset toDto(AssetEntity entity) {
+	public Asset toDto(final AssetEntity entity) {
 		return Asset.builder()
 			.withAssetId(entity.getAssetId())
 			.withPartyId(entity.getPartyId())
@@ -28,9 +27,9 @@ public class Mapper {
 			.build();
 	}
 
-	public AssetEntity toEntity(AssetCreateRequest request) {
+	public AssetEntity toEntity(final AssetCreateRequest request) {
 		return AssetEntity.builder()
-			.withPartyId(UUID.fromString(request.getPartyId()))
+			.withPartyId(request.getPartyId())
 			.withAssetId(request.getAssetId())
 			.withCaseReferenceIds(request.getCaseReferenceIds())
 			.withType(request.getType())
@@ -42,7 +41,7 @@ public class Mapper {
 			.build();
 	}
 
-	public AssetEntity updateEntity(AssetEntity old, AsssetUpdateRequest request) {
+	public AssetEntity updateEntity(final AssetEntity old, final AsssetUpdateRequest request) {
 
 		if (request.getAdditionalParameters() != null) {
 

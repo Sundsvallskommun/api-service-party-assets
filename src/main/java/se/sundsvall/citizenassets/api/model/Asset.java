@@ -3,7 +3,6 @@ package se.sundsvall.citizenassets.api.model;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -19,7 +18,7 @@ public class Asset {
 	private String assetId;
 
 	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000")
-	private UUID partyId;
+	private String partyId;
 
 	@Schema(description = "Case reference ids", example = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
 	private List<String> caseReferenceIds;

@@ -52,7 +52,7 @@ class AssetServiceTest {
 
 	@Test
 	void getAssets() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString();
 
 		final var entity = getAssetEntity(uuid);
 
@@ -70,7 +70,7 @@ class AssetServiceTest {
 
 	@Test
 	void createAsset() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString();
 		final var assetRequest = getAssetCreateRequest(uuid);
 		final var entity = getAssetEntity(uuid);
 
@@ -86,7 +86,7 @@ class AssetServiceTest {
 
 	@Test
 	void createAssetWithExistingAssetId() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString();
 		final var assetCreateRequest = getAssetCreateRequest(uuid);
 
 		when(repository.save(any(AssetEntity.class))).thenThrow(new DataIntegrityViolationException(""));
@@ -101,14 +101,14 @@ class AssetServiceTest {
 
 	@Test
 	void deleteAsset() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString().toString();
 		service.deleteAsset(uuid);
-		verify(repository).deleteById(any(UUID.class));
+		verify(repository).deleteById(any(String.class));
 	}
 
 	@Test
 	void updateAsset() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString().toString();
 
 		final var asssetUpdateRequest = getAsssetUpdateRequest();
 		final var entity = getAssetEntity(uuid);
@@ -125,7 +125,7 @@ class AssetServiceTest {
 	@Test
 	void updateAssetThatDoesntExists() {
 
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString().toString();
 		final var assetUpdaterequest = getAsssetUpdateRequest();
 
 		when(repository.findByAssetId(any(String.class))).thenReturn(java.util.Optional.empty());
