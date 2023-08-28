@@ -4,7 +4,6 @@ import static org.zalando.problem.Status.BAD_REQUEST;
 import static org.zalando.problem.Status.NOT_FOUND;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -26,21 +25,21 @@ public class AssetService {
 
 	private final AssetSpecification specification;
 
-	public AssetService(AssetRepository repository, Mapper mapper, AssetSpecification specification) {
+	public AssetService(final AssetRepository repository, final Mapper mapper, final AssetSpecification specification) {
 		this.repository = repository;
 		this.mapper = mapper;
 		this.specification = specification;
 	}
 
-	public List<Asset> getAssets(AssetSearchRequest request) {
+	public List<Asset> getAssets(final AssetSearchRequest request) {
 		return repository.findAll(specification.createAssetSpecification(request))
 			.stream()
 			.map(mapper::toDto)
 			.toList();
 	}
 
-	public String createAsset(AssetCreateRequest request) {
-		UUID result;
+	public String createAsset(final AssetCreateRequest request) {
+		final String result;
 		try {
 			final var entity = mapper.toEntity(request);
 
@@ -63,11 +62,11 @@ public class AssetService {
 		return String.valueOf(result);
 	}
 
-	public void deleteAsset(UUID id) {
+	public void deleteAsset(final String id) {
 		repository.deleteById(id);
 	}
 
-	public void updateAsset(UUID partyId, String assetId, AsssetUpdateRequest request) {
+	public void updateAsset(final String partyId, final String assetId, final AsssetUpdateRequest request) {
 
 		final var old = repository.findByAssetId(assetId)
 			.filter(asset -> asset.getPartyId().equals(partyId))

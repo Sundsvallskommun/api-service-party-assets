@@ -101,7 +101,7 @@ class AssetResourceTest {
 	@Test
 	void createAsset(@Value("${local.server.port}") int myPort) {
 
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetCreateRequest(uuid);
 
 		when(mockAssetService.createAsset(any(AssetCreateRequest.class))).thenReturn(uuid.toString());
@@ -131,7 +131,7 @@ class AssetResourceTest {
 			.isNoContent();
 
 		verify(mockAssetService)
-			.updateAsset(any(UUID.class), any(String.class), any(AsssetUpdateRequest.class));
+			.updateAsset(any(String.class), any(String.class), any(AsssetUpdateRequest.class));
 		verifyNoMoreInteractions(mockAssetService);
 	}
 
@@ -150,8 +150,7 @@ class AssetResourceTest {
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
 		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(test.getDetail()).isEqualTo("Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; Invalid UUID string: imNotARealUUID");
-		assertThat(test.getTitle()).isEqualTo("Bad Request");
+		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
 		verifyNoInteractions(mockAssetService);
 	}
 
@@ -164,7 +163,7 @@ class AssetResourceTest {
 			.expectStatus()
 			.isNoContent();
 
-		verify(mockAssetService).deleteAsset(any(UUID.class));
+		verify(mockAssetService).deleteAsset(any(String.class));
 		verifyNoMoreInteractions(mockAssetService);
 	}
 
@@ -181,8 +180,7 @@ class AssetResourceTest {
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
 		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(test.getDetail()).isEqualTo("Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; Invalid UUID string: imNotARealUUID");
-		assertThat(test.getTitle()).isEqualTo("Bad Request");
+		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
 		verifyNoInteractions(mockAssetService);
 
 	}
