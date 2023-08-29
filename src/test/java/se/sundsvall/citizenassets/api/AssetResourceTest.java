@@ -91,7 +91,7 @@ class AssetResourceTest {
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
 		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(test.getViolations().get(0).getMessage()).isEqualTo("Failed to convert value of type 'java.lang.String' to required type 'java.util.UUID'; Invalid UUID string: " + uuid);
+		assertThat(test.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
 		assertThat(test.getViolations().get(0).getField()).isEqualTo("partyId");
 		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);

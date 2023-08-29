@@ -2,7 +2,8 @@ package se.sundsvall.citizenassets.api.model;
 
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.UUID;
+
+import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AssetSearchRequest {
 
+	@ValidUuid
 	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.REQUIRED)
-	private UUID partyId;
+	private String partyId;
 
 	@Schema(description = "Asset id", example = "PRH-123456789")
 	private String assetId;
