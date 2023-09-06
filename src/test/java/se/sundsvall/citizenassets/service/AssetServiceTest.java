@@ -3,138 +3,130 @@ package se.sundsvall.citizenassets.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.citizenassets.TestFactory.getAssetCreateRequest;
 import static se.sundsvall.citizenassets.TestFactory.getAssetEntity;
-import static se.sundsvall.citizenassets.TestFactory.getAsssetUpdateRequest;
+import static se.sundsvall.citizenassets.TestFactory.getAssetUpdateRequest;
 
 import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.zalando.problem.ThrowableProblem;
 
-import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
-import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
 import se.sundsvall.citizenassets.integration.db.AssetRepository;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
 import se.sundsvall.citizenassets.integration.db.specification.AssetSpecification;
-import se.sundsvall.citizenassets.service.mapper.Mapper;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
 
 	@Mock
-	private AssetRepository repository;
+	private AssetRepository repositoryMock;
 
 	@Mock
-	private AssetSpecification assetSpecification;
-
-	@Mock(answer = Answers.CALLS_REAL_METHODS)
-	private Mapper mapper;
-
-	@Mock
-	private Specification<AssetEntity> mockSpecification;
+	private Specification<AssetEntity> specificationMock;
 
 	@InjectMocks
 	private AssetService service;
 
 	@Test
 	void getAssets() {
-		final var uuid = UUID.randomUUID();
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
 
-		final var entity = getAssetEntity(uuid);
+		try (MockedStatic<AssetSpecification> assetSpecificationMock = mockStatic(AssetSpecification.class)) {
+			when(AssetSpecification.createAssetSpecification(any())).thenReturn(specificationMock);
+			when(repositoryMock.findAll(Mockito.<Specification<AssetEntity>>any())).thenReturn(List.of(entity));
 
-		when(assetSpecification.createAssetSpecification(any())).thenReturn(mockSpecification);
-		when(repository.findAll(Mockito.<Specification<AssetEntity>>any())).thenReturn(List.of(entity));
+			final var result = service.getAssets(AssetSearchRequest.create());
 
-		final var result = service.getAssets(AssetSearchRequest.builder().build());
+			assertThat(result).isNotNull().hasSize(1);
+			assertThat(result.get(0)).usingRecursiveComparison().isEqualTo(entity);
 
-		assertThat(result).isNotNull().hasSize(1);
-		assertThat(result.get(0)).usingRecursiveComparison().isEqualTo(entity);
+		} ;
 
-		verify(repository).findAll(Mockito.<Specification<AssetEntity>>any());
-		verify(mapper).toDto(any(AssetEntity.class));
+		verify(repositoryMock).findAll(Mockito.<Specification<AssetEntity>>any());
 	}
 
 	@Test
 	void createAsset() {
-		final var uuid = UUID.randomUUID();
-		final var assetRequest = getAssetCreateRequest(uuid);
-		final var entity = getAssetEntity(uuid);
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+		final var assetRequest = getAssetCreateRequest(partyId);
 
-		when(repository.save(any(AssetEntity.class))).thenReturn(entity);
+		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
 		final var result = service.createAsset(assetRequest);
 
-		assertThat(result).isNotNull().isEqualTo(String.valueOf(uuid));
+		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
 
-		verify(repository).save(any(AssetEntity.class));
-		verify(mapper).toEntity(any(AssetCreateRequest.class));
+		verify(repositoryMock).save(any(AssetEntity.class));
 	}
 
 	@Test
 	void createAssetWithExistingAssetId() {
-		final var uuid = UUID.randomUUID();
-		final var assetCreateRequest = getAssetCreateRequest(uuid);
+		final var partyId = UUID.randomUUID().toString();
+		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(repository.save(any(AssetEntity.class))).thenThrow(new DataIntegrityViolationException(""));
+		when(repositoryMock.save(any(AssetEntity.class))).thenThrow(new DataIntegrityViolationException(""));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.createAsset(assetCreateRequest))
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
-		verify(mapper).toEntity(any(AssetCreateRequest.class));
-		verify(repository).save(any(AssetEntity.class));
+		verify(repositoryMock).save(any(AssetEntity.class));
 	}
 
 	@Test
 	void deleteAsset() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString();
 		service.deleteAsset(uuid);
-		verify(repository).deleteById(any(UUID.class));
+		verify(repositoryMock).deleteById(uuid);
 	}
 
 	@Test
 	void updateAsset() {
-		final var uuid = UUID.randomUUID();
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+		final var asssetUpdateRequest = getAssetUpdateRequest();
 
-		final var asssetUpdateRequest = getAsssetUpdateRequest();
-		final var entity = getAssetEntity(uuid);
+		when(repositoryMock.findById(any())).thenReturn(java.util.Optional.of(entity));
 
-		when(repository.findByAssetId(any())).thenReturn(java.util.Optional.of(entity));
+		service.updateAsset(id, asssetUpdateRequest);
 
-		service.updateAsset(uuid, "assetId", asssetUpdateRequest);
-
-		verify(repository).findByAssetId(any(String.class));
-		verify(repository).save(any(AssetEntity.class));
-		verify(mapper).updateEntity(any(AssetEntity.class), any(AsssetUpdateRequest.class));
+		verify(repositoryMock).findById(id);
+		verify(repositoryMock).save(any(AssetEntity.class));
 	}
 
 	@Test
-	void updateAssetThatDoesntExists() {
+	void updateNonExistingAsset() {
 
-		final var uuid = UUID.randomUUID();
-		final var assetUpdaterequest = getAsssetUpdateRequest();
+		final var uuid = UUID.randomUUID().toString();
+		final var assetUpdaterequest = getAssetUpdateRequest();
 
-		when(repository.findByAssetId(any(String.class))).thenReturn(java.util.Optional.empty());
+		when(repositoryMock.findById(any(String.class))).thenReturn(java.util.Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(uuid, "assetId", assetUpdaterequest))
-			.withMessage("Asset not found: Asset with assetId assetId not found");
+			.isThrownBy(() -> service.updateAsset(uuid, assetUpdaterequest))
+			.withMessage("Asset not found: Asset with id " + uuid + " not found");
 
-		verify(repository).findByAssetId(any(String.class));
-		verify(mapper, never()).toDto(any(AssetEntity.class));
+		verify(repositoryMock).findById(any(String.class));
+		verify(repositoryMock, never()).save(any());
 	}
 }
