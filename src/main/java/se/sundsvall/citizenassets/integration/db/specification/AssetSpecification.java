@@ -1,48 +1,53 @@
 package se.sundsvall.citizenassets.integration.db.specification;
 
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Component;
 
 import jakarta.persistence.criteria.Predicate;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
-import se.sundsvall.citizenassets.integration.db.model.AssetEntity_;
 
-@Component
 public class AssetSpecification {
-	public Specification<AssetEntity> createAssetSpecification(AssetSearchRequest request) {
+	private AssetSpecification() {}
+
+	public static Specification<AssetEntity> createAssetSpecification(AssetSearchRequest request) {
 		return ((root, query, criteriaBuilder) -> {
 
 			final List<Predicate> predicates = new ArrayList<>();
 
-			predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.PARTY_ID), request.getPartyId()));
+			predicates.add(criteriaBuilder.equal(root.get("partyId"), request.getPartyId()));
 
-			if (StringUtils.isNotBlank(request.getAssetId())) {
-				predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.ASSET_ID), request.getAssetId()));
+			if (isNotBlank(request.getAssetId())) {
+				predicates.add(criteriaBuilder.equal(root.get("assetId"), request.getAssetId()));
 			}
 
-			if (StringUtils.isNotBlank(request.getType())) {
-				predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.TYPE), request.getType()));
+			if (isNotBlank(request.getType())) {
+				predicates.add(criteriaBuilder.equal(root.get("type"), request.getType()));
 			}
 
-			if (request.getIssued() != null) {
-				predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.ISSUED), request.getIssued()));
+			if (nonNull(request.getIssued())) {
+				predicates.add(criteriaBuilder.equal(root.get("issued"), request.getIssued()));
 			}
 
-			if (request.getValidTo() != null) {
-				predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.VALID_TO), request.getValidTo()));
+			if (nonNull(request.getValidTo())) {
+				predicates.add(criteriaBuilder.equal(root.get("validTo"), request.getValidTo()));
 			}
 
-			if (request.getStatus() != null) {
-				predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.STATUS), request.getStatus()));
+			if (nonNull(request.getStatus())) {
+				predicates.add(criteriaBuilder.equal(root.get("status"), request.getStatus()));
 			}
 
-			if (StringUtils.isNotBlank(request.getDescription())) {
-				predicates.add(criteriaBuilder.equal(root.get(AssetEntity_.DESCRIPTION), request.getDescription()));
+			if (nonNull(request.getStatusReason())) {
+				predicates.add(criteriaBuilder.equal(root.get("statusReason"), request.getStatusReason()));
+			}
+
+			if (isNotBlank(request.getDescription())) {
+				predicates.add(criteriaBuilder.equal(root.get("description"), request.getDescription()));
 			}
 
 			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
