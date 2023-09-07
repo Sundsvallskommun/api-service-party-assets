@@ -37,6 +37,8 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 @Validated
 @RequestMapping(value = "/assets")
 @Tag(name = "Assets")
+@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 public class AssetResource {
 
 	private final AssetService service;
@@ -47,17 +49,12 @@ public class AssetResource {
 
 	@GetMapping
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
-	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	public ResponseEntity<List<Asset>> getAssets(@ParameterObject @Valid AssetSearchRequest request) {
 		return ResponseEntity.ok(service.getAssets(request));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
-	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	public ResponseEntity<String> createAsset(@RequestBody @Valid AssetCreateRequest asset, UriComponentsBuilder uriComponentsBuilder) {
 		final var result = service.createAsset(asset);
 		return ResponseEntity
@@ -70,9 +67,7 @@ public class AssetResource {
 
 	@PutMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid String id, @RequestBody @Valid AssetUpdateRequest asset) {
 		service.updateAsset(id, asset);
 		return ResponseEntity.noContent().build();
@@ -80,9 +75,6 @@ public class AssetResource {
 
 	@DeleteMapping(path = "{id}")
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid String id) {
 		service.deleteAsset(id);
 		return ResponseEntity.noContent().build();

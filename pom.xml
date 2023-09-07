@@ -20,6 +20,9 @@
 		<exposed.app.port>8080</exposed.app.port>
 		<published.container.port.test>8720</published.container.port.test>
 		<published.container.port.production>8720</published.container.port.production>
+		<!-- Service properties -->
+		<maven-processor-plugin.version>4.5</maven-processor-plugin.version>
+		<hibernate-jpamodelgen.version>6.3.0.Final</hibernate-jpamodelgen.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -36,7 +39,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
-		<dependency>
+ 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
 		</dependency>
@@ -69,27 +72,36 @@
 				<configuration>
 					<excludes>
 						<exclude>**/se/sundsvall/citizenassets/Application*</exclude>
-					</excludes>
+                        <exclude>**/se/sundsvall/citizenassets/integration/db/model/AssetEntity_**</exclude>
+  					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- Add the generated entity classes as sources. -->
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
+				<!-- Add generated entity model classes as sources -->
+				<groupId>org.bsc.maven</groupId>
+				<artifactId>maven-processor-plugin</artifactId>
+				<version>${maven-processor-plugin.version}</version>
 				<executions>
 					<execution>
-						<id>add-generated-source</id>
-						<phase>generate-sources</phase>
+						<id>process</id>
 						<goals>
-							<goal>add-source</goal>
+							<goal>process</goal>
 						</goals>
+						<phase>generate-sources</phase>
 						<configuration>
-							<sources>
-								<source>${project.build.directory}/generated-sources</source>
-							</sources>
+							<processors>
+								<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+							</processors>
 						</configuration>
 					</execution>
 				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.hibernate</groupId>
+						<artifactId>hibernate-jpamodelgen</artifactId>
+						<version>${hibernate-jpamodelgen.version}</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
