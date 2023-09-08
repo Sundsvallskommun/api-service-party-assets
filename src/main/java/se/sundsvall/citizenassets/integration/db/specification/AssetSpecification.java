@@ -1,7 +1,9 @@
 package se.sundsvall.citizenassets.integration.db.specification;
 
 import static java.util.Objects.nonNull;
+import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static se.sundsvall.citizenassets.integration.db.model.AssetEntity_.ADDITIONAL_PARAMETERS;
 import static se.sundsvall.citizenassets.integration.db.model.AssetEntity_.ASSET_ID;
 import static se.sundsvall.citizenassets.integration.db.model.AssetEntity_.DESCRIPTION;
 import static se.sundsvall.citizenassets.integration.db.model.AssetEntity_.ISSUED;
@@ -16,6 +18,8 @@ import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
 import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
@@ -29,6 +33,11 @@ public class AssetSpecification {
 			final List<Predicate> predicates = new ArrayList<>();
 
 			predicates.add(criteriaBuilder.equal(root.get(PARTY_ID), request.getPartyId()));
+
+			if (isNotEmpty(request.getAdditionalParameters())) {
+				List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(ADDITIONAL_PARAMETERS));
+				predicates.add(criteriaBuilder.or(parameterPredicates.toArray(new Predicate[0])));
+			}
 
 			if (isNotBlank(request.getAssetId())) {
 				predicates.add(criteriaBuilder.equal(root.get(ASSET_ID), request.getAssetId()));
@@ -60,5 +69,13 @@ public class AssetSpecification {
 
 			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 		});
+	}
+
+	private static List<Predicate> createParameterPredicates(AssetSearchRequest request, CriteriaBuilder criteriaBuilder, MapJoin<AssetEntity, String, String> join) {
+		return request.getAdditionalParameters().entrySet().stream()
+			.map(entry -> criteriaBuilder.and(
+				criteriaBuilder.equal(join.key(), entry.getKey()),
+				criteriaBuilder.equal(join.value(), entry.getValue())))
+			.toList();
 	}
 }

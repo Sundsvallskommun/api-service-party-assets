@@ -60,7 +60,7 @@ class AssetRepositoryTest {
 	@Test
 	void testFindWithAllParameters() {
 		final var request = AssetSearchRequest.create()
-			.withAdditionalParameters(Map.of("first_key", "first_value", "second_key", "second_value"))
+			.withAdditionalParameters(Map.of("first_key", "third_value"))
 			.withAssetId(CITIZEN_1_ASSET_2)
 			.withDescription("Parkeringstillstånd")
 			.withIssued(LocalDate.of(2023, 1, 1))
