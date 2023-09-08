@@ -5,10 +5,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,20 +26,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import se.sundsvall.citizenassets.api.model.Asset;
 import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
-import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
+import se.sundsvall.citizenassets.api.model.AssetUpdateRequest;
 import se.sundsvall.citizenassets.service.AssetService;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 @RestController
-@RequestMapping(value = "/assets", produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+@Validated
+@RequestMapping(value = "/assets")
 @Tag(name = "Assets")
+@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 public class AssetResource {
 
 	private final AssetService service;
@@ -56,7 +55,7 @@ public class AssetResource {
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
-	public ResponseEntity<String> createAsset(@Valid @RequestBody AssetCreateRequest asset, UriComponentsBuilder uriComponentsBuilder) {
+	public ResponseEntity<String> createAsset(@RequestBody @Valid AssetCreateRequest asset, UriComponentsBuilder uriComponentsBuilder) {
 		final var result = service.createAsset(asset);
 		return ResponseEntity
 			.created(uriComponentsBuilder
@@ -66,17 +65,17 @@ public class AssetResource {
 			.build();
 	}
 
-	@PutMapping(path = "{partyid}/{assetid}", consumes = APPLICATION_JSON_VALUE)
+	@PutMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
-	public ResponseEntity<Void> updateAsset(@PathVariable("partyid") @ValidUuid UUID partyId, @NotEmpty @PathVariable("assetid") String assetid, @Valid @RequestBody AsssetUpdateRequest asset) {
-		service.updateAsset(partyId, assetid, asset);
+	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid String id, @RequestBody @Valid AssetUpdateRequest asset) {
+		service.updateAsset(id, asset);
 		return ResponseEntity.noContent().build();
 	}
 
 	@DeleteMapping(path = "{id}")
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid UUID id) {
+	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid String id) {
 		service.deleteAsset(id);
 		return ResponseEntity.noContent().build();
 	}

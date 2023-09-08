@@ -2,9 +2,11 @@ package se.sundsvall.citizenassets.service;
 
 import static org.zalando.problem.Status.BAD_REQUEST;
 import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.citizenassets.integration.db.specification.AssetSpecification.createAssetSpecification;
+import static se.sundsvall.citizenassets.service.mapper.AssetMapper.toEntity;
+import static se.sundsvall.citizenassets.service.mapper.AssetMapper.updateEntity;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -13,38 +15,30 @@ import org.zalando.problem.Problem;
 import se.sundsvall.citizenassets.api.model.Asset;
 import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
-import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
+import se.sundsvall.citizenassets.api.model.AssetUpdateRequest;
 import se.sundsvall.citizenassets.integration.db.AssetRepository;
-import se.sundsvall.citizenassets.integration.db.specification.AssetSpecification;
-import se.sundsvall.citizenassets.service.mapper.Mapper;
+import se.sundsvall.citizenassets.service.mapper.AssetMapper;
 
 @Service
 public class AssetService {
 
 	private final AssetRepository repository;
-	private final Mapper mapper;
 
-	private final AssetSpecification specification;
-
-	public AssetService(AssetRepository repository, Mapper mapper, AssetSpecification specification) {
+	public AssetService(AssetRepository repository) {
 		this.repository = repository;
-		this.mapper = mapper;
-		this.specification = specification;
 	}
 
 	public List<Asset> getAssets(AssetSearchRequest request) {
-		return repository.findAll(specification.createAssetSpecification(request))
+		return repository.findAll(createAssetSpecification(request))
 			.stream()
-			.map(mapper::toDto)
+			.map(AssetMapper::toAsset)
 			.toList();
 	}
 
 	public String createAsset(AssetCreateRequest request) {
-		UUID result;
 		try {
-			final var entity = mapper.toEntity(request);
+			return repository.save(toEntity(request)).getId();
 
-			result = repository.save(entity).getId();
 		} catch (final DataIntegrityViolationException e) {
 
 			/*
@@ -60,22 +54,20 @@ public class AssetService {
 				.withStatus(BAD_REQUEST)
 				.build();
 		}
-		return String.valueOf(result);
 	}
 
-	public void deleteAsset(UUID id) {
+	public void deleteAsset(String id) {
 		repository.deleteById(id);
 	}
 
-	public void updateAsset(UUID partyId, String assetId, AsssetUpdateRequest request) {
+	public void updateAsset(String id, AssetUpdateRequest request) {
 
-		final var old = repository.findByAssetId(assetId)
-			.filter(asset -> asset.getPartyId().equals(partyId))
+		final var old = repository.findById(id)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle("Asset not found")
-				.withDetail("Asset with assetId %s not found".formatted(assetId))
+				.withDetail("Asset with id %s not found".formatted(id))
 				.build());
-		repository.save(mapper.updateEntity(old, request));
+		repository.save(updateEntity(old, request));
 	}
 }
