@@ -21,15 +21,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 
 import se.sundsvall.citizenassets.Application;
 import se.sundsvall.citizenassets.TestFactory;
 import se.sundsvall.citizenassets.api.model.Asset;
-import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
-import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
 import se.sundsvall.citizenassets.api.model.Status;
 import se.sundsvall.citizenassets.service.AssetService;
 
@@ -38,7 +35,7 @@ import se.sundsvall.citizenassets.service.AssetService;
 class AssetResourceTest {
 
 	@MockBean
-	private AssetService mockAssetService;
+	private AssetService assetServiceMock;
 
 	@Autowired
 	private WebTestClient webTestClient;
@@ -46,7 +43,7 @@ class AssetResourceTest {
 	@Test
 	void getAssets() {
 		final var assets = List.of(TestFactory.getAsset());
-		when(mockAssetService.getAssets(any(AssetSearchRequest.class))).thenReturn(assets);
+		when(assetServiceMock.getAssets(any(AssetSearchRequest.class))).thenReturn(assets);
 		final var result = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path("/assets")
 				.queryParam("partyId", UUID.randomUUID())
@@ -69,8 +66,8 @@ class AssetResourceTest {
 
 		assertThat(result).usingRecursiveComparison().isEqualTo(assets);
 
-		verify(mockAssetService).getAssets(any(AssetSearchRequest.class));
-		verifyNoMoreInteractions(mockAssetService);
+		verify(assetServiceMock).getAssets(any(AssetSearchRequest.class));
+		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@ParameterizedTest
@@ -95,16 +92,17 @@ class AssetResourceTest {
 		assertThat(test.getViolations().get(0).getField()).isEqualTo("partyId");
 		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
-		verifyNoInteractions(mockAssetService);
+		verifyNoInteractions(assetServiceMock);
 	}
 
 	@Test
-	void createAsset(@Value("${local.server.port}") int myPort) {
+	void createAsset(@Value("${local.server.port}") int serverPort) {
 
 		final var uuid = UUID.randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetCreateRequest(uuid);
+		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
 
-		when(mockAssetService.createAsset(any(AssetCreateRequest.class))).thenReturn(uuid.toString());
+		when(assetServiceMock.createAsset(assetRequest)).thenReturn(uuid.toString());
+
 		webTestClient.post()
 			.uri("/assets")
 			.bodyValue(assetRequest)
@@ -112,76 +110,84 @@ class AssetResourceTest {
 			.expectStatus()
 			.isCreated()
 			.expectHeader()
-			.location("http://localhost:" + myPort + "/asset/" + uuid);
+			.location("http://localhost:" + serverPort + "/asset/" + uuid);
 
-		verify(mockAssetService).createAsset(any(AssetCreateRequest.class));
-		verifyNoMoreInteractions(mockAssetService);
+		verify(assetServiceMock).createAsset(assetRequest);
+		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test
 	void testUpdateAsset() {
-		final var uuid = UUID.randomUUID();
-		final var assetRequest = TestFactory.getAsssetUpdateRequest();
+		final var id = UUID.randomUUID().toString();
+		final var assetRequest = TestFactory.getAssetUpdateRequest();
 
 		webTestClient.put()
-			.uri("/assets/{partyId}/{assetId}", uuid, "assetId")
+			.uri("/assets/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
 			.expectStatus()
 			.isNoContent();
 
-		verify(mockAssetService)
-			.updateAsset(any(String.class), any(String.class), any(AsssetUpdateRequest.class));
-		verifyNoMoreInteractions(mockAssetService);
+		verify(assetServiceMock).updateAsset(id, assetRequest);
+		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test
-	void testUpdateAsset_faulytUUID() {
-		final var uuid = "imNotARealUUID";
-		final var assetRequest = TestFactory.getAsssetUpdateRequest();
+	void testUpdateAsset_faultyUUID() {
+		final var id = "imNotARealUUID";
+		final var assetRequest = TestFactory.getAssetUpdateRequest();
 		final var test = webTestClient.put()
-			.uri("/assets/{partyId}/{assetId}", uuid, "assetId")
+			.uri("/assets/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()
-			.expectBody(Problem.class).returnResult().getResponseBody();
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
 
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
 		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(test.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
+		assertThat(test.getViolations().get(0).getField()).isEqualTo("updateAsset.id");
 		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
-		verifyNoInteractions(mockAssetService);
+		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		verifyNoInteractions(assetServiceMock);
 	}
 
 	@Test
 	void testDeleteAsset() {
-		final var uuid = UUID.randomUUID();
+		final var uuid = UUID.randomUUID().toString();
 		webTestClient.delete()
-			.uri("/assets/{partyId}", uuid)
+			.uri("/assets/{id}", uuid)
 			.exchange()
 			.expectStatus()
 			.isNoContent();
 
-		verify(mockAssetService).deleteAsset(any(String.class));
-		verifyNoMoreInteractions(mockAssetService);
+		verify(assetServiceMock).deleteAsset(uuid);
+		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test
 	void testDeleteAssert_faultyUUID() {
 		final var uuid = "imNotARealUUID";
 		final var test = webTestClient.delete()
-			.uri("/assets/{partyId}", uuid)
+			.uri("/assets/{id}", uuid)
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()
-			.expectBody(Problem.class).returnResult().getResponseBody();
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
 
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
 		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(test.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
+		assertThat(test.getViolations().get(0).getField()).isEqualTo("deleteAsset.id");
 		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
-		verifyNoInteractions(mockAssetService);
-
+		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		verifyNoInteractions(assetServiceMock);
 	}
 }

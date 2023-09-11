@@ -26,21 +26,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import se.sundsvall.citizenassets.api.model.Asset;
 import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
-import se.sundsvall.citizenassets.api.model.AsssetUpdateRequest;
+import se.sundsvall.citizenassets.api.model.AssetUpdateRequest;
 import se.sundsvall.citizenassets.service.AssetService;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 @RestController
 @Validated
-@RequestMapping(value = "/assets", produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+@RequestMapping(value = "/assets")
 @Tag(name = "Assets")
+@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+@ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 public class AssetResource {
 
 	private final AssetService service;
@@ -67,11 +65,11 @@ public class AssetResource {
 			.build();
 	}
 
-	@PutMapping(path = "{partyid}/{assetid}", consumes = APPLICATION_JSON_VALUE)
+	@PutMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class)))
-	public ResponseEntity<Void> updateAsset(@PathVariable("partyid") @ValidUuid final String partyId, @NotEmpty @PathVariable("assetid") final String assetid, @Valid @RequestBody final AsssetUpdateRequest asset) {
-		service.updateAsset(partyId, assetid, asset);
+	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
+		service.updateAsset(id, asset);
 		return ResponseEntity.noContent().build();
 	}
 
