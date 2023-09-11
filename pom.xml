@@ -21,7 +21,7 @@
 		<published.container.port.test>8720</published.container.port.test>
 		<published.container.port.production>8720</published.container.port.production>
 		<!-- Service properties -->
-		<maven-processor-plugin.version>4.5</maven-processor-plugin.version>
+		<maven-processor-plugin.version>4.5-jdk8</maven-processor-plugin.version>
 		<hibernate-jpamodelgen.version>6.3.0.Final</hibernate-jpamodelgen.version>
 	</properties>
 	<dependencies>
