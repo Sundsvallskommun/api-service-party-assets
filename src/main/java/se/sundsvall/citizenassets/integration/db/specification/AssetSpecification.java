@@ -23,7 +23,7 @@ import se.sundsvall.citizenassets.integration.db.model.AssetEntity;
 public class AssetSpecification {
 	private AssetSpecification() {}
 
-	public static Specification<AssetEntity> createAssetSpecification(AssetSearchRequest request) {
+	public static Specification<AssetEntity> createAssetSpecification(final AssetSearchRequest request) {
 		return ((root, query, criteriaBuilder) -> {
 
 			final List<Predicate> predicates = new ArrayList<>();

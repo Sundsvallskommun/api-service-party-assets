@@ -24,7 +24,7 @@ public class AssetService {
 
 	private final AssetRepository repository;
 
-	public AssetService(AssetRepository repository) {
+	public AssetService(final AssetRepository repository) {
 		this.repository = repository;
 	}
 
@@ -35,7 +35,7 @@ public class AssetService {
 			.toList();
 	}
 
-	public String createAsset(AssetCreateRequest request) {
+	public String createAsset(final AssetCreateRequest request) {
 		try {
 			return repository.save(toEntity(request)).getId();
 
@@ -56,11 +56,11 @@ public class AssetService {
 		}
 	}
 
-	public void deleteAsset(String id) {
+	public void deleteAsset(final String id) {
 		repository.deleteById(id);
 	}
 
-	public void updateAsset(String id, AssetUpdateRequest request) {
+	public void updateAsset(final String id, final AssetUpdateRequest request) {
 
 		final var old = repository.findById(id)
 			.orElseThrow(() -> Problem.builder()

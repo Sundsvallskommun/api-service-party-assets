@@ -43,19 +43,19 @@ public class AssetResource {
 
 	private final AssetService service;
 
-	public AssetResource(AssetService service) {
+	public AssetResource(final AssetService service) {
 		this.service = service;
 	}
 
 	@GetMapping
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
-	public ResponseEntity<List<Asset>> getAssets(@ParameterObject @Valid AssetSearchRequest request) {
+	public ResponseEntity<List<Asset>> getAssets(@ParameterObject @Valid final AssetSearchRequest request) {
 		return ResponseEntity.ok(service.getAssets(request));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
-	public ResponseEntity<String> createAsset(@RequestBody @Valid AssetCreateRequest asset, UriComponentsBuilder uriComponentsBuilder) {
+	public ResponseEntity<String> createAsset(@Valid @RequestBody final AssetCreateRequest asset, final UriComponentsBuilder uriComponentsBuilder) {
 		final var result = service.createAsset(asset);
 		return ResponseEntity
 			.created(uriComponentsBuilder
@@ -68,14 +68,14 @@ public class AssetResource {
 	@PutMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE)
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
 	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid String id, @RequestBody @Valid AssetUpdateRequest asset) {
+	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
 		service.updateAsset(id, asset);
 		return ResponseEntity.noContent().build();
 	}
 
 	@DeleteMapping(path = "{id}")
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid String id) {
+	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid final String id) {
 		service.deleteAsset(id);
 		return ResponseEntity.noContent().build();
 	}
