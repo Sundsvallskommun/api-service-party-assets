@@ -21,7 +21,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.zalando.problem.ThrowableProblem;
 
@@ -67,14 +66,15 @@ class AssetServiceTest {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
 		final var entity = getAssetEntity(id, partyId);
-		final var assetRequest = getAssetCreateRequest(partyId);
+		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(assetRequest);
+		final var result = service.createAsset(assetCreateRequest);
 
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
 
+		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
 		verify(repositoryMock).save(any(AssetEntity.class));
 	}
 
@@ -83,13 +83,14 @@ class AssetServiceTest {
 		final var partyId = UUID.randomUUID().toString();
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(repositoryMock.save(any(AssetEntity.class))).thenThrow(new DataIntegrityViolationException(""));
+		when(repositoryMock.existsByAssetId(assetCreateRequest.getAssetId())).thenReturn(true);
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.createAsset(assetCreateRequest))
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
-		verify(repositoryMock).save(any(AssetEntity.class));
+		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
+		verify(repositoryMock, never()).save(any(AssetEntity.class));
 	}
 
 	@Test

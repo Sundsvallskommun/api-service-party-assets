@@ -58,6 +58,12 @@ class AssetRepositoryTest {
 	}
 
 	@Test
+	void testExistsByAssetId() {
+		assertThat(repository.existsByAssetId(CITIZEN_1_ASSET_1)).isTrue();
+		assertThat(repository.existsByAssetId("NON_EXISTING_ASSET_ID")).isFalse();
+	}
+
+	@Test
 	void testFindWithAllParameters() {
 		final var request = AssetSearchRequest.create()
 			.withAdditionalParameters(Map.of("first_key", "third_value"))
