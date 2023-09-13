@@ -1,6 +1,7 @@
 package se.sundsvall.citizenassets.integration.db.model;
 
 import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.EAGER;
 import static java.time.OffsetDateTime.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
 
@@ -44,7 +45,7 @@ public class AssetEntity {
 
 	private String partyId;
 
-	@ElementCollection
+	@ElementCollection(fetch = EAGER)
 	@CollectionTable(name = "case_reference_id", joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_case_reference_id_asset_id")), indexes = {
 		@Index(name = "idx_case_reference_id_asset_id", columnList = "asset_id")
 	})
@@ -65,7 +66,7 @@ public class AssetEntity {
 
 	private String description;
 
-	@ElementCollection
+	@ElementCollection(fetch = EAGER)
 	@CollectionTable(name = "additional_parameter", joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_additional_parameter_asset_id")),
 		indexes = {
 			@Index(name = "idx_additional_parameter_asset_id", columnList = "asset_id")

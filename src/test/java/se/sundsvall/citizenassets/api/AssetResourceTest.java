@@ -110,7 +110,7 @@ class AssetResourceTest {
 			.expectStatus()
 			.isCreated()
 			.expectHeader()
-			.location("http://localhost:" + serverPort + "/asset/" + uuid);
+			.location("http://localhost:" + serverPort + "/assets/" + uuid);
 
 		verify(assetServiceMock).createAsset(assetRequest);
 		verifyNoMoreInteractions(assetServiceMock);
