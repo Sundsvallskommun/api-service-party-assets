@@ -1,6 +1,6 @@
 package se.sundsvall.citizenassets.service;
 
-import static org.zalando.problem.Status.BAD_REQUEST;
+import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.citizenassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.citizenassets.service.mapper.AssetMapper.toEntity;
@@ -37,7 +37,7 @@ public class AssetService {
 	public String createAsset(final AssetCreateRequest request) {
 		if (repository.existsByAssetId(request.getAssetId())) {
 			throw Problem.builder()
-				.withStatus(BAD_REQUEST)
+				.withStatus(CONFLICT)
 				.withTitle("Asset already exists")
 				.withDetail("Asset with assetId %s already exists".formatted(request.getAssetId()))
 				.build();

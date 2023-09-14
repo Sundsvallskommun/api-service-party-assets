@@ -12,6 +12,7 @@ import static se.sundsvall.citizenassets.TestFactory.getAssetEntity;
 import static se.sundsvall.citizenassets.TestFactory.getAssetUpdateRequest;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -107,7 +108,7 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var asssetUpdateRequest = getAssetUpdateRequest();
 
-		when(repositoryMock.findById(any())).thenReturn(java.util.Optional.of(entity));
+		when(repositoryMock.findById(any())).thenReturn(Optional.of(entity));
 
 		service.updateAsset(id, asssetUpdateRequest);
 
@@ -121,7 +122,7 @@ class AssetServiceTest {
 		final var uuid = UUID.randomUUID().toString();
 		final var assetUpdaterequest = getAssetUpdateRequest();
 
-		when(repositoryMock.findById(any(String.class))).thenReturn(java.util.Optional.empty());
+		when(repositoryMock.findById(any(String.class))).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.updateAsset(uuid, assetUpdaterequest))
