@@ -1,6 +1,7 @@
 package se.sundsvall.citizenassets.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -22,10 +23,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.zalando.problem.violations.ConstraintViolationProblem;
+import org.zalando.problem.violations.Violation;
 
 import se.sundsvall.citizenassets.Application;
 import se.sundsvall.citizenassets.TestFactory;
 import se.sundsvall.citizenassets.api.model.Asset;
+import se.sundsvall.citizenassets.api.model.AssetCreateRequest;
 import se.sundsvall.citizenassets.api.model.AssetSearchRequest;
 import se.sundsvall.citizenassets.api.model.Status;
 import se.sundsvall.citizenassets.service.AssetService;
@@ -99,7 +102,7 @@ class AssetResourceTest {
 	void createAsset(@Value("${local.server.port}") int serverPort) {
 
 		final var uuid = UUID.randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
+		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString()).withStatusReason(null);
 
 		when(assetServiceMock.createAsset(assetRequest)).thenReturn(uuid.toString());
 
@@ -117,9 +120,62 @@ class AssetResourceTest {
 	}
 
 	@Test
+	void createAsset_emptyRequest() {
+		final var response = webTestClient.post()
+			.uri("/assets")
+			.bodyValue(AssetCreateRequest.create())
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations())
+			.extracting(
+				Violation::getField, Violation::getMessage)
+			.containsExactlyInAnyOrder(
+				tuple("assetId", "must not be empty"),
+				tuple("issued", "must not be null"),
+				tuple("partyId", "not a valid UUID"),
+				tuple("status", "must not be null"),
+				tuple("type", "must not be empty"));
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void createAsset_faultyStatusReason() {
+		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
+
+		final var response = webTestClient.post()
+			.uri("/assets")
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations().get(0).getMessage()).isEqualTo("'statusReason' is not valid reason for status ACTIVE. Valid reasons are [].");
+		assertThat(response.getViolations().get(0).getField()).isEqualTo("assetCreateRequest");
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void testUpdateAsset() {
 		final var id = UUID.randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest();
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
 
 		webTestClient.put()
 			.uri("/assets/{id}", id)
@@ -133,9 +189,34 @@ class AssetResourceTest {
 	}
 
 	@Test
+	void testUpdateAsset_faultyStatusReason() {
+		final var id = UUID.randomUUID().toString();
+		final var assetRequest = TestFactory.getAssetUpdateRequest();
+
+		final var response = webTestClient.put()
+			.uri("/assets/{id}", id)
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations().get(0).getMessage()).isEqualTo("'statusReasonUpdated' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST].");
+		assertThat(response.getViolations().get(0).getField()).isEqualTo("assetUpdateRequest");
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void testUpdateAsset_faultyUUID() {
 		final var id = "imNotARealUUID";
-		final var assetRequest = TestFactory.getAssetUpdateRequest();
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
 		final var test = webTestClient.put()
 			.uri("/assets/{id}", id)
 			.bodyValue(assetRequest)

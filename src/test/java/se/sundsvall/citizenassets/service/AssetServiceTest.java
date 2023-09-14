@@ -12,6 +12,7 @@ import static se.sundsvall.citizenassets.TestFactory.getAssetEntity;
 import static se.sundsvall.citizenassets.TestFactory.getAssetUpdateRequest;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.zalando.problem.ThrowableProblem;
 
@@ -67,14 +67,15 @@ class AssetServiceTest {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
 		final var entity = getAssetEntity(id, partyId);
-		final var assetRequest = getAssetCreateRequest(partyId);
+		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(assetRequest);
+		final var result = service.createAsset(assetCreateRequest);
 
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
 
+		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
 		verify(repositoryMock).save(any(AssetEntity.class));
 	}
 
@@ -83,13 +84,14 @@ class AssetServiceTest {
 		final var partyId = UUID.randomUUID().toString();
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(repositoryMock.save(any(AssetEntity.class))).thenThrow(new DataIntegrityViolationException(""));
+		when(repositoryMock.existsByAssetId(assetCreateRequest.getAssetId())).thenReturn(true);
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.createAsset(assetCreateRequest))
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
-		verify(repositoryMock).save(any(AssetEntity.class));
+		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
+		verify(repositoryMock, never()).save(any(AssetEntity.class));
 	}
 
 	@Test
@@ -106,7 +108,7 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var asssetUpdateRequest = getAssetUpdateRequest();
 
-		when(repositoryMock.findById(any())).thenReturn(java.util.Optional.of(entity));
+		when(repositoryMock.findById(any())).thenReturn(Optional.of(entity));
 
 		service.updateAsset(id, asssetUpdateRequest);
 
@@ -120,7 +122,7 @@ class AssetServiceTest {
 		final var uuid = UUID.randomUUID().toString();
 		final var assetUpdaterequest = getAssetUpdateRequest();
 
-		when(repositoryMock.findById(any(String.class))).thenReturn(java.util.Optional.empty());
+		when(repositoryMock.findById(any(String.class))).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.updateAsset(uuid, assetUpdaterequest))
