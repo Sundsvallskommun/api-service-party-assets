@@ -11,12 +11,12 @@
 		<!-- lookup parent from repository -->
 	</parent>
 	<groupId>se.sundsvall</groupId>
-	<artifactId>api-service-citizen-assets</artifactId>
-	<version>1.3</version>
-	<name>citizen-assets</name>
+	<artifactId>api-service-party-assets</artifactId>
+	<version>1.0</version>
+	<name>party-assets</name>
 	<properties>
 		<!-- Pipeline properties -->
-		<docker.image.name>ms-citizen-assets</docker.image.name>
+		<docker.image.name>ms-party-assets</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
 		<published.container.port.test>8720</published.container.port.test>
 		<published.container.port.production>8720</published.container.port.production>
@@ -71,8 +71,8 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<exclude>**/se/sundsvall/citizenassets/Application*</exclude>
-                        <exclude>**/se/sundsvall/citizenassets/integration/db/model/AssetEntity_**</exclude>
+						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
+                        <exclude>**/se/sundsvall/partyassets/integration/db/model/AssetEntity_**</exclude>
   					</excludes>
 				</configuration>
 			</plugin>
