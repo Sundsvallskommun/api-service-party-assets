@@ -43,6 +43,7 @@ class AssetTest {
 		final var description = "description";
 		final var id = "id";
 		final var issued = LocalDate.now();
+		final var origin = "origin";
 		final var partyId = "partyId";
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
@@ -56,6 +57,7 @@ class AssetTest {
 			.withDescription(description)
 			.withId(id)
 			.withIssued(issued)
+			.withOrigin(origin)
 			.withPartyId(partyId)
 			.withStatus(status)
 			.withStatusReason(statusReason)
@@ -69,6 +71,7 @@ class AssetTest {
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getIssued()).isEqualTo(issued);
+		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);

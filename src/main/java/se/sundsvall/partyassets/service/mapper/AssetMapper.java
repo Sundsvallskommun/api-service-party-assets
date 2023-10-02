@@ -11,6 +11,7 @@ import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 public class AssetMapper {
 
@@ -18,31 +19,34 @@ public class AssetMapper {
 
 	public static Asset toAsset(final AssetEntity entity) {
 		return Asset.create()
-			.withId(entity.getId())
+			.withAdditionalParameters(entity.getAdditionalParameters())
 			.withAssetId(entity.getAssetId())
-			.withPartyId(entity.getPartyId())
+			.withDescription(entity.getDescription())
 			.withCaseReferenceIds(entity.getCaseReferenceIds())
-			.withType(entity.getType())
+			.withId(entity.getId())
 			.withIssued(entity.getIssued())
-			.withValidTo(entity.getValidTo())
+			.withOrigin(entity.getOrigin())
+			.withPartyId(entity.getPartyId())
 			.withStatus(entity.getStatus())
 			.withStatusReason(entity.getStatusReason())
-			.withDescription(entity.getDescription())
-			.withAdditionalParameters(entity.getAdditionalParameters());
+			.withType(entity.getType())
+			.withValidTo(entity.getValidTo());
 	}
 
-	public static AssetEntity toEntity(final AssetCreateRequest request) {
+	public static AssetEntity toEntity(final AssetCreateRequest request, PartyType partyType) {
 		return AssetEntity.create()
-			.withPartyId(request.getPartyId())
+			.withAdditionalParameters(request.getAdditionalParameters())
 			.withAssetId(request.getAssetId())
 			.withCaseReferenceIds(retreiveUniqueItems(request.getCaseReferenceIds())) // Filter out distinct values to save
-			.withType(request.getType())
+			.withDescription(request.getDescription())
 			.withIssued(request.getIssued())
-			.withValidTo(request.getValidTo())
+			.withOrigin(request.getOrigin())
+			.withPartyId(request.getPartyId())
+			.withPartyType(partyType)
 			.withStatus(request.getStatus())
 			.withStatusReason(request.getStatusReason())
-			.withDescription(request.getDescription())
-			.withAdditionalParameters(request.getAdditionalParameters());
+			.withType(request.getType())
+			.withValidTo(request.getValidTo());
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {

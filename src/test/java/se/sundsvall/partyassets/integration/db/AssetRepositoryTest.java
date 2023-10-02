@@ -3,6 +3,7 @@ package se.sundsvall.partyassets.integration.db;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.groups.Tuple.tuple;
 import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 
 /**
@@ -68,6 +70,7 @@ class AssetRepositoryTest {
 		final var request = AssetSearchRequest.create()
 			.withAdditionalParameters(Map.of("first_key", "third_value"))
 			.withAssetId(CITIZEN_1_ASSET_2)
+			.withOrigin("CASEDATA")
 			.withDescription("Parkeringstillstånd")
 			.withIssued(LocalDate.of(2023, 1, 1))
 			.withPartyId(CITIZEN_1)
@@ -79,8 +82,14 @@ class AssetRepositoryTest {
 		final var result = repository.findAll(AssetSpecification.createAssetSpecification(request));
 
 		assertThat(result).hasSize(1)
-			.extracting(AssetEntity::getAssetId)
-			.containsExactly(CITIZEN_1_ASSET_2);
+			.extracting(
+				AssetEntity::getAssetId,
+				AssetEntity::getPartyId,
+				AssetEntity::getPartyType)
+			.containsExactly(tuple(
+				CITIZEN_1_ASSET_2,
+				CITIZEN_1,
+				PartyType.PRIVATE));
 	}
 
 	@Test

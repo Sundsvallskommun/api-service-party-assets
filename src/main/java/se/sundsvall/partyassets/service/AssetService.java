@@ -2,6 +2,8 @@ package se.sundsvall.partyassets.service;
 
 import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.partyassets.integration.db.model.PartyType.ENTERPRISE;
+import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
@@ -16,6 +18,8 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.PartyType;
+import se.sundsvall.partyassets.integration.party.PartyClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
 @Service
@@ -23,8 +27,11 @@ public class AssetService {
 
 	private final AssetRepository repository;
 
-	public AssetService(final AssetRepository repository) {
+	private final PartyClient partyClient;
+
+	public AssetService(final AssetRepository repository, final PartyClient partyClient) {
 		this.repository = repository;
+		this.partyClient = partyClient;
 	}
 
 	public List<Asset> getAssets(AssetSearchRequest request) {
@@ -42,7 +49,12 @@ public class AssetService {
 				.withDetail("Asset with assetId %s already exists".formatted(request.getAssetId()))
 				.build();
 		}
-		return repository.save(toEntity(request)).getId();
+		return repository.save(toEntity(request, calculatePartyType(request.getPartyId()))).getId();
+	}
+
+	private PartyType calculatePartyType(String partyId) {
+		return partyClient.getLegalId(generated.se.sundsvall.party.PartyType.PRIVATE, partyId)
+			.isPresent() ? PRIVATE : ENTERPRISE;
 	}
 
 	public void deleteAsset(final String id) {

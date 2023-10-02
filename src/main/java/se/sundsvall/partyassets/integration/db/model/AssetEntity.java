@@ -40,10 +40,16 @@ public class AssetEntity {
 	@UuidGenerator
 	private String id;
 
-	@Column(name = "asset_id")
+	private String origin;
+
+	@Column(name = "asset_id", nullable = false)
 	private String assetId;
 
+	@Column(name = "party_id", nullable = false)
 	private String partyId;
+
+	@Enumerated(STRING)
+	private PartyType partyType;
 
 	@ElementCollection(fetch = EAGER)
 	@CollectionTable(name = "case_reference_id", joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_case_reference_id_asset_id")), indexes = {
@@ -52,9 +58,10 @@ public class AssetEntity {
 	@Column(name = "case_reference_id", nullable = false)
 	private List<String> caseReferenceIds;
 
-	@Column(name = "`type`")
+	@Column(name = "`type`", nullable = false)
 	private String type;
 
+	@Column(name = "issued", nullable = false)
 	private LocalDate issued;
 
 	private LocalDate validTo;
@@ -108,6 +115,19 @@ public class AssetEntity {
 		return this;
 	}
 
+	public String getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+
+	public AssetEntity withOrigin(String origin) {
+		this.origin = origin;
+		return this;
+	}
+
 	public String getAssetId() {
 		return assetId;
 	}
@@ -131,6 +151,19 @@ public class AssetEntity {
 
 	public AssetEntity withPartyId(String partyId) {
 		this.partyId = partyId;
+		return this;
+	}
+
+	public PartyType getPartyType() {
+		return partyType;
+	}
+
+	public void setPartyType(PartyType partyType) {
+		this.partyType = partyType;
+	}
+
+	public AssetEntity withPartyType(PartyType partyType) {
+		this.partyType = partyType;
 		return this;
 	}
 
@@ -266,7 +299,7 @@ public class AssetEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, partyId, status, statusReason, type, updated, validTo);
+		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, origin, partyId, partyType, status, statusReason, type, updated, validTo);
 	}
 
 	@Override
@@ -279,16 +312,16 @@ public class AssetEntity {
 		}
 		AssetEntity other = (AssetEntity) obj;
 		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created, other.created) && Objects.equals(
-			description, other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects
-				.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
+			description, other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType
+			&& status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("AssetEntity [id=").append(id).append(", assetId=").append(assetId).append(", partyId=").append(partyId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(", issued=").append(issued)
-			.append(", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append(
-				", created=").append(created).append(", updated=").append(updated).append("]");
+		builder.append("AssetEntity [id=").append(id).append(", origin=").append(origin).append(", assetId=").append(assetId).append(", partyId=").append(partyId).append(", partyType=").append(partyType).append(", caseReferenceIds=").append(
+			caseReferenceIds).append(", type=").append(type).append(", issued=").append(issued).append(", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(
+				description).append(", additionalParameters=").append(additionalParameters).append(", created=").append(created).append(", updated=").append(updated).append("]");
 		return builder.toString();
 	}
 }

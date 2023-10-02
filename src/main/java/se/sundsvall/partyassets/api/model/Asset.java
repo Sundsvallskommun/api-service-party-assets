@@ -15,6 +15,9 @@ public class Asset {
 	@Schema(description = "External asset id", example = "PRH-123456789")
 	private String assetId;
 
+	@Schema(description = "Source of origin for the asset", example = "CASEDATA")
+	private String origin;
+
 	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000")
 	private String partyId;
 
@@ -69,6 +72,19 @@ public class Asset {
 
 	public Asset withId(String id) {
 		this.id = id;
+		return this;
+	}
+
+	public String getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+
+	public Asset withOrigin(String origin) {
+		this.origin = origin;
 		return this;
 	}
 
@@ -191,7 +207,7 @@ public class Asset {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, id, issued, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, id, issued, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -204,14 +220,15 @@ public class Asset {
 		}
 		Asset other = (Asset) obj;
 		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(
-			id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo,
-				other.validTo);
+			id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) &&
+			Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Asset [id=").append(id).append(", assetId=").append(assetId).append(", partyId=").append(partyId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(", issued=").append(issued).append(
+		builder.append("Asset [id=").append(id).append(", assetId=").append(assetId).append(", origin=").append(origin).append(", partyId=").append(partyId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(
+			", issued=").append(issued).append(
 			", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
 		return builder.toString();
 	}

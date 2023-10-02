@@ -7,17 +7,19 @@
     ) engine=InnoDB;
 
     create table asset (
-        issued date,
+        issued date not null,
         valid_to date,
         created datetime(6),
         updated datetime(6),
-        asset_id varchar(255),
+        asset_id varchar(255) not null,
         description varchar(255),
         id varchar(255) not null,
-        party_id varchar(255),
+        origin varchar(255),
+        party_id varchar(255) not null,
+        party_type enum ('ENTERPRISE','PRIVATE'),
         status enum ('ACTIVE','BLOCKED','EXPIRED'),
         status_reason varchar(255),
-        `type` varchar(255),
+        `type` varchar(255) not null,
         primary key (id)
     ) engine=InnoDB;
 

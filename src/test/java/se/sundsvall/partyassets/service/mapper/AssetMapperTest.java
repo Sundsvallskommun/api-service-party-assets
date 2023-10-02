@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 class AssetMapperTest {
 
@@ -32,7 +33,8 @@ class AssetMapperTest {
 	@Test
 	void toEntity() {
 		final var request = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
-		final var entity = AssetMapper.toEntity(request);
+		final var partyType = PartyType.PRIVATE;
+		final var entity = AssetMapper.toEntity(request, partyType);
 
 		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getAssetId()).isEqualTo(request.getAssetId());
@@ -40,6 +42,7 @@ class AssetMapperTest {
 		assertThat(entity.getDescription()).isEqualTo(request.getDescription());
 		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
 		assertThat(entity.getPartyId()).isEqualTo(request.getPartyId());
+		assertThat(entity.getPartyType()).isEqualTo(partyType);
 		assertThat(entity.getStatus()).isEqualTo(request.getStatus());
 		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
 		assertThat(entity.getType()).isEqualTo(request.getType());

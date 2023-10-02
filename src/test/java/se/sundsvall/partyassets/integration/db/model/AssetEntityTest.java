@@ -51,7 +51,9 @@ class AssetEntityTest {
 		final var description = "description";
 		final var id = "id";
 		final var issued = LocalDate.now();
+		final var origin = "origin";
 		final var partyId = "partyId";
+		final var partyType = PartyType.ENTERPRISE;
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
 		final var type = "type";
@@ -66,7 +68,9 @@ class AssetEntityTest {
 			.withDescription(description)
 			.withId(id)
 			.withIssued(issued)
+			.withOrigin(origin)
 			.withPartyId(partyId)
+			.withPartyType(partyType)
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withType(type)
@@ -81,7 +85,9 @@ class AssetEntityTest {
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getIssued()).isEqualTo(issued);
+		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
+		assertThat(bean.getPartyType()).isEqualTo(partyType);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getType()).isEqualTo(type);

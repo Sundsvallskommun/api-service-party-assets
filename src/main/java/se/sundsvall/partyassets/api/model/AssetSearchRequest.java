@@ -11,12 +11,15 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 public class AssetSearchRequest {
 
+	@Schema(description = "Asset id", example = "PRH-123456789")
+	private String assetId;
+
+	@Schema(description = "Source of origin for the asset", example = "CASEDATA")
+	private String origin;
+
 	@ValidUuid
 	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = REQUIRED)
 	private String partyId;
-
-	@Schema(description = "Asset id", example = "PRH-123456789")
-	private String assetId;
 
 	@Schema(description = "Asset type", example = "PERMIT")
 	private String type;
@@ -43,19 +46,6 @@ public class AssetSearchRequest {
 		return new AssetSearchRequest();
 	}
 
-	public String getPartyId() {
-		return partyId;
-	}
-
-	public void setPartyId(String partyId) {
-		this.partyId = partyId;
-	}
-
-	public AssetSearchRequest withPartyId(String partyId) {
-		this.partyId = partyId;
-		return this;
-	}
-
 	public String getAssetId() {
 		return assetId;
 	}
@@ -66,6 +56,32 @@ public class AssetSearchRequest {
 
 	public AssetSearchRequest withAssetId(String assetId) {
 		this.assetId = assetId;
+		return this;
+	}
+
+	public String getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+
+	public AssetSearchRequest withOrigin(String origin) {
+		this.origin = origin;
+		return this;
+	}
+
+	public String getPartyId() {
+		return partyId;
+	}
+
+	public void setPartyId(String partyId) {
+		this.partyId = partyId;
+	}
+
+	public AssetSearchRequest withPartyId(String partyId) {
+		this.partyId = partyId;
 		return this;
 	}
 
@@ -162,7 +178,7 @@ public class AssetSearchRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, description, issued, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, description, issued, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -174,15 +190,15 @@ public class AssetSearchRequest {
 			return false;
 		}
 		AssetSearchRequest other = (AssetSearchRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(issued, other.issued) && Objects.equals(partyId,
-			other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(issued, other.issued) && Objects.equals(origin,
+			other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("AssetSearchRequest [partyId=").append(partyId).append(", assetId=").append(assetId).append(", type=").append(type).append(", issued=").append(issued).append(", validTo=").append(validTo).append(", status=").append(status)
-			.append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
+		builder.append("AssetSearchRequest [assetId=").append(assetId).append(", origin=").append(origin).append(", partyId=").append(partyId).append(", type=").append(type).append(", issued=").append(issued).append(", validTo=").append(validTo)
+			.append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
 		return builder.toString();
 	}
 }

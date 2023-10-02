@@ -28,6 +28,7 @@ import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 /**
  * Assets integration tests.
@@ -45,8 +46,8 @@ class AssetsIT extends AbstractAppTest {
 	private AssetRepository repository;
 
 	@Test
-	void test01_createAsset() {
-		final var partyId = "b566819b-9133-4ba6-9ce2-f12aafbc047b";
+	void test01_createAssetPrivateParty() {
+		final var partyId = "a6c380f3-6d26-496d-93fe-10b1e0160354";
 		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
 		
 		// Verify no existing assets on customer before create
@@ -72,6 +73,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
 		assertThat(asset.get().getIssued()).isEqualTo(LocalDate.of(2023, 1, 1));
 		assertThat(asset.get().getPartyId()).isEqualTo(partyId);
+		assertThat(asset.get().getPartyType()).isEqualTo(PartyType.PRIVATE);
 		assertThat(asset.get().getStatus()).isEqualTo(Status.ACTIVE);
 		assertThat(asset.get().getStatusReason()).isNull();
 		assertThat(asset.get().getType()).isEqualTo("PERMIT");
@@ -80,7 +82,43 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test02_findAllAssetsForCitizen() {
+	void test02_createAssetEnterpriseParty() {
+		final var partyId = "b566819b-9133-4ba6-9ce2-f12aafbc047b";
+		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
+
+		// Verify no existing assets on customer before create
+		assertThat(repository.findOne(createAssetSpecification(searchRequestForPartyId))).isEmpty();
+
+		// Create asset
+		setupCall()
+			.withHttpMethod(HttpMethod.POST)
+			.withServicePath("/assets")
+			.withRequest("request.json")
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/assets/(.*)$"))
+			.sendRequestAndVerifyResponse();
+
+		// Verify that assets has been created for customer
+		final var asset = repository.findOne(createAssetSpecification(searchRequestForPartyId));
+		assertThat(asset).isPresent();
+		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
+		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000055");
+		assertThat(asset.get().getCaseReferenceIds()).containsExactly("391f7118-12d6-41c8-9032-4621c252000d");
+		assertThat(asset.get().getCreated()).isCloseTo(OffsetDateTime.now(), within(2, SECONDS));
+		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
+		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
+		assertThat(asset.get().getIssued()).isEqualTo(LocalDate.of(2023, 6, 1));
+		assertThat(asset.get().getPartyId()).isEqualTo(partyId);
+		assertThat(asset.get().getPartyType()).isEqualTo(PartyType.ENTERPRISE);
+		assertThat(asset.get().getStatus()).isEqualTo(Status.ACTIVE);
+		assertThat(asset.get().getStatusReason()).isNull();
+		assertThat(asset.get().getType()).isEqualTo("PERMIT");
+		assertThat(asset.get().getUpdated()).isNull();
+		assertThat(asset.get().getValidTo()).isEqualTo(LocalDate.of(2024, 5, 31));
+	}
+
+	@Test
+	void test03_findAllAssetsForPrivateParty() {
 		setupCall()
 			.withHttpMethod(GET)
 			.withServicePath("/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f")
@@ -90,7 +128,7 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test03_findSpecificAssetForCitizen() {
+	void test04_findSpecificAssetForPrivateParty() {
 		setupCall()
 			.withHttpMethod(GET)
 			.withServicePath("/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f" +
@@ -108,7 +146,7 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test04_updateAsset() {
+	void test05_updateAsset() {
 		final var id = "647e3062-62dc-499f-9faa-e54cb97aa214";
 
 		// Verify asset before update
@@ -135,7 +173,7 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test05_deleteAsset() {
+	void test06_deleteAsset() {
 		final var id = "7c145278-da81-49b0-a011-0f8f6821e3a0";
 
 		// Verify existing asset before delete

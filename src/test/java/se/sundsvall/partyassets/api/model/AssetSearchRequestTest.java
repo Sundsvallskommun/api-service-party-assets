@@ -40,6 +40,7 @@ class AssetSearchRequestTest {
 		final var assetId = "assetId";
 		final var description = "description";
 		final var issued = LocalDate.now();
+		final var origin = "origin";
 		final var partyId = "partyId";
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
@@ -51,6 +52,7 @@ class AssetSearchRequestTest {
 			.withAssetId(assetId)
 			.withDescription(description)
 			.withIssued(issued)
+			.withOrigin(origin)
 			.withPartyId(partyId)
 			.withStatus(status)
 			.withStatusReason(statusReason)
@@ -62,6 +64,7 @@ class AssetSearchRequestTest {
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getIssued()).isEqualTo(issued);
+		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);

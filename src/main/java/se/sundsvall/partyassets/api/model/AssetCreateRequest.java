@@ -1,5 +1,7 @@
 package se.sundsvall.partyassets.api.model;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -14,30 +16,33 @@ import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 @ValidStatusReason
 public class AssetCreateRequest {
 
-	@ValidUuid
-	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = Schema.RequiredMode.REQUIRED)
-	private String partyId;
-
 	@NotEmpty
-	@Schema(description = "Asset id", example = "PRH-123456789")
+	@Schema(description = "Asset id", example = "PRH-123456789", requiredMode = REQUIRED)
 	private String assetId;
+
+	@Schema(description = "Source of origin for the asset", example = "CASEDATA")
+	private String origin;
+
+	@ValidUuid
+	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = REQUIRED)
+	private String partyId;
 
 	@Schema(description = "Case reference ids", example = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
 	private List<String> caseReferenceIds;
 
 	@NotEmpty
-	@Schema(description = "Asset type", example = "PERMIT")
+	@Schema(description = "Asset type", example = "PERMIT", requiredMode = REQUIRED)
 	private String type;
 
 	@NotNull
-	@Schema(description = "Issued date", example = "2021-01-01")
+	@Schema(description = "Issued date", example = "2021-01-01", requiredMode = REQUIRED)
 	private LocalDate issued;
 
 	@Schema(description = "Valid to date", example = "2021-12-31")
 	private LocalDate validTo;
 
 	@NotNull
-	@Schema(description = "Asset status", example = "ACTIVE")
+	@Schema(description = "Asset status", example = "ACTIVE", requiredMode = REQUIRED)
 	private Status status;
 
 	@Schema(description = "Status reason", example = "Status reason")
@@ -53,19 +58,6 @@ public class AssetCreateRequest {
 		return new AssetCreateRequest();
 	}
 
-	public String getPartyId() {
-		return partyId;
-	}
-
-	public void setPartyId(String partyId) {
-		this.partyId = partyId;
-	}
-
-	public AssetCreateRequest withPartyId(String partyId) {
-		this.partyId = partyId;
-		return this;
-	}
-
 	public String getAssetId() {
 		return assetId;
 	}
@@ -76,6 +68,32 @@ public class AssetCreateRequest {
 
 	public AssetCreateRequest withAssetId(String assetId) {
 		this.assetId = assetId;
+		return this;
+	}
+
+	public String getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(String origin) {
+		this.origin = origin;
+	}
+
+	public AssetCreateRequest withOrigin(String origin) {
+		this.origin = origin;
+		return this;
+	}
+
+	public String getPartyId() {
+		return partyId;
+	}
+
+	public void setPartyId(String partyId) {
+		this.partyId = partyId;
+	}
+
+	public AssetCreateRequest withPartyId(String partyId) {
+		this.partyId = partyId;
 		return this;
 	}
 
@@ -185,7 +203,7 @@ public class AssetCreateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, issued, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, issued, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -198,14 +216,16 @@ public class AssetCreateRequest {
 		}
 		AssetCreateRequest other = (AssetCreateRequest) obj;
 		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(
-			issued, other.issued) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
+			issued, other.issued) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(
+				validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("AssetCreateRequest [partyId=").append(partyId).append(", assetId=").append(assetId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(", issued=").append(issued).append(", validTo=")
-			.append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
+		builder.append("AssetCreateRequest [assetId=").append(assetId).append(", origin=").append(origin).append(", partyId=").append(partyId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(", issued=")
+			.append(issued).append(", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(
+				additionalParameters).append("]");
 		return builder.toString();
 	}
 }
