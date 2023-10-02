@@ -39,12 +39,12 @@ import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 })
 class AssetRepositoryTest {
 
-	private static final String CITIZEN_1 = "f2ef7992-7b01-4185-a7f8-cf97dc7f438f";
-	private static final String CITIZEN_1_ASSED_ID_1 = "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884";
-	private static final String CITIZEN_1_ASSET_1 = "PRH-0000000001";
-	private static final String CITIZEN_1_ASSET_2 = "PRH-0000000002";
-	private static final String CITIZEN_1_ASSET_3 = "CON-0000000003";
-	private static final String CITIZEN_2_ASSET_ID_3 = "647e3062-62dc-499f-9faa-e54cb97aa214";
+	private static final String PRIVATE_PARTY_1 = "f2ef7992-7b01-4185-a7f8-cf97dc7f438f";
+	private static final String PRIVATE_PARTY_ASSET_ID_1 = "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884";
+	private static final String PRIVATE_PARTY_ASSET_1 = "PRH-0000000001";
+	private static final String PRIVATE_PARTY_ASSET_2 = "PRH-0000000002";
+	private static final String PRIVATE_PARTY_ASSET_3 = "CON-0000000003";
+	private static final String ENTERPRISE_PARTY_ASSET_ID_3 = "647e3062-62dc-499f-9faa-e54cb97aa214";
 
 	@Autowired
 	private AssetRepository repository;
@@ -61,7 +61,7 @@ class AssetRepositoryTest {
 
 	@Test
 	void testExistsByAssetId() {
-		assertThat(repository.existsByAssetId(CITIZEN_1_ASSET_1)).isTrue();
+		assertThat(repository.existsByAssetId(PRIVATE_PARTY_ASSET_1)).isTrue();
 		assertThat(repository.existsByAssetId("NON_EXISTING_ASSET_ID")).isFalse();
 	}
 
@@ -69,11 +69,11 @@ class AssetRepositoryTest {
 	void testFindWithAllParameters() {
 		final var request = AssetSearchRequest.create()
 			.withAdditionalParameters(Map.of("first_key", "third_value"))
-			.withAssetId(CITIZEN_1_ASSET_2)
+			.withAssetId(PRIVATE_PARTY_ASSET_2)
 			.withOrigin("CASEDATA")
 			.withDescription("Parkeringstillstånd")
 			.withIssued(LocalDate.of(2023, 1, 1))
-			.withPartyId(CITIZEN_1)
+			.withPartyId(PRIVATE_PARTY_1)
 			.withStatus(Status.BLOCKED)
 			.withStatusReason("Stöldanmäld")
 			.withType("PERMIT")
@@ -87,24 +87,24 @@ class AssetRepositoryTest {
 				AssetEntity::getPartyId,
 				AssetEntity::getPartyType)
 			.containsExactly(tuple(
-				CITIZEN_1_ASSET_2,
-				CITIZEN_1,
+				PRIVATE_PARTY_ASSET_2,
+				PRIVATE_PARTY_1,
 				PartyType.PRIVATE));
 	}
 
 	@Test
 	void testFindAllAssetsForCustomer() {
-		final var request = AssetSearchRequest.create().withPartyId(CITIZEN_1);
+		final var request = AssetSearchRequest.create().withPartyId(PRIVATE_PARTY_1);
 		final var result = repository.findAll(AssetSpecification.createAssetSpecification(request));
 
 		assertThat(result).hasSize(3)
 			.extracting(AssetEntity::getAssetId)
-			.containsExactlyInAnyOrder(CITIZEN_1_ASSET_1, CITIZEN_1_ASSET_2, CITIZEN_1_ASSET_3);
+			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_1, PRIVATE_PARTY_ASSET_2, PRIVATE_PARTY_ASSET_3);
 	}
 
 	@Test
 	void findById() {
-		assertThat(repository.findById(CITIZEN_1_ASSED_ID_1)).isPresent();
+		assertThat(repository.findById(PRIVATE_PARTY_ASSET_ID_1)).isPresent();
 	}
 
 	@Test
@@ -137,10 +137,10 @@ class AssetRepositoryTest {
 
 	@Test
 	void testDelete() {
-		assertThat(repository.findById(CITIZEN_2_ASSET_ID_3)).isPresent();
+		assertThat(repository.findById(ENTERPRISE_PARTY_ASSET_ID_3)).isPresent();
 
-		repository.deleteById(CITIZEN_2_ASSET_ID_3);
+		repository.deleteById(ENTERPRISE_PARTY_ASSET_ID_3);
 
-		assertThat(repository.findById(CITIZEN_2_ASSET_ID_3)).isNotPresent();
+		assertThat(repository.findById(ENTERPRISE_PARTY_ASSET_ID_3)).isNotPresent();
 	}
 }
