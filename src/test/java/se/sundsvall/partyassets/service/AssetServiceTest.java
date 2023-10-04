@@ -132,8 +132,23 @@ class AssetServiceTest {
 	@Test
 	void deleteAsset() {
 		final var uuid = UUID.randomUUID().toString();
+
+		when(repositoryMock.existsById(uuid)).thenReturn(true);
+
 		service.deleteAsset(uuid);
+		verify(repositoryMock).existsById(uuid);
 		verify(repositoryMock).deleteById(uuid);
+	}
+
+	@Test
+	void deleteNonExistingAsset() {
+		final var uuid = UUID.randomUUID().toString();
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.deleteAsset(uuid))
+			.withMessage("Asset not found: Asset with id " + uuid + " not found");
+		verify(repositoryMock).existsById(uuid);
+		verify(repositoryMock, never()).deleteById(uuid);
 	}
 
 	@Test

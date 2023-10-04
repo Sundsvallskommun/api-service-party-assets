@@ -15,12 +15,14 @@ import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.VALID_T
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.data.jpa.domain.Specification;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
@@ -32,39 +34,18 @@ public class AssetSpecification {
 
 			final List<Predicate> predicates = new ArrayList<>();
 
-			predicates.add(criteriaBuilder.equal(root.get(PARTY_ID), request.getPartyId()));
+			addEqualCriteria(PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
+			addEqualCriteria(ASSET_ID, request.getAssetId(), predicates, criteriaBuilder, root);
+			addEqualCriteria(TYPE, request.getType(), predicates, criteriaBuilder, root);
+			addEqualCriteria(ISSUED, request.getIssued(), predicates, criteriaBuilder, root);
+			addEqualCriteria(VALID_TO, request.getValidTo(), predicates, criteriaBuilder, root);
+			addEqualCriteria(STATUS, request.getStatus(), predicates, criteriaBuilder, root);
+			addEqualCriteria(STATUS_REASON, request.getStatusReason(), predicates, criteriaBuilder, root);
+			addEqualCriteria(DESCRIPTION, request.getDescription(), predicates, criteriaBuilder, root);
 
 			if (isNotEmpty(request.getAdditionalParameters())) {
 				List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(ADDITIONAL_PARAMETERS));
 				predicates.add(criteriaBuilder.or(parameterPredicates.toArray(new Predicate[0])));
-			}
-
-			if (isNotBlank(request.getAssetId())) {
-				predicates.add(criteriaBuilder.equal(root.get(ASSET_ID), request.getAssetId()));
-			}
-
-			if (isNotBlank(request.getType())) {
-				predicates.add(criteriaBuilder.equal(root.get(TYPE), request.getType()));
-			}
-
-			if (nonNull(request.getIssued())) {
-				predicates.add(criteriaBuilder.equal(root.get(ISSUED), request.getIssued()));
-			}
-
-			if (nonNull(request.getValidTo())) {
-				predicates.add(criteriaBuilder.equal(root.get(VALID_TO), request.getValidTo()));
-			}
-
-			if (nonNull(request.getStatus())) {
-				predicates.add(criteriaBuilder.equal(root.get(STATUS), request.getStatus()));
-			}
-
-			if (nonNull(request.getStatusReason())) {
-				predicates.add(criteriaBuilder.equal(root.get(STATUS_REASON), request.getStatusReason()));
-			}
-
-			if (isNotBlank(request.getDescription())) {
-				predicates.add(criteriaBuilder.equal(root.get(DESCRIPTION), request.getDescription()));
 			}
 
 			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -77,5 +58,21 @@ public class AssetSpecification {
 				criteriaBuilder.equal(join.key(), entry.getKey()),
 				criteriaBuilder.equal(join.value(), entry.getValue())))
 			.toList();
+	}
+
+	private static void addEqualCriteria(String attribute, Object value, List<Predicate> predicates, CriteriaBuilder criteriaBuilder, Root<AssetEntity> root) {
+		Stream.of(value)
+			.filter(String.class::isInstance)
+			.findAny()
+			.map(String.class::cast)
+			.ifPresentOrElse(string -> {
+				if (isNotBlank(string)) {
+					predicates.add(criteriaBuilder.equal(root.get(attribute), string));
+				}
+			}, () -> {
+				if (nonNull(value)) {
+					predicates.add(criteriaBuilder.equal(root.get(attribute), value));
+				}
+			});
 	}
 }

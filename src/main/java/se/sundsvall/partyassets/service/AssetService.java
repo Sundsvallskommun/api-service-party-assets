@@ -58,6 +58,13 @@ public class AssetService {
 	}
 
 	public void deleteAsset(final String id) {
+		if (!repository.existsById(id)) {
+			throw Problem.builder()
+				.withStatus(NOT_FOUND)
+				.withTitle("Asset not found")
+				.withDetail("Asset with id %s not found".formatted(id))
+				.build();
+		}
 		repository.deleteById(id);
 	}
 
