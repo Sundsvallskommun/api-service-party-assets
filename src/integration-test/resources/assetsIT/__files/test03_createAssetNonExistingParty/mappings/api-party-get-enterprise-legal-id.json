@@ -1,8 +1,8 @@
 {
-	"name": "api-party-get-legal-id",
+	"name": "api-party-get-enterprise-legal-id",
 	"request": {
 		"method": "GET",
-		"urlPath": "/api-party/PRIVATE/b566819b-9133-4ba6-9ce2-f12aafbc047b/legalId",
+		"urlPath": "/api-party/ENTERPRISE/0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f/legalId",
 		"headers": {
 			"Authorization": {
 				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
@@ -17,7 +17,7 @@
 		"jsonBody": {
 			"title": "Not Found",
 			"status": 404,
-			"detail": "citizenmapping error: {status=404 Not Found, title=Not Found}"
+			"detail": "legalentity error: {detail=A LegalEntity with id 0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f was not found, status=404 Not Found, title=The LegalEntity was not found.}"
 		}
 	}
 }

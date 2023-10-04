@@ -3,7 +3,6 @@ package se.sundsvall.partyassets.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,7 +32,7 @@ import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
-import se.sundsvall.partyassets.integration.party.PartyClient;
+import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -45,7 +44,7 @@ class AssetServiceTest {
 	private Specification<AssetEntity> specificationMock;
 
 	@Mock
-	private PartyClient partyClientMock;
+	private PartyTypeProvider partyTypeProviderMock;
 
 	@Captor
 	private ArgumentCaptor<AssetEntity> entityCaptor;
@@ -80,12 +79,12 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(partyClientMock.getLegalId(any(), eq(partyId))).thenReturn(Optional.of("returnvalue"));
+		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
 		final var result = service.createAsset(assetCreateRequest);
 
-		verify(partyClientMock).getLegalId(generated.se.sundsvall.party.PartyType.PRIVATE, partyId);
+		verify(partyTypeProviderMock).calculatePartyType(partyId);
 		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
 		verify(repositoryMock).save(entityCaptor.capture());
 
@@ -100,12 +99,12 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(partyClientMock.getLegalId(any(), eq(partyId))).thenReturn(Optional.empty());
+		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.ENTERPRISE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
 		final var result = service.createAsset(assetCreateRequest);
 
-		verify(partyClientMock).getLegalId(generated.se.sundsvall.party.PartyType.PRIVATE, partyId);
+		verify(partyTypeProviderMock).calculatePartyType(partyId);
 		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
 		verify(repositoryMock).save(entityCaptor.capture());
 
@@ -125,7 +124,7 @@ class AssetServiceTest {
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
 		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
-		verify(partyClientMock, never()).getLegalId(any(), any());
+		verify(partyTypeProviderMock, never()).calculatePartyType(any());
 		verify(repositoryMock, never()).save(any(AssetEntity.class));
 	}
 

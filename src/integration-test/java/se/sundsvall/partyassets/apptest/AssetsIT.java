@@ -8,6 +8,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
@@ -62,7 +63,7 @@ class AssetsIT extends AbstractAppTest {
 			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/assets/(.*)$"))
 			.sendRequestAndVerifyResponse();
 		
-		// Verify that assets has been created for customer
+		// Verify that asset has been created for customer
 		final var asset = repository.findOne(createAssetSpecification(searchRequestForPartyId));
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
@@ -98,7 +99,7 @@ class AssetsIT extends AbstractAppTest {
 			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/assets/(.*)$"))
 			.sendRequestAndVerifyResponse();
 
-		// Verify that assets has been created for customer
+		// Verify that asset has been created for customer
 		final var asset = repository.findOne(createAssetSpecification(searchRequestForPartyId));
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
@@ -118,7 +119,24 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test03_findAllAssetsForPrivateParty() {
+	void test03_createAssetNonExistingParty() {
+		final var partyId = "0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f";
+		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
+
+		// Create asset
+		setupCall()
+			.withHttpMethod(HttpMethod.POST)
+			.withServicePath("/assets")
+			.withRequest("request.json")
+			.withExpectedResponseStatus(NOT_FOUND)
+			.sendRequestAndVerifyResponse();
+
+		// Verify that no asset has been created for customer
+		assertThat(repository.findOne(createAssetSpecification(searchRequestForPartyId))).isEmpty();
+	}
+
+	@Test
+	void test04_findAllAssetsForPrivateParty() {
 		setupCall()
 			.withHttpMethod(GET)
 			.withServicePath("/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f")
@@ -128,7 +146,7 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test04_findSpecificAssetForPrivateParty() {
+	void test05_findSpecificAssetForPrivateParty() {
 		setupCall()
 			.withHttpMethod(GET)
 			.withServicePath("/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f" +
@@ -146,7 +164,7 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test05_updateAsset() {
+	void test06_updateAsset() {
 		final var id = "647e3062-62dc-499f-9faa-e54cb97aa214";
 
 		// Verify asset before update
@@ -173,7 +191,7 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test06_deleteAsset() {
+	void test07_deleteAsset() {
 		final var id = "7c145278-da81-49b0-a011-0f8f6821e3a0";
 
 		// Verify existing asset before delete
