@@ -11,18 +11,20 @@
 		<!-- lookup parent from repository -->
 	</parent>
 	<groupId>se.sundsvall</groupId>
-	<artifactId>api-service-citizen-assets</artifactId>
-	<version>1.3</version>
-	<name>citizen-assets</name>
+	<artifactId>api-service-party-assets</artifactId>
+	<version>1.0</version>
+	<name>party-assets</name>
 	<properties>
 		<!-- Pipeline properties -->
-		<docker.image.name>ms-citizen-assets</docker.image.name>
+		<docker.image.name>ms-party-assets</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
 		<published.container.port.test>8720</published.container.port.test>
 		<published.container.port.production>8720</published.container.port.production>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
 		<hibernate-jpamodelgen.version>6.3.0.Final</hibernate-jpamodelgen.version>
+		<openapi-generator-maven-plugin.version>7.0.1</openapi-generator-maven-plugin.version>
+		<generated-sources-java-path>src/main/java</generated-sources-java-path>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -34,6 +36,10 @@
 		<dependency>
 			<groupId>se.sundsvall.dept44</groupId>
 			<artifactId>dept44-common-validators</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>se.sundsvall.dept44</groupId>
+			<artifactId>dept44-starter-feign</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -71,10 +77,42 @@
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<configuration>
 					<excludes>
-						<exclude>**/se/sundsvall/citizenassets/Application*</exclude>
-                        <exclude>**/se/sundsvall/citizenassets/integration/db/model/AssetEntity_**</exclude>
+						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
+                        <exclude>**/se/sundsvall/partyassets/integration/db/model/AssetEntity_**</exclude>
+						<exclude>**/generated/se/sundsvall/**/*</exclude>
   					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>${openapi-generator-maven-plugin.version}</version>
+				<executions>
+					<execution>
+						<id>party-api</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>src/main/resources/integrations/party-api.yaml</inputSpec>
+							<output>${generated-sources-path}</output>
+							<generatorName>jaxrs-spec</generatorName>
+							<generateApis>false</generateApis>
+							<generateSupportingFiles>false</generateSupportingFiles>
+							<configOptions>
+								<useSpringBoot3>true</useSpringBoot3>
+								<useBeanValidation>false</useBeanValidation>
+								<useSwaggerAnnotations>false</useSwaggerAnnotations>
+								<sourceFolder>${generated-sources-java-path}</sourceFolder>
+								<dateLibrary>java8</dateLibrary>
+								<modelPackage>generated.se.sundsvall.party</modelPackage>
+								<openApiNullable>false</openApiNullable>
+								<generatePom>false</generatePom>
+								<interfaceOnly>true</interfaceOnly>
+							</configOptions>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<!-- Add generated entity model classes as sources -->
