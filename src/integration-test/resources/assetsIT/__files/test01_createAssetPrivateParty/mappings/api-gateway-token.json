@@ -1,0 +1,19 @@
+{
+	"name": "api-gateway",
+	"request": {
+		"urlPath": "/api-gateway/token",
+		"method": "POST",
+		"bodyPatterns": [
+			{
+				"matches": "^grant_type=client_credentials&scope=device_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
+			}
+		]
+	},
+	"response": {
+		"headers": {
+			"Content-Type": "application/json"
+		},
+		"status": 200,
+		"bodyFileName": "common/api-gateway-token-response.json"
+	}
+}

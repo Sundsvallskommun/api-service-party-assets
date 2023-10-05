@@ -1,0 +1,19 @@
+{
+	"name": "api-party-get-enterprise-legal-id",
+	"request": {
+		"method": "GET",
+		"urlPath": "/api-party/ENTERPRISE/b566819b-9133-4ba6-9ce2-f12aafbc047b/legalId",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			}
+		}
+	},
+	"response": {
+		"headers": {
+			"Content-Type": "text/plain"
+		},
+		"status": 200,
+		"body": "5511223456"
+	}
+}
