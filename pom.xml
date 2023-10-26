@@ -12,7 +12,7 @@
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-party-assets</artifactId>
-	<version>1.0</version>
+	<version>1.1</version>
 	<name>party-assets</name>
 	<properties>
 		<!-- Pipeline properties -->
@@ -22,7 +22,7 @@
 		<published.container.port.production>8720</published.container.port.production>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
-		<hibernate-jpamodelgen.version>6.3.0.Final</hibernate-jpamodelgen.version>
+		<hibernate-jpamodelgen.version>6.3.1.Final</hibernate-jpamodelgen.version>
 		<openapi-generator-maven-plugin.version>7.0.1</openapi-generator-maven-plugin.version>
 		<generated-sources-java-path>src/main/java</generated-sources-java-path>
 	</properties>
@@ -78,7 +78,7 @@
 				<configuration>
 					<excludes>
 						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
-                        <exclude>**/se/sundsvall/partyassets/integration/db/model/AssetEntity_**</exclude>
+                        <exclude>**/se/sundsvall/partyassets/integration/db/model/*_.*</exclude>
 						<exclude>**/generated/se/sundsvall/**/*</exclude>
   					</excludes>
 				</configuration>
