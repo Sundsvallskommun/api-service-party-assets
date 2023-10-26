@@ -195,7 +195,7 @@ class AssetsIT extends AbstractAppTest {
 	void test07_updateAssetWithInvalidStatusReason() {
 		final var id = "647e3062-62dc-499f-9faa-e54cb97aa214";
 
-		// Verify asset before update
+		// Fetch asset before update
 		final var assetPreUpdate = repository.findById(id).get();
 
 		// Update asset
