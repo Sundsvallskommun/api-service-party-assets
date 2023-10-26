@@ -78,7 +78,7 @@
 				<configuration>
 					<excludes>
 						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
-                        <exclude>**/se/sundsvall/partyassets/integration/db/model/*_.*</exclude>
+						<exclude>**/se/sundsvall/partyassets/integration/db/model/*_.*</exclude>
 						<exclude>**/generated/se/sundsvall/**/*</exclude>
   					</excludes>
 				</configuration>

@@ -61,7 +61,6 @@ public class StatusReasonResource {
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
 	public ResponseEntity<Void> createReasons(@PathVariable final Status status, @RequestBody @NotEmpty final List<@NotBlank String> statusReasons, final UriComponentsBuilder uriComponentsBuilder) {
 		service.createReasons(status, statusReasons);
-
 		return ResponseEntity
 			.created(uriComponentsBuilder
 				.path("/statusreasons/{status}")
@@ -74,7 +73,6 @@ public class StatusReasonResource {
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
 	public ResponseEntity<Void> deleteAsset(@PathVariable final Status status) {
 		service.deleteReasons(status);
-
 		return ResponseEntity.noContent().build();
 	}
 }
