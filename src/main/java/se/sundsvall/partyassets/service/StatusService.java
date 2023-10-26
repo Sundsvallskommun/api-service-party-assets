@@ -17,7 +17,7 @@ import org.zalando.problem.Problem;
 
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.StatusRepository;
-import se.sundsvall.partyassets.service.mapper.StatusMapper;
+import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 
 @Service
 public class StatusService {
@@ -38,7 +38,7 @@ public class StatusService {
 	@Cacheable(value = CACHE_NAME, key = "{#root.methodName, #status}")
 	public List<String> getReasons(Status status) {
 		return repository.findById(status.name())
-			.map(StatusMapper::toReasons)
+			.map(StatusEntity::getReasons)
 			.orElse(emptyList());
 	}
 

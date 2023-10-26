@@ -20,12 +20,8 @@ public class StatusMapper {
 
 	public static Map<Status, List<String>> toReasons(final List<StatusEntity> entities) {
 		return ofNullable(entities).orElse(emptyList()).stream()
-			.map(entity -> Map.entry(Status.valueOf(entity.getName()), toReasons(entity)))
+			.map(entity -> Map.entry(Status.valueOf(entity.getName()), entity.getReasons()))
 			.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-	}
-
-	public static List<String> toReasons(final StatusEntity entity) {
-		return entity.getReasons();
 	}
 
 	public static StatusEntity toEntity(final Status status, final List<String> reasons) {

@@ -18,19 +18,6 @@ import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 class StatusMapperTest {
 
 	@Test
-	void toReasonsForStatus() {
-		// Arrange
-		final var reasons = List.of("REASON_A", "REASON_B", "REASON_C");
-
-		// Act
-		final var entity = StatusEntity.create()
-			.withReasons(reasons);
-
-		// Assert
-		assertThat(StatusMapper.toReasons(entity)).isEqualTo(reasons);
-	}
-
-	@Test
 	void toReasonsForStatuses() {
 		// Arrange
 		final var activeReasons = List.of("A1", "A2", "A3");
