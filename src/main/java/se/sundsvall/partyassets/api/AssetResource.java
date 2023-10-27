@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.api;
 
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -57,13 +58,14 @@ public class AssetResource {
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
-	public ResponseEntity<String> createAsset(@Valid @RequestBody final AssetCreateRequest asset, final UriComponentsBuilder uriComponentsBuilder) {
+	public ResponseEntity<Void> createAsset(@Valid @RequestBody final AssetCreateRequest asset, final UriComponentsBuilder uriComponentsBuilder) {
 		final var result = service.createAsset(asset);
 		return ResponseEntity
 			.created(uriComponentsBuilder
 				.path("/assets/{id}")
 				.buildAndExpand(result)
 				.toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
 

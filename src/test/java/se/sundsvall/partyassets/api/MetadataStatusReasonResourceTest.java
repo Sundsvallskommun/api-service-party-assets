@@ -31,7 +31,7 @@ import se.sundsvall.partyassets.service.StatusService;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
-class StatusReasonResourceTest {
+class MetadataStatusReasonResourceTest {
 
 	@MockBean
 	private StatusService serviceMock;
@@ -48,7 +48,7 @@ class StatusReasonResourceTest {
 		
 		// Act
 		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.path("/statusreasons").build())
+			.uri(uriBuilder -> uriBuilder.path("/metadata/statusreasons").build())
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -74,7 +74,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		final var response = webTestClient.get()
-			.uri("/statusreasons/{status}", status)
+			.uri("/metadata/statusreasons/{status}", status)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -102,7 +102,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.get()
-			.uri("/statusreasons/{status}", "BOGUS_STATUS")
+			.uri("/metadata/statusreasons/{status}", "BOGUS_STATUS")
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()
@@ -124,13 +124,13 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/statusreasons/{status}", status)
+			.uri("/metadata/statusreasons/{status}", status)
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
 			.isCreated()
 			.expectHeader()
-			.location("http://localhost:" + serverPort + "/statusreasons/" + status);
+			.location("http://localhost:" + serverPort + "/metadata/statusreasons/" + status);
 
 		// Assert
 		verify(serviceMock).createReasons(status, body);
@@ -150,7 +150,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/statusreasons/{status}", "BOGUS_STATUS")
+			.uri("/metadata/statusreasons/{status}", "BOGUS_STATUS")
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
@@ -186,7 +186,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/statusreasons/{status}", status)
+			.uri("/metadata/statusreasons/{status}", status)
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
@@ -218,7 +218,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/statusreasons/{status}", status)
+			.uri("/metadata/statusreasons/{status}", status)
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
@@ -239,7 +239,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.delete()
-			.uri("/statusreasons/{status}", status)
+			.uri("/metadata/statusreasons/{status}", status)
 			.exchange()
 			.expectStatus()
 			.isNoContent();
@@ -261,7 +261,7 @@ class StatusReasonResourceTest {
 
 		// Act
 		webTestClient.delete()
-			.uri("/statusreasons/{status}", "BOGUS_STATUS")
+			.uri("/metadata/statusreasons/{status}", "BOGUS_STATUS")
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()

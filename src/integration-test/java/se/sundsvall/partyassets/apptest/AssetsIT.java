@@ -3,6 +3,7 @@ package se.sundsvall.partyassets.apptest;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -12,6 +13,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.MediaType.ALL_VALUE;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 
 import java.time.LocalDate;
@@ -61,6 +63,7 @@ class AssetsIT extends AbstractAppTest {
 			.withServicePath("/assets")
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))
 			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/assets/(.*)$"))
 			.sendRequestAndVerifyResponse();
 		
