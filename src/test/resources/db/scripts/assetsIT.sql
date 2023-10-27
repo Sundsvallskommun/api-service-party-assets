@@ -30,6 +30,11 @@
 	-- Private party, PRH-2
     ('945576d3-6e92-4118-ba33-53582d338ad3', 'case_reference_3'),
 	-- Enterprise party, PRH-11
-    ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'case_reference_4');    
+    ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'case_reference_4');
     
+    insert into `status` (name, created)
+    values ('BLOCKED', now());
 
+    insert into status_reason (status_name, reason)
+    values ('BLOCKED', 'IRREGULARITY'),
+           ('BLOCKED', 'LOST');
