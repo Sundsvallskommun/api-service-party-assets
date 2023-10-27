@@ -33,15 +33,15 @@ import se.sundsvall.partyassets.service.StatusService;
 
 @RestController
 @Validated
-@RequestMapping(value = "/statusreasons")
-@Tag(name = "Statusreasons")
+@RequestMapping(value = "/metadata/statusreasons")
+@Tag(name = "Metadata for statusreasons", description = "Statusreasons metadata operations")
 @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = { Problem.class, ConstraintViolationProblem.class })))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-public class StatusReasonResource {
+public class MetadataStatusReasonResource {
 
 	private final StatusService service;
 
-	public StatusReasonResource(final StatusService service) {
+	public MetadataStatusReasonResource(final StatusService service) {
 		this.service = service;
 	}
 
@@ -63,7 +63,7 @@ public class StatusReasonResource {
 		service.createReasons(status, statusReasons);
 		return ResponseEntity
 			.created(uriComponentsBuilder
-				.path("/statusreasons/{status}")
+				.path("/metadata/statusreasons/{status}")
 				.buildAndExpand(status)
 				.toUri())
 			.build();
@@ -71,7 +71,7 @@ public class StatusReasonResource {
 
 	@DeleteMapping(path = "{status}", produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
-	public ResponseEntity<Void> deleteAsset(@PathVariable final Status status) {
+	public ResponseEntity<Void> deleteReasons(@PathVariable final Status status) {
 		service.deleteReasons(status);
 		return ResponseEntity.noContent().build();
 	}
