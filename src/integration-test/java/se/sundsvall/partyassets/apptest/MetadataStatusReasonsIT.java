@@ -24,9 +24,9 @@ import se.sundsvall.partyassets.integration.db.StatusRepository;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 
 /**
- * Assets integration tests.
+ * MetadataStatusReasons integration tests.
  * 
- * @see src/test/resources/db/scripts/assetsIT.sql for data setup.
+ * @see src/test/resources/db/scripts/metadataStatusReasonsIT.sql for data setup.
  */
 @WireMockAppTestSuite(files = "classpath:/metadataStatusReasonsIT/", classes = Application.class)
 @Sql(scripts = {
