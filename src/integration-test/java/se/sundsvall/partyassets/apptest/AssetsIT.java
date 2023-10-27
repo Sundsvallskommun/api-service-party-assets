@@ -7,6 +7,7 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PUT;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -191,7 +192,29 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test07_deleteAsset() {
+	void test07_updateAssetWithInvalidStatusReason() {
+		final var id = "647e3062-62dc-499f-9faa-e54cb97aa214";
+
+		// Fetch asset before update
+		final var assetPreUpdate = repository.findById(id).get();
+
+		// Update asset
+		setupCall()
+			.withHttpMethod(PUT)
+			.withServicePath("/assets/" + id)
+			.withRequest("request.json")
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse("response.json")
+			.sendRequestAndVerifyResponse();
+
+		// Verify that asset is the same after update as before (i.e. no update has been executed)
+		final var assetPostUpdate = repository.findById(id).get();
+
+		assertThat(assetPreUpdate).usingRecursiveComparison().isEqualTo(assetPostUpdate);
+	}
+
+	@Test
+	void test08_deleteAsset() {
 		final var id = "7c145278-da81-49b0-a011-0f8f6821e3a0";
 
 		// Verify existing asset before delete

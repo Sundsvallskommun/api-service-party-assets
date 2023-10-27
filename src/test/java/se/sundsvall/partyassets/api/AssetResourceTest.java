@@ -11,6 +11,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -32,21 +33,31 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.AssetService;
+import se.sundsvall.partyassets.service.StatusService;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class AssetResourceTest {
+	private static final Map<Status, List<String>> VALID_STATUS_REASONS_FOR_STATUSES = Map.of(
+		Status.BLOCKED, List.of("IRREGULARITY", "LOST"));
 
 	@MockBean
 	private AssetService assetServiceMock;
+
+	@MockBean
+	private StatusService statusServiceMock; // Used by status reason validators
 
 	@Autowired
 	private WebTestClient webTestClient;
 
 	@Test
 	void getAssets() {
+		// Arrange
 		final var assets = List.of(TestFactory.getAsset());
+
 		when(assetServiceMock.getAssets(any(AssetSearchRequest.class))).thenReturn(assets);
+
+		// Act
 		final var result = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path("/assets")
 				.queryParam("partyId", UUID.randomUUID())
@@ -67,8 +78,8 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
+		// Assert
 		assertThat(result).usingRecursiveComparison().isEqualTo(assets);
-
 		verify(assetServiceMock).getAssets(any(AssetSearchRequest.class));
 		verifyNoMoreInteractions(assetServiceMock);
 	}
@@ -76,7 +87,7 @@ class AssetResourceTest {
 	@ParameterizedTest
 	@ValueSource(strings = { "imNotARealUUID", "1", "1234-1234-1234-1234" })
 	void getAssets_faultyPartyId(String uuid) {
-
+		// Act
 		final var test = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path("/assets")
 				.queryParam("partyId", uuid)
@@ -88,6 +99,7 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
+		// Assert
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
 		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
@@ -100,12 +112,13 @@ class AssetResourceTest {
 
 	@Test
 	void createAsset(@Value("${local.server.port}") int serverPort) {
-
+		// Arrange
 		final var uuid = UUID.randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString()).withStatusReason(null);
 
 		when(assetServiceMock.createAsset(assetRequest)).thenReturn(uuid.toString());
 
+		// Act
 		webTestClient.post()
 			.uri("/assets")
 			.bodyValue(assetRequest)
@@ -115,12 +128,14 @@ class AssetResourceTest {
 			.expectHeader()
 			.location("http://localhost:" + serverPort + "/assets/" + uuid);
 
+		// Assert
 		verify(assetServiceMock).createAsset(assetRequest);
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test
 	void createAsset_emptyRequest() {
+		// Act
 		final var response = webTestClient.post()
 			.uri("/assets")
 			.bodyValue(AssetCreateRequest.create())
@@ -131,6 +146,7 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
+		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
 		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
@@ -150,8 +166,10 @@ class AssetResourceTest {
 
 	@Test
 	void createAsset_faultyStatusReason() {
+		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
 
+		// Act
 		final var response = webTestClient.post()
 			.uri("/assets")
 			.bodyValue(assetRequest)
@@ -162,6 +180,7 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
+		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
 		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
@@ -174,9 +193,13 @@ class AssetResourceTest {
 
 	@Test
 	void testUpdateAsset() {
+		// Arrange
 		final var id = UUID.randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
 
+		when(statusServiceMock.getReasonsForAllStatuses()).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+
+		// Act
 		webTestClient.put()
 			.uri("/assets/{id}", id)
 			.bodyValue(assetRequest)
@@ -184,15 +207,20 @@ class AssetResourceTest {
 			.expectStatus()
 			.isNoContent();
 
+		// Assert
 		verify(assetServiceMock).updateAsset(id, assetRequest);
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test
 	void testUpdateAsset_faultyStatusReason() {
+		// Arrange
 		final var id = UUID.randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest();
 
+		when(statusServiceMock.getReasonsForAllStatuses()).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+
+		// Act
 		final var response = webTestClient.put()
 			.uri("/assets/{id}", id)
 			.bodyValue(assetRequest)
@@ -203,6 +231,7 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
+		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
 		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
@@ -215,9 +244,14 @@ class AssetResourceTest {
 
 	@Test
 	void testUpdateAsset_faultyUUID() {
+		// Arrange
 		final var id = "imNotARealUUID";
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
-		final var test = webTestClient.put()
+
+		when(statusServiceMock.getReasonsForAllStatuses()).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+
+		// Act
+		final var response = webTestClient.put()
 			.uri("/assets/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
@@ -227,33 +261,41 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
-		assertThat(test).isNotNull();
-		assertThat(test.getStatus()).isNotNull();
-		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(test.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
-		assertThat(test.getViolations().get(0).getField()).isEqualTo("updateAsset.id");
-		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().get(0).getField()).isEqualTo("updateAsset.id");
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 		verifyNoInteractions(assetServiceMock);
 	}
 
 	@Test
 	void testDeleteAsset() {
+		// Arrange
 		final var uuid = UUID.randomUUID().toString();
+
+		// Act
 		webTestClient.delete()
 			.uri("/assets/{id}", uuid)
 			.exchange()
 			.expectStatus()
 			.isNoContent();
 
+		// Assert
 		verify(assetServiceMock).deleteAsset(uuid);
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test
 	void testDeleteAssert_faultyUUID() {
+		// Arrange
 		final var uuid = "imNotARealUUID";
-		final var test = webTestClient.delete()
+
+		// Act
+		final var response = webTestClient.delete()
 			.uri("/assets/{id}", uuid)
 			.exchange()
 			.expectStatus()
@@ -262,13 +304,14 @@ class AssetResourceTest {
 			.returnResult()
 			.getResponseBody();
 
-		assertThat(test).isNotNull();
-		assertThat(test.getStatus()).isNotNull();
-		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(test.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
-		assertThat(test.getViolations().get(0).getField()).isEqualTo("deleteAsset.id");
-		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations().get(0).getMessage()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().get(0).getField()).isEqualTo("deleteAsset.id");
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 		verifyNoInteractions(assetServiceMock);
 	}
 }
