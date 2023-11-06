@@ -22,7 +22,6 @@
 		<published.container.port.production>8720</published.container.port.production>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
-		<hibernate-jpamodelgen.version>6.3.1.Final</hibernate-jpamodelgen.version>
 		<openapi-generator-maven-plugin.version>7.0.1</openapi-generator-maven-plugin.version>
 		<generated-sources-java-path>src/main/java</generated-sources-java-path>
 	</properties>
@@ -51,11 +50,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
+			<artifactId>flyway-mysql</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-mysql</artifactId>
+			<groupId>org.hibernate.orm</groupId>
+			<artifactId>hibernate-jpamodelgen</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		
 		<!-- Test -->
@@ -115,31 +115,23 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<!-- Add generated entity model classes as sources -->
-				<groupId>org.bsc.maven</groupId>
-				<artifactId>maven-processor-plugin</artifactId>
-				<version>${maven-processor-plugin.version}</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>${build-helper-maven-plugin.version}</version>
 				<executions>
 					<execution>
-						<id>process</id>
-						<goals>
-							<goal>process</goal>
-						</goals>
+						<id>add-generated-source</id>
 						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
 						<configuration>
-							<processors>
-								<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
-							</processors>
+							<sources>
+								<source>${project.build.directory}/generated-sources/annotations</source> <!-- JPAModelGen classes -->
+							</sources>
 						</configuration>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.hibernate</groupId>
-						<artifactId>hibernate-jpamodelgen</artifactId>
-						<version>${hibernate-jpamodelgen.version}</version>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
