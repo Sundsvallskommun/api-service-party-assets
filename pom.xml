@@ -22,7 +22,7 @@
 		<published.container.port.production>8720</published.container.port.production>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
-		<openapi-generator-maven-plugin.version>7.0.1</openapi-generator-maven-plugin.version>
+		<openapi-generator-maven-plugin.version>7.1.0</openapi-generator-maven-plugin.version>
 		<generated-sources-java-path>src/main/java</generated-sources-java-path>
 	</properties>
 	<dependencies>
