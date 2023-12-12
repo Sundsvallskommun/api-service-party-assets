@@ -4,6 +4,9 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.ResponseEntity.created;
+import static org.springframework.http.ResponseEntity.noContent;
+import static org.springframework.http.ResponseEntity.ok;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +51,7 @@ public class MetadataStatusReasonResource {
 	@GetMapping(produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	public ResponseEntity<Map<Status, List<String>>> readAllReasons() {
-		return ResponseEntity.ok(service.getReasonsForAllStatuses());
+		return ok(service.getReasonsForAllStatuses());
 	}
 
 	@GetMapping(path = "{status}", produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
@@ -61,11 +64,10 @@ public class MetadataStatusReasonResource {
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
 	public ResponseEntity<Void> createReasons(@PathVariable final Status status, @RequestBody @NotEmpty final List<@NotBlank String> statusReasons, final UriComponentsBuilder uriComponentsBuilder) {
 		service.createReasons(status, statusReasons);
-		return ResponseEntity
-			.created(uriComponentsBuilder
-				.path("/metadata/statusreasons/{status}")
-				.buildAndExpand(status)
-				.toUri())
+		return created(uriComponentsBuilder
+			.path("/metadata/statusreasons/{status}")
+			.buildAndExpand(status)
+			.toUri())
 			.build();
 	}
 
@@ -73,6 +75,6 @@ public class MetadataStatusReasonResource {
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
 	public ResponseEntity<Void> deleteReasons(@PathVariable final Status status) {
 		service.deleteReasons(status);
-		return ResponseEntity.noContent().build();
+		return noContent().build();
 	}
 }
