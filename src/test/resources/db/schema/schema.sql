@@ -16,10 +16,10 @@
         id varchar(255) not null,
         origin varchar(255),
         party_id varchar(255) not null,
-        party_type enum ('ENTERPRISE','PRIVATE'),
-        status enum ('ACTIVE','BLOCKED','EXPIRED'),
         status_reason varchar(255),
         `type` varchar(255) not null,
+        party_type enum ('ENTERPRISE','PRIVATE'),
+        status enum ('ACTIVE','EXPIRED','BLOCKED'),
         primary key (id)
     ) engine=InnoDB;
 
