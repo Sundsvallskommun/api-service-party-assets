@@ -1,0 +1,41 @@
+integration:
+  party:
+    connectTimeout: 5
+    readTimeout: 30
+logging:
+  level:
+    root: 'INFO'
+openapi:
+  name: ${spring.application.name}
+  title: ${spring.application.name}
+  version: '@project.version@'
+resilience4j:
+  circuitbreaker:
+    instances:
+      party:
+        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
+spring:
+  application:
+    name: api-partyassets
+  cache:
+    cache-names: statusReasonCache
+    caffeine:
+      spec: maximumSize=20, expireAfterWrite=3600s
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+  flyway:
+    enabled: false
+  jpa:
+    properties:
+      jakarta:
+        persistence:
+          schema-generation:
+            database:
+              action: none
+  security:
+    oauth2:
+      client:
+        registration:
+          party:
+            authorization-grant-type: client_credentials
+            provider: party
