@@ -5,6 +5,9 @@ import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.ResponseEntity.created;
+import static org.springframework.http.ResponseEntity.noContent;
+import static org.springframework.http.ResponseEntity.ok;
 
 import java.util.List;
 
@@ -53,18 +56,17 @@ public class AssetResource {
 	@GetMapping(produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	public ResponseEntity<List<Asset>> getAssets(@ParameterObject @Valid final AssetSearchRequest request) {
-		return ResponseEntity.ok(service.getAssets(request));
+		return ok(service.getAssets(request));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
 	public ResponseEntity<Void> createAsset(@Valid @RequestBody final AssetCreateRequest asset, final UriComponentsBuilder uriComponentsBuilder) {
 		final var result = service.createAsset(asset);
-		return ResponseEntity
-			.created(uriComponentsBuilder
-				.path("/assets/{id}")
-				.buildAndExpand(result)
-				.toUri())
+		return created(uriComponentsBuilder
+			.path("/assets/{id}")
+			.buildAndExpand(result)
+			.toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
@@ -74,13 +76,13 @@ public class AssetResource {
 	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
 		service.updateAsset(id, asset);
-		return ResponseEntity.noContent().build();
+		return noContent().build();
 	}
 
 	@DeleteMapping(path = "{id}", produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
 	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid final String id) {
 		service.deleteAsset(id);
-		return ResponseEntity.noContent().build();
+		return noContent().build();
 	}
 }
