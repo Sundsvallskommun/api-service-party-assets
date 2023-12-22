@@ -61,7 +61,7 @@ public class MetadataStatusReasonResource {
 	}
 
 	@PostMapping(path = "{status}", consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
+	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
 	public ResponseEntity<Void> createReasons(@PathVariable final Status status, @RequestBody @NotEmpty final List<@NotBlank String> statusReasons, final UriComponentsBuilder uriComponentsBuilder) {
 		service.createReasons(status, statusReasons);
 		return created(uriComponentsBuilder
