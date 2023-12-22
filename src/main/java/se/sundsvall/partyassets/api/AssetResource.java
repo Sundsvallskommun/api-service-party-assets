@@ -60,7 +60,7 @@ public class AssetResource {
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."))
+	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
 	public ResponseEntity<Void> createAsset(@Valid @RequestBody final AssetCreateRequest asset, final UriComponentsBuilder uriComponentsBuilder) {
 		final var result = service.createAsset(asset);
 		return created(uriComponentsBuilder
@@ -72,7 +72,7 @@ public class AssetResource {
 	}
 
 	@PutMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
+	@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true)
 	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
 		service.updateAsset(id, asset);
@@ -80,7 +80,7 @@ public class AssetResource {
 	}
 
 	@DeleteMapping(path = "{id}", produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
+	@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true)
 	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid final String id) {
 		service.deleteAsset(id);
 		return noContent().build();
