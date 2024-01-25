@@ -11,14 +11,11 @@
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-party-assets</artifactId>
-	<version>1.1</version>
+	<version>1.2</version>
 	<name>party-assets</name>
 	<properties>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.16.6</fastexcel.version>
-		<webjars.jquery.version>3.7.1</webjars.jquery.version>
-		<webjars.jquery-validation.version>1.19.5</webjars.jquery-validation.version>
-		<webjars.bootstrap.version>5.3.2</webjars.bootstrap.version>
 		<!-- Pipeline properties -->
 		<docker.image.name>ms-party-assets</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
@@ -62,28 +59,6 @@
 		</dependency>
 		<!-- PR3 import dependencies -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>jquery</artifactId>
-			<version>${webjars.jquery.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>jquery-validation</artifactId>
-			<version>${webjars.jquery-validation.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>bootstrap</artifactId>
-			<version>${webjars.bootstrap.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.dhatim</groupId>
 			<artifactId>fastexcel</artifactId>
 			<version>${fastexcel.version}</version>
@@ -124,7 +99,7 @@
 						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
 						<exclude>**/se/sundsvall/partyassets/integration/db/model/*_.*</exclude>
 						<exclude>**/generated/se/sundsvall/**/*</exclude>
-						<exclude>**/se/sundsvall/partyassets/pr3import/**</exclude>
+						<!--<exclude>**/se/sundsvall/partyassets/pr3import/**</exclude>-->
   					</excludes>
 				</configuration>
 			</plugin>
@@ -150,6 +125,30 @@
 								<sourceFolder>models</sourceFolder>
 								<dateLibrary>java8</dateLibrary>
 								<modelPackage>generated.se.sundsvall.party</modelPackage>
+								<openApiNullable>false</openApiNullable>
+								<generatePom>false</generatePom>
+								<interfaceOnly>true</interfaceOnly>
+							</configOptions>
+						</configuration>
+					</execution>
+					<execution>
+						<id>messaging-api</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<inputSpec>src/main/resources/integrations/messaging-api.yaml</inputSpec>
+							<output>${generated-sources-path}</output>
+							<generatorName>spring</generatorName>
+							<generateApis>false</generateApis>
+							<generateSupportingFiles>false</generateSupportingFiles>
+							<configOptions>
+								<useSpringBoot3>true</useSpringBoot3>
+								<useBeanValidation>false</useBeanValidation>
+								<useSwaggerAnnotations>false</useSwaggerAnnotations>
+								<sourceFolder>models</sourceFolder>
+								<dateLibrary>java8</dateLibrary>
+								<modelPackage>generated.se.sundsvall.messaging</modelPackage>
 								<openApiNullable>false</openApiNullable>
 								<generatePom>false</generatePom>
 								<interfaceOnly>true</interfaceOnly>

@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import se.sundsvall.dept44.configuration.feign.FeignConfiguration;
@@ -22,20 +21,6 @@ import se.sundsvall.dept44.configuration.feign.decoder.ProblemErrorDecoder;
 class PR3ImportConfiguration implements WebMvcConfigurer {
 
     static final String INTEGRATION_NAME = "pr3import-messaging";
-
-    @Override
-    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        registry
-            .addResourceHandler("/webjars/**")
-            .addResourceLocations("/webjars/");
-
-        // "Workaround" to be able to have locally stored JS or CSS assets, required since we won't
-        // be able to get them from a CDN and the dept44 Problem setup in essence short-circuits the
-        // regular static resource handling.
-        registry
-            .addResourceHandler("/assets/**")
-            .addResourceLocations("classpath:/templates/assets/");
-    }
 
     @Bean
     FeignBuilderCustomizer feignBuilderCustomizer(final PR3ImportProperties properties) {
