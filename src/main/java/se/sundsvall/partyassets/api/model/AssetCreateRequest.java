@@ -3,15 +3,18 @@ package se.sundsvall.partyassets.api.model;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @ValidStatusReason
 public class AssetCreateRequest {
@@ -192,9 +195,17 @@ public class AssetCreateRequest {
 		return additionalParameters;
 	}
 
+	public void setAdditionalParameter(String key, String value) {
+		if (additionalParameters == null) {
+			additionalParameters = new HashMap<>();
+		}
+		additionalParameters.put(key, value);
+	}
+
 	public void setAdditionalParameters(Map<String, String> additionalParameters) {
 		this.additionalParameters = additionalParameters;
 	}
+
 
 	public AssetCreateRequest withAdditionalParameters(Map<String, String> additionalParameters) {
 		this.additionalParameters = additionalParameters;
