@@ -236,7 +236,6 @@ class PR3Importer {
     private String addCenturyDigitToLegalId(final String legalId) {
         // Make sure we have digits only
         if (legalId.isBlank() || !legalId.matches("^\\d+$")) {
-            //throw new IllegalArgumentException("Invalid legal id: '" + legalId + "'");
             return null;
         }
         // Do nothing if we already have a legal id with century digits
@@ -278,12 +277,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the issued date, or is empty.
      */
     private Optional<LocalDate> extractIssuedDate(final Row row) {
-        try {
-            return row.getCellAsDate(16).map(LocalDateTime::toLocalDate);
-        } catch (Exception e) {
-            System.err.println(row.getRowNum() + 1 + ": " + e.getMessage());
-            throw e;
-        }
+        return row.getCellAsDate(16).map(LocalDateTime::toLocalDate);
     }
 
     /**
