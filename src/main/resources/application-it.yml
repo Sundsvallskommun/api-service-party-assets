@@ -26,3 +26,15 @@ spring:
           party:
             client-id: the-client-id
             client-secret: the-client-secret
+pr3import:
+  static-asset-info:
+    origin: someOrigin
+    type: someType
+    description: someDescription
+  messaging-integration:
+    url: api-messaging-url
+    oauth2:
+      token-uri: api-gateway-url
+      client-id: client-id
+      client-secret: client-secret
+      grant-type: client_credentials
