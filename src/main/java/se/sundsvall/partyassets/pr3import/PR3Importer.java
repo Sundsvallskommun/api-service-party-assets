@@ -3,11 +3,11 @@ package se.sundsvall.partyassets.pr3import;
 import static com.nimbusds.oauth2.sdk.util.StringUtils.isNotBlank;
 import static java.util.Comparator.comparing;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -86,7 +86,7 @@ class PR3Importer {
                 .toList()
                 .reversed();
 
-            result.setTotal(rows.size());
+            result.setTotal(rows.size() - 1);
 
             // Copy the header row
             copyHeaderRow(rows.getFirst(), failedEntriesSheet);
@@ -174,10 +174,9 @@ class PR3Importer {
             }
         }
 
-        result.setFailed(lastFailedRowIndex - 1);
-        result.setFailedExcelData(out.toByteArray());
-
-        return result;
+        return result
+            .withFailed(lastFailedRowIndex - 1)
+            .withFailedExcelData(out.toByteArray());
     }
 
     /**
@@ -233,7 +232,7 @@ class PR3Importer {
      * @param legalId the legal id to add the century digit to.
      * @return the original legal id with a leading century digit, if it was previously missing.
      */
-    private String addCenturyDigitToLegalId(final String legalId) {
+    String addCenturyDigitToLegalId(final String legalId) {
         // Make sure we have digits only
         if (legalId.isBlank() || !legalId.matches("^\\d+$")) {
             return null;
@@ -251,27 +250,27 @@ class PR3Importer {
     }
 
     /**
-     * Extracts the legal id from the given row (column "PERSONNR").
+     * Extracts the legal id from the given row (column 10, "PERSONNR").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the legal id, or is empty.
      */
     private Optional<String> extractLegalId(final Row row) {
-        return row.getCellAsString(10);
+        return extractCell(row, 10);
     }
 
     /**
-     * Extracts the asset id from the given row (column "TILLSTNR").
+     * Extracts the asset id from the given row (column 7, "TILLSTNR").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the asset id, or is empty.
      */
     private Optional<String> extractAssetId(final Row row) {
-        return row.getCellAsString(7);
+        return extractCell(row, 7);
     }
 
     /**
-     * Extracts the issued date from the given row (column "UTFARDAT").
+     * Extracts the issued date from the given row (column 16, "UTFARDAT").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the issued date, or is empty.
@@ -281,7 +280,7 @@ class PR3Importer {
     }
 
     /**
-     * Extracts the valid-to date from the given row (column "GILTIGTTOM").
+     * Extracts the valid-to date from the given row (column 18, "GILTIGTTOM").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the valid-to date, or is empty.
@@ -303,17 +302,17 @@ class PR3Importer {
     }
 
     /**
-     * Extracts the registration number from the given row (column "DIARIENR").
+     * Extracts the registration number from the given row (column 15, "DIARIENR").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the registration number, or is empty.
      */
     private Optional<String> extractRegistrationNumber(final Row row) {
-        return row.getCellAsString(15);
+        return extractCell(row, 15);
     }
 
     /**
-     * Extracts the date the card was printed from the given row (column "UTSKRIVET").
+     * Extracts the date the card was printed from the given row (column 21, "UTSKRIVET").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the date the card was printed, or is empty.
@@ -323,14 +322,14 @@ class PR3Importer {
     }
 
     /**
-     * Extracts the "SmartCardSync" flag from the given row (column "SmartParkSync").
+     * Extracts the "SmartCardSync" flag from the given row (column 27, "SmartParkSync").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
      */
     private Optional<String> extractSmartParkSync(final Row row) {
-        return row.getCellAsNumber(27)
-            .map(BigDecimal::intValue)
+        return extractCell(row, 27)
+            .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
                 case 0 -> "false";
                 case 1 -> "true";
@@ -339,37 +338,37 @@ class PR3Importer {
     }
 
     /**
-     * Extracts the (name of the) administration that issued the card from the given row (column "EXTRA1").
+     * Extracts the (name of the) administration that issued the card from the given row (column 23, "EXTRA1").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the (name of the) administration that issued
      * the card, or is empty.
      */
     private Optional<String> extractIssuedByAdministration(final Row row) {
-        return row.getCellAsString(23);
+        return extractCell(row, 23);
     }
 
     /**
-     * Extracts the (name of the) administrator that issued the card from the given row (column "EXTRA2").
+     * Extracts the (name of the) administrator that issued the card from the given row (column 24, "EXTRA2").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the (name of the) administrator that issued
      * the card, or is empty.
      */
     private Optional<String> extractIssuedByAdministrator(final Row row) {
-        return row.getCellAsString(24);
+        return extractCell(row, 24);
     }
 
     /**
-     * Extracts whether the card was applied for as a driver or passenger from the given row (column "EXTRA2").
+     * Extracts whether the card was applied for as a driver or passenger from the given row (column 5, "PASSAGE").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains whether the card was applied for as a driver
      * or passenger, or is empty.
      */
     private Optional<String> extractAppliedAs(final Row row) {
-        return row.getCellAsNumber(5)
-            .map(BigDecimal::intValue)
+        return extractCell(row, 5)
+            .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
                 case 1 -> PASSENGER;
                 case 2 -> DRIVER;
@@ -378,14 +377,14 @@ class PR3Importer {
     }
 
     /**
-     * Extracts the sex as "K" for women and "M" for men, from the given row (column "KON").
+     * Extracts the sex as "K" for women and "M" for men, from the given row (column 4, "KON").
      *
      * @param row the row.
      * @return an {@code Optional} that either contains the sex, or is empty.
      */
     private Optional<String> extractSex(final Row row) {
-        return row.getCellAsNumber(4)
-            .map(BigDecimal::intValue)
+        return extractCell(row, 4)
+            .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
                 case 0 -> "K";
                 case 1 -> "M";
@@ -393,7 +392,19 @@ class PR3Importer {
             });
     }
 
-    public static class Result {
+    /**
+     * Convenience method to extract the contents of a cell as a string, regardless of what type
+     * Excel treats it as.
+     *
+     * @param row the row.
+     * @param cellIndex the cell index.
+     * @return an {@code Optional} that either contains the cell value as a string, or is empty
+     */
+    private Optional<String> extractCell(final Row row, final int cellIndex) {
+        return Optional.of(row.getCellText(cellIndex)).filter(not(String::isBlank));
+    }
+
+    static class Result {
 
         private int total;
         private int failed;
@@ -408,12 +419,22 @@ class PR3Importer {
             this.total = total;
         }
 
+        Result withTotal(final int total) {
+            this.total = total;
+            return this;
+        }
+
         public int getFailed() {
             return failed;
         }
 
         void setFailed(final int failed) {
             this.failed = failed;
+        }
+
+        Result withFailed(final int failed) {
+            this.failed = failed;
+            return this;
         }
 
         public int getSuccessful() {
@@ -426,6 +447,11 @@ class PR3Importer {
 
         void setFailedExcelData(final byte[] failedExcelData) {
             this.failedExcelData = failedExcelData;
+        }
+
+        Result withFailedExcelData(final byte[] failedExcelData) {
+            this.failedExcelData = failedExcelData;
+            return this;
         }
     }
 }
