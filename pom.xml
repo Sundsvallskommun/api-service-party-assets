@@ -99,7 +99,6 @@
 						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
 						<exclude>**/se/sundsvall/partyassets/integration/db/model/*_.*</exclude>
 						<exclude>**/generated/se/sundsvall/**/*</exclude>
-						<!--<exclude>**/se/sundsvall/partyassets/pr3import/**</exclude>-->
   					</excludes>
 				</configuration>
 			</plugin>

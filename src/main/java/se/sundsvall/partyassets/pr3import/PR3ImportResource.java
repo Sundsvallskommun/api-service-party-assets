@@ -12,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
@@ -45,7 +44,6 @@ class PR3ImportResource {
     }
 
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE, produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE})
-    @ResponseBody
     PR3Importer.Result handleImport(@RequestParam("file") final MultipartFile file,
             @RequestParam("email") final String emailAddress) throws Exception {
         var result = importer.importFromExcel(file.getInputStream());
