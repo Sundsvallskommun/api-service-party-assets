@@ -2,6 +2,7 @@ package se.sundsvall.partyassets.pr3import;
 
 import static com.nimbusds.oauth2.sdk.util.StringUtils.isNotBlank;
 import static java.util.Comparator.comparing;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
 
@@ -45,10 +46,12 @@ class PR3Importer {
     private static final String PARAM_APPLIED_AS = "appliedAs";
     private static final String PARAM_PERMIT_FULL_NUMBER = "permitFullNumber";
 
-    private static final String DRIVER = "driver";
-    private static final String PASSENGER = "passenger";
-    private static final String DRIVER_SHORT = "F";
-    private static final String PASSENGER_SHORT = "P";
+    static final String DRIVER = "driver";
+    static final String PASSENGER = "passenger";
+    static final String DRIVER_SHORT = "F";
+    static final String PASSENGER_SHORT = "P";
+
+    private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final PR3ImportProperties properties;
     private final AssetService assetService;
@@ -104,12 +107,20 @@ class PR3Importer {
                 // Fill in the rest of the asset information from the current row
                 extractAssetId(row).ifPresent(assetCreateRequest::setAssetId);
                 var legalId = extractLegalId(row);
+
+                // Manually check the legal id, since there's a real chance that the input file
+                // contains crap legal ids
+                if (legalId.isPresent()) {
+                    try {
+                        PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 8));
+                    } catch (Exception e) {
+                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id: "));
+
+                        continue;
+                    }
+                }
+
                 legalId
-                    // Clean the legal id
-                    .map(this::cleanLegalId)
-                    // Add a century digit to the legal id, if needed
-                    .map(this::addCenturyDigitToLegalId)
-                    // Get the party id
                     .flatMap(cleanLegalId -> partyClient.getPartyId(PartyType.PRIVATE, cleanLegalId))
                     .ifPresent(assetCreateRequest::setPartyId);
                 extractIssuedDate(row).ifPresent(assetCreateRequest::setIssued);
@@ -217,12 +228,26 @@ class PR3Importer {
     }
 
     /**
+     * Extracts the legal id from the given row (column 10, "PERSONNR") and adds a century digit if
+     * needed.
+     *
+     * @param row the row.
+     * @return an {@code Optional} that either contains the legal id, or is empty.
+     */
+    Optional<String> extractLegalId(final Row row) {
+        return extractCell(row, 10)
+            .map(this::cleanLegalId)
+            .map(this::addCenturyDigitToLegalId)
+            .filter(not(String::isBlank));
+    }
+
+    /**
      * Cleans and returns the provided legal id, removing everything but digits.
      *
      * @param legalId the legal id to clean.
      * @return a legal id with digits only
      */
-    private String cleanLegalId(final String legalId) {
+    String cleanLegalId(final String legalId) {
         return legalId.replaceAll("\\D", "");
     }
 
@@ -238,25 +263,15 @@ class PR3Importer {
             return null;
         }
         // Do nothing if we already have a legal id with century digits
-        if (legalId.startsWith("19") || legalId.startsWith("20")) {
+        if (legalId.length() == 12 && (legalId.startsWith("19") || legalId.startsWith("20"))) {
             return legalId;
         }
 
         // Naively validate
-        var thisYear = LocalDate.now().getYear() % 2000;
         var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
+        var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
 
-        return (legalIdYear <= thisYear ? "20" : "19") + legalId;
-    }
-
-    /**
-     * Extracts the legal id from the given row (column 10, "PERSONNR").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the legal id, or is empty.
-     */
-    private Optional<String> extractLegalId(final Row row) {
-        return extractCell(row, 10);
+        return centuryDigit + legalId;
     }
 
     /**
@@ -265,7 +280,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the asset id, or is empty.
      */
-    private Optional<String> extractAssetId(final Row row) {
+    Optional<String> extractAssetId(final Row row) {
         return extractCell(row, 7);
     }
 
@@ -275,7 +290,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the issued date, or is empty.
      */
-    private Optional<LocalDate> extractIssuedDate(final Row row) {
+    Optional<LocalDate> extractIssuedDate(final Row row) {
         return row.getCellAsDate(16).map(LocalDateTime::toLocalDate);
     }
 
@@ -285,7 +300,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the valid-to date, or is empty.
      */
-    private Optional<LocalDate> extractValidToDate(final Row row) {
+    Optional<LocalDate> extractValidToDate(final Row row) {
         return row.getCellAsDate(18).map(LocalDateTime::toLocalDate);
     }
 
@@ -296,7 +311,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the status, or is empty.
      */
-    private Optional<Status> extractStatus(final Row row) {
+    Optional<Status> extractStatus(final Row row) {
         return extractValidToDate(row)
             .map(validToDate -> validToDate.isAfter(LocalDate.now()) ? Status.ACTIVE : Status.EXPIRED);
     }
@@ -307,7 +322,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the registration number, or is empty.
      */
-    private Optional<String> extractRegistrationNumber(final Row row) {
+    Optional<String> extractRegistrationNumber(final Row row) {
         return extractCell(row, 15);
     }
 
@@ -317,7 +332,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the date the card was printed, or is empty.
      */
-    private Optional<LocalDateTime> extractCardPrinted(final Row row) {
+    Optional<LocalDateTime> extractCardPrinted(final Row row) {
         return row.getCellAsDate(21);
     }
 
@@ -327,7 +342,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
      */
-    private Optional<String> extractSmartParkSync(final Row row) {
+    Optional<String> extractSmartParkSync(final Row row) {
         return extractCell(row, 27)
             .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
@@ -344,7 +359,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the (name of the) administration that issued
      * the card, or is empty.
      */
-    private Optional<String> extractIssuedByAdministration(final Row row) {
+    Optional<String> extractIssuedByAdministration(final Row row) {
         return extractCell(row, 23);
     }
 
@@ -355,7 +370,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the (name of the) administrator that issued
      * the card, or is empty.
      */
-    private Optional<String> extractIssuedByAdministrator(final Row row) {
+    Optional<String> extractIssuedByAdministrator(final Row row) {
         return extractCell(row, 24);
     }
 
@@ -366,7 +381,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains whether the card was applied for as a driver
      * or passenger, or is empty.
      */
-    private Optional<String> extractAppliedAs(final Row row) {
+    Optional<String> extractAppliedAs(final Row row) {
         return extractCell(row, 5)
             .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
@@ -382,7 +397,7 @@ class PR3Importer {
      * @param row the row.
      * @return an {@code Optional} that either contains the sex, or is empty.
      */
-    private Optional<String> extractSex(final Row row) {
+    Optional<String> extractSex(final Row row) {
         return extractCell(row, 4)
             .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
@@ -400,7 +415,7 @@ class PR3Importer {
      * @param cellIndex the cell index.
      * @return an {@code Optional} that either contains the cell value as a string, or is empty
      */
-    private Optional<String> extractCell(final Row row, final int cellIndex) {
+    Optional<String> extractCell(final Row row, final int cellIndex) {
         return Optional.of(row.getCellText(cellIndex)).filter(not(String::isBlank));
     }
 
