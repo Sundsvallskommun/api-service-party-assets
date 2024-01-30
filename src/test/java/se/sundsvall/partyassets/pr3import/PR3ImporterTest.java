@@ -15,9 +15,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import java.io.IOException;
 import java.util.UUID;
 
-import org.dhatim.fastexcel.reader.Row;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,9 +36,6 @@ class PR3ImporterTest {
     private AssetService mockAssetService;
     @MockBean
     private PartyClient mockPartyClient;
-
-    @Mock
-    private Row mockRow;
 
     @Value("classpath:test.xlsx")
     private Resource importFileResource;
