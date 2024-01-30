@@ -111,10 +111,18 @@ class PR3Importer {
                 // Manually check the legal id, since there's a real chance that the input file
                 // contains crap legal ids
                 if (legalId.isPresent()) {
+                    // Verify the date part of the legal id
                     try {
                         PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 8));
                     } catch (Exception e) {
-                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id: "));
+                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id"));
+
+                        continue;
+                    }
+
+                    // Verify the check digit on the legal id
+                    if (!verifyCheckDigit(legalId.get())) {
+                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id (check digit)"));
 
                         continue;
                     }
@@ -417,6 +425,27 @@ class PR3Importer {
      */
     Optional<String> extractCell(final Row row, final int cellIndex) {
         return Optional.of(row.getCellText(cellIndex)).filter(not(String::isBlank));
+    }
+
+    static boolean verifyCheckDigit(final String legalId) {
+        var sum = 0;
+        var alternate = false;
+
+        // Start from the right, moving left
+        for (var i = legalId.length() - 1; i >= 2; --i) {
+            // Get the current digit
+            int digit = Character.getNumericValue(legalId.charAt(i));
+            // Double every other digit
+            digit = alternate ? (digit * 2) : digit;
+            // Subtract 9 if the value is greater than 9 (the same as summing the digits)
+            digit = (digit > 9) ? (digit - 9) : digit;
+            // Add the digit to the sum
+            sum += digit;
+            // Flip the alternate flag
+            alternate = !alternate;
+        }
+
+        return (sum % 10) == 0;
     }
 
     static class Result {
