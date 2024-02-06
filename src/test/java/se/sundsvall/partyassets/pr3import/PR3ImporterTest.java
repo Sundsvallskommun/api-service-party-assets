@@ -52,22 +52,12 @@ class PR3ImporterTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getTotal()).isEqualTo(3);
-        assertThat(result.getSuccessful()).isEqualTo(3);
-        assertThat(result.getFailed()).isZero();
+        assertThat(result.getSuccessful()).isEqualTo(2);
+        assertThat(result.getFailed()).isOne();
 
-        verify(mockPartyClient, times(3)).getPartyId(eq(PRIVATE), anyString());
+        verify(mockPartyClient, times(2)).getPartyId(eq(PRIVATE), anyString());
         verifyNoMoreInteractions(mockPartyClient);
-        verify(mockAssetService, times(3)).createAsset(any(AssetCreateRequest.class));
+        verify(mockAssetService, times(2)).createAsset(any(AssetCreateRequest.class));
         verifyNoMoreInteractions(mockAssetService);
-    }
-
-    @Test
-    void addCenturyDigitToLegalId() {
-        assertThat(importer.addCenturyDigitToLegalId("")).isNull();
-        assertThat(importer.addCenturyDigitToLegalId("not-a-legal-id")).isNull();
-        assertThat(importer.addCenturyDigitToLegalId("196505018585")).isEqualTo("196505018585");
-        assertThat(importer.addCenturyDigitToLegalId("200301021456")).isEqualTo("200301021456");
-        assertThat(importer.addCenturyDigitToLegalId("6505018585")).isEqualTo("196505018585");
-        assertThat(importer.addCenturyDigitToLegalId("0301021456")).isEqualTo("200301021456");
     }
 }

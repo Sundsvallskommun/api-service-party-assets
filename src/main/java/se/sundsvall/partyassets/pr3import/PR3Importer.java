@@ -51,7 +51,7 @@ class PR3Importer {
     static final String DRIVER_SHORT = "F";
     static final String PASSENGER_SHORT = "P";
 
-    private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
     private final PR3ImportProperties properties;
     private final AssetService assetService;
@@ -113,7 +113,7 @@ class PR3Importer {
                 if (legalId.isPresent()) {
                     // Verify the date part of the legal id
                     try {
-                        PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 8));
+                        PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 6));
                     } catch (Exception e) {
                         copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id"));
 
@@ -126,11 +126,16 @@ class PR3Importer {
 
                         continue;
                     }
+
+                    // Attempt to get the party id, by trying first "19" and then "20" as century digits
+                    var partyId = partyClient.getPartyId(PartyType.PRIVATE, "19" + legalId);
+                    if (partyId.isEmpty()) {
+                        partyId = partyClient.getPartyId(PartyType.PRIVATE, "20" + legalId);
+                    }
+
+                    partyId.ifPresent(assetCreateRequest::setPartyId);
                 }
 
-                legalId
-                    .flatMap(cleanLegalId -> partyClient.getPartyId(PartyType.PRIVATE, cleanLegalId))
-                    .ifPresent(assetCreateRequest::setPartyId);
                 extractIssuedDate(row).ifPresent(assetCreateRequest::setIssued);
                 extractValidToDate(row).ifPresent(assetCreateRequest::setValidTo);
                 extractStatus(row).ifPresent(assetCreateRequest::setStatus);
@@ -245,7 +250,6 @@ class PR3Importer {
     Optional<String> extractLegalId(final Row row) {
         return extractCell(row, 10)
             .map(this::cleanLegalId)
-            .map(this::addCenturyDigitToLegalId)
             .filter(not(String::isBlank));
     }
 
@@ -257,29 +261,6 @@ class PR3Importer {
      */
     String cleanLegalId(final String legalId) {
         return legalId.replaceAll("\\D", "");
-    }
-
-    /**
-     * Naively adds a century digit to the given legal id, if it's missing.
-     *
-     * @param legalId the legal id to add the century digit to.
-     * @return the original legal id with a leading century digit, if it was previously missing.
-     */
-    String addCenturyDigitToLegalId(final String legalId) {
-        // Make sure we have digits only
-        if (legalId.isBlank() || !legalId.matches("^\\d+$")) {
-            return null;
-        }
-        // Do nothing if we already have a legal id with century digits
-        if (legalId.length() == 12 && (legalId.startsWith("19") || legalId.startsWith("20"))) {
-            return legalId;
-        }
-
-        // Naively validate
-        var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
-        var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
-
-        return centuryDigit + legalId;
     }
 
     /**
@@ -432,7 +413,7 @@ class PR3Importer {
         var alternate = false;
 
         // Start from the right, moving left
-        for (var i = legalId.length() - 1; i >= 2; --i) {
+        for (var i = legalId.length() - 1; i >= 0; --i) {
             // Get the current digit
             int digit = Character.getNumericValue(legalId.charAt(i));
             // Double every other digit
