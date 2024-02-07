@@ -24,16 +24,16 @@ import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
 
 import se.sundsvall.partyassets.Application;
-import se.sundsvall.partyassets.api.model.AssetCreateRequest;
+import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.party.PartyClient;
-import se.sundsvall.partyassets.service.AssetService;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class PR3ImporterTest {
 
     @MockBean
-    private AssetService mockAssetService;
+    private AssetRepository mockAssetRepository;
     @MockBean
     private PartyClient mockPartyClient;
 
@@ -52,13 +52,14 @@ class PR3ImporterTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getTotal()).isEqualTo(3);
-        assertThat(result.getSuccessful()).isEqualTo(3);
-        assertThat(result.getFailed()).isZero();
+        assertThat(result.getSuccessful()).isEqualTo(2);
+        assertThat(result.getFailed()).isOne();
 
-        verify(mockPartyClient, times(3)).getPartyId(eq(PRIVATE), anyString());
+        verify(mockPartyClient, times(2)).getPartyId(eq(PRIVATE), any(String.class));
         verifyNoMoreInteractions(mockPartyClient);
-        verify(mockAssetService, times(3)).createAsset(any(AssetCreateRequest.class));
-        verifyNoMoreInteractions(mockAssetService);
+        verify(mockAssetRepository, times(2)).existsByAssetId(any(String.class));
+        verify(mockAssetRepository, times(2)).save(any(AssetEntity.class));
+        verifyNoMoreInteractions(mockAssetRepository);
     }
 
     @Test

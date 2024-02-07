@@ -5,6 +5,9 @@ import static java.util.Comparator.comparing;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
+import static org.zalando.problem.Status.CONFLICT;
+import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
+import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,12 +28,13 @@ import org.dhatim.fastexcel.reader.ReadableWorkbook;
 import org.dhatim.fastexcel.reader.Row;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.zalando.problem.Problem;
 import org.zalando.problem.ThrowableProblem;
 
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.Status;
+import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.party.PartyClient;
-import se.sundsvall.partyassets.service.AssetService;
 
 import generated.se.sundsvall.party.PartyType;
 
@@ -46,22 +50,34 @@ class PR3Importer {
     private static final String PARAM_APPLIED_AS = "appliedAs";
     private static final String PARAM_PERMIT_FULL_NUMBER = "permitFullNumber";
 
+    private static final int COL_SEX                        = 4;
+    private static final int COL_APPLIED_AS                 = 5;
+    private static final int COL_ASSET_ID                   = 7;
+    private static final int COL_LEGAL_ID                   = 10;
+    private static final int COL_REGISTRATION_NUMBER        = 15;
+    private static final int COL_ISSUED_DATE                = 16;
+    private static final int COL_VALID_TO_DATE              = 18;
+    private static final int COL_CARD_PRINTED               = 21;
+    private static final int COL_ISSUED_BY_ADMINISTRATION   = 23;
+    private static final int COL_ISSUED_BY_ADMINISTRATOR    = 24;
+    private static final int COL_SMART_PARK_SYNC            = 27;
+
     static final String DRIVER = "driver";
     static final String PASSENGER = "passenger";
     static final String DRIVER_SHORT = "F";
     static final String PASSENGER_SHORT = "P";
 
-    private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
     private final PR3ImportProperties properties;
-    private final AssetService assetService;
+    private final AssetRepository assetRepository;
     private final PartyClient partyClient;
     private final Validator validator;
 
-    PR3Importer(final PR3ImportProperties properties, final AssetService assetService,
+    PR3Importer(final PR3ImportProperties properties, AssetRepository assetRepository,
             final PartyClient partyClient, final Validator validator) {
         this.properties = properties;
-        this.assetService = assetService;
+        this.assetRepository = assetRepository;
         this.partyClient = partyClient;
         this.validator = validator;
     }
@@ -83,9 +99,10 @@ class PR3Importer {
              var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
             var sourceSheet = sourceWorkbook.getFirstSheet();
             var failedEntriesSheet = failedEntriesWorkbook.newWorksheet(sourceSheet.getName());
-            // Sort the rows on asset id (TILLSTNR), descending
+
+            // Sort the rows on asset id, descending
             var rows = sourceSheet.read().stream()
-                .sorted(comparing(r -> r.getCellText(7)))
+                .sorted(comparing(r -> r.getCellText(COL_ASSET_ID)))
                 .toList()
                 .reversed();
 
@@ -98,7 +115,8 @@ class PR3Importer {
             for (var rowIndex = 1; rowIndex < rows.size(); rowIndex++) {
                 var row = rows.get(rowIndex);
 
-                // Create an asset (create request) and fill in the static info
+                // Create an asset (create request, to take advantage of validation constraints) and
+                // fill in the static info
                 var assetCreateRequest = new AssetCreateRequest()
                     .withOrigin(properties.staticAssetInfo().origin())
                     .withType(properties.staticAssetInfo().type())
@@ -113,24 +131,35 @@ class PR3Importer {
                 if (legalId.isPresent()) {
                     // Verify the date part of the legal id
                     try {
-                        PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 8));
+                        PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 6));
                     } catch (Exception e) {
                         copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id"));
 
                         continue;
                     }
 
-                    // Verify the check digit on the legal id
+                    // Verify the check digit on the legal id (without century digits)
                     if (!verifyCheckDigit(legalId.get())) {
                         copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id (check digit)"));
 
                         continue;
                     }
+
+                    // Attempt to get the party id, by trying first "19" and then "20" as century digits
+                    var partyId = partyClient.getPartyId(PartyType.PRIVATE, "19" + legalId.get());
+                    if (partyId.isEmpty()) {
+                        partyId = partyClient.getPartyId(PartyType.PRIVATE, "20" + legalId.get());
+                    }
+
+                    if (partyId.isPresent()) {
+                        assetCreateRequest.setPartyId(partyId.get());
+                    } else {
+                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Unable to get party id"));
+
+                        continue;
+                    }
                 }
 
-                legalId
-                    .flatMap(cleanLegalId -> partyClient.getPartyId(PartyType.PRIVATE, cleanLegalId))
-                    .ifPresent(assetCreateRequest::setPartyId);
                 extractIssuedDate(row).ifPresent(assetCreateRequest::setIssued);
                 extractValidToDate(row).ifPresent(assetCreateRequest::setValidTo);
                 extractStatus(row).ifPresent(assetCreateRequest::setStatus);
@@ -170,9 +199,20 @@ class PR3Importer {
                 // Validate the asset
                 var constraintViolations = validator.validate(assetCreateRequest);
                 if (constraintViolations.isEmpty()) {
-                    // Save the asset
+                    // Save the asset - reusing the asset service would indeed be a viable option,
+                    // but as we know when importing PR3 data that we're always storing private assets
+                    // we won't need to make the extra calls to the party service to determine the
+                    // actual party type
                     try {
-                        assetService.createAsset(assetCreateRequest);
+                        if (assetRepository.existsByAssetId(assetCreateRequest.getAssetId())) {
+                            throw Problem.builder()
+                                .withStatus(CONFLICT)
+                                .withTitle("Asset already exists")
+                                .withDetail("Asset with assetId %s already exists".formatted(assetCreateRequest.getAssetId()))
+                                .build();
+                        }
+
+                        assetRepository.save(toEntity(assetCreateRequest, PRIVATE));
                     } catch (Exception e) {
                         if (e instanceof ThrowableProblem p) {
                             errorDetail = ofNullable(p.getDetail());
@@ -226,7 +266,16 @@ class PR3Importer {
         var columnCount = sourceRow.getCellCount();
 
         for (var colIndex = 0; colIndex < columnCount; colIndex++) {
-            target.value(targetRowIndex, colIndex, sourceRow.getCellText(colIndex));
+            // Handle date columns
+            if (targetRowIndex > 0 && colIndex >= COL_ISSUED_DATE && colIndex <= COL_CARD_PRINTED) {
+                var currentColIndex = colIndex;
+
+                sourceRow.getCellAsDate(colIndex)
+                    .map(LocalDateTime::toLocalDate)
+                    .ifPresent(date -> target.value(targetRowIndex, currentColIndex, date));
+            } else {
+                target.value(targetRowIndex, colIndex, sourceRow.getCellText(colIndex));
+            }
         }
 
         optionalDetail.ifPresent(detail -> {
@@ -243,10 +292,16 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the legal id, or is empty.
      */
     Optional<String> extractLegalId(final Row row) {
-        return extractCell(row, 10)
+        return extractCell(row, COL_LEGAL_ID)
             .map(this::cleanLegalId)
-            .map(this::addCenturyDigitToLegalId)
-            .filter(not(String::isBlank));
+            .filter(not(String::isBlank))
+            .map(legalId -> {
+                // Strip off any century digits, if present
+                if (legalId.matches("^\\d{12}$")) {
+                    return legalId.substring(2);
+                }
+                return legalId;
+            });
     }
 
     /**
@@ -289,7 +344,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the asset id, or is empty.
      */
     Optional<String> extractAssetId(final Row row) {
-        return extractCell(row, 7);
+        return extractCell(row, COL_ASSET_ID);
     }
 
     /**
@@ -299,7 +354,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the issued date, or is empty.
      */
     Optional<LocalDate> extractIssuedDate(final Row row) {
-        return row.getCellAsDate(16).map(LocalDateTime::toLocalDate);
+        return row.getCellAsDate(COL_ISSUED_DATE).map(LocalDateTime::toLocalDate);
     }
 
     /**
@@ -309,7 +364,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the valid-to date, or is empty.
      */
     Optional<LocalDate> extractValidToDate(final Row row) {
-        return row.getCellAsDate(18).map(LocalDateTime::toLocalDate);
+        return row.getCellAsDate(COL_VALID_TO_DATE).map(LocalDateTime::toLocalDate);
     }
 
     /**
@@ -331,7 +386,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the registration number, or is empty.
      */
     Optional<String> extractRegistrationNumber(final Row row) {
-        return extractCell(row, 15);
+        return extractCell(row, COL_REGISTRATION_NUMBER);
     }
 
     /**
@@ -341,7 +396,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the date the card was printed, or is empty.
      */
     Optional<LocalDateTime> extractCardPrinted(final Row row) {
-        return row.getCellAsDate(21);
+        return row.getCellAsDate(COL_CARD_PRINTED);
     }
 
     /**
@@ -351,7 +406,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
      */
     Optional<String> extractSmartParkSync(final Row row) {
-        return extractCell(row, 27)
+        return extractCell(row, COL_SMART_PARK_SYNC)
             .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
                 case 0 -> "false";
@@ -368,7 +423,7 @@ class PR3Importer {
      * the card, or is empty.
      */
     Optional<String> extractIssuedByAdministration(final Row row) {
-        return extractCell(row, 23);
+        return extractCell(row, COL_ISSUED_BY_ADMINISTRATION);
     }
 
     /**
@@ -379,7 +434,7 @@ class PR3Importer {
      * the card, or is empty.
      */
     Optional<String> extractIssuedByAdministrator(final Row row) {
-        return extractCell(row, 24);
+        return extractCell(row, COL_ISSUED_BY_ADMINISTRATOR);
     }
 
     /**
@@ -390,7 +445,7 @@ class PR3Importer {
      * or passenger, or is empty.
      */
     Optional<String> extractAppliedAs(final Row row) {
-        return extractCell(row, 5)
+        return extractCell(row, COL_APPLIED_AS)
             .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
                 case 1 -> PASSENGER;
@@ -406,7 +461,7 @@ class PR3Importer {
      * @return an {@code Optional} that either contains the sex, or is empty.
      */
     Optional<String> extractSex(final Row row) {
-        return extractCell(row, 4)
+        return extractCell(row, COL_SEX)
             .map(Integer::parseInt)
             .map(intValue -> switch (intValue) {
                 case 0 -> "K";
@@ -432,7 +487,7 @@ class PR3Importer {
         var alternate = false;
 
         // Start from the right, moving left
-        for (var i = legalId.length() - 1; i >= 2; --i) {
+        for (var i = legalId.length() - 1; i >= 0; --i) {
             // Get the current digit
             int digit = Character.getNumericValue(legalId.charAt(i));
             // Double every other digit
