@@ -8,5 +8,5 @@ permissions:
 
 jobs:
   shared-workflows:
-    uses: Sundsvallskommun/shared-workflows/.github/workflows/common-dependabot-reviewer.yml@main
+    uses: Sundsvallskommun/shared-workflows/.github/workflows/common-dependabot-reviewer.yml@uf-xyz/update-secrate-name
     secrets: inherit
