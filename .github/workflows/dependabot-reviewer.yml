@@ -1,11 +1,10 @@
-name: "Call Dependabot reviewer"
+name: Call Dependabot reviewer
 
-on: pull_request_target
-
-permissions:
-  pull-requests: write
-  contents: write
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   shared-workflows:
     uses: Sundsvallskommun/shared-workflows/.github/workflows/common-dependabot-reviewer.yml@main
+    secrets: inherit
