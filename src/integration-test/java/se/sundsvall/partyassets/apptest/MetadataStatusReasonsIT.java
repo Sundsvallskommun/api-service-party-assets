@@ -25,7 +25,7 @@ import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 
 /**
  * MetadataStatusReasons integration tests.
- * 
+ *
  * @see src/test/resources/db/scripts/metadataStatusReasonsIT.sql for data setup.
  */
 @WireMockAppTestSuite(files = "classpath:/metadataStatusReasonsIT/", classes = Application.class)
@@ -45,16 +45,16 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 
 		// Verify no existing status with status reasons before create
 		assertThat(repository.findById(status.name())).isEmpty();
-		
+
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
 			.withServicePath("/metadata/statusreasons/%s".formatted(status.name()))
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/metadata/statusreasons/%s".formatted(status.name())))
+			.withExpectedResponseHeader(LOCATION, List.of("^/metadata/statusreasons/%s".formatted(status.name())))
 			.sendRequestAndVerifyResponse();
-		
+
 		// Assert that status and corresponding status reasons has been created
 		final var result = repository.findById(Status.EXPIRED.name());
 		assertThat(result).isPresent();
