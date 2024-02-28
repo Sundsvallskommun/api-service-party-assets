@@ -8,6 +8,7 @@ import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.created;
 import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.web.util.UriComponentsBuilder.fromPath;
 
 import java.util.List;
 
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 
@@ -61,12 +61,9 @@ public class AssetResource {
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
-	public ResponseEntity<Void> createAsset(@Valid @RequestBody final AssetCreateRequest asset, final UriComponentsBuilder uriComponentsBuilder) {
+	public ResponseEntity<Void> createAsset(@Valid @RequestBody final AssetCreateRequest asset) {
 		final var result = service.createAsset(asset);
-		return created(uriComponentsBuilder
-			.path("/assets/{id}")
-			.buildAndExpand(result)
-			.toUri())
+		return created(fromPath("/assets/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}

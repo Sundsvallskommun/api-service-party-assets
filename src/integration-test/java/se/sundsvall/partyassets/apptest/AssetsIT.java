@@ -36,7 +36,7 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 /**
  * Assets integration tests.
- * 
+ *
  * @see src/test/resources/db/scripts/assetsIT.sql for data setup.
  */
 @WireMockAppTestSuite(files = "classpath:/assetsIT/", classes = Application.class)
@@ -53,10 +53,10 @@ class AssetsIT extends AbstractAppTest {
 	void test01_createAssetPrivateParty() {
 		final var partyId = "a6c380f3-6d26-496d-93fe-10b1e0160354";
 		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
-		
+
 		// Verify no existing assets on customer before create
 		assertThat(repository.findOne(createAssetSpecification(searchRequestForPartyId))).isEmpty();
-		
+
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
@@ -64,9 +64,9 @@ class AssetsIT extends AbstractAppTest {
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))
-			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/assets/(.*)$"))
+			.withExpectedResponseHeader(LOCATION, List.of("^/assets/(.*)$"))
 			.sendRequestAndVerifyResponse();
-		
+
 		// Verify that asset has been created for customer
 		final var asset = repository.findOne(createAssetSpecification(searchRequestForPartyId));
 		assertThat(asset).isPresent();
@@ -100,7 +100,7 @@ class AssetsIT extends AbstractAppTest {
 			.withServicePath("/assets")
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("^http://(.*)/assets/(.*)$"))
+			.withExpectedResponseHeader(LOCATION, List.of("^/assets/(.*)$"))
 			.sendRequestAndVerifyResponse();
 
 		// Verify that asset has been created for customer
@@ -153,15 +153,16 @@ class AssetsIT extends AbstractAppTest {
 	void test05_findSpecificAssetForPrivateParty() {
 		setupCall()
 			.withHttpMethod(GET)
-			.withServicePath("/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f" +
-				"&additionalParameters[first_key]=third_value" +
-				"&assetId=PRH-0000000002" +
-				"&description=Parkeringstillstånd" +
-				"&issued=2023-01-01" +
-				"&status=BLOCKED" +
-				"&statusReason=Stöldanmäld" +
-				"&type=PERMIT" +
-				"&validTo=2023-12-31")
+			.withServicePath("""
+				/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f\
+				&additionalParameters[first_key]=third_value\
+				&assetId=PRH-0000000002\
+				&description=Parkeringstillstånd\
+				&issued=2023-01-01\
+				&status=BLOCKED\
+				&statusReason=Stöldanmäld\
+				&type=PERMIT\
+				&validTo=2023-12-31""")
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("response.json")
 			.sendRequestAndVerifyResponse();

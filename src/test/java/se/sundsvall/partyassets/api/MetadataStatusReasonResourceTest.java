@@ -18,7 +18,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
@@ -43,9 +42,9 @@ class MetadataStatusReasonResourceTest {
 	void getReasonsForAllStatuses() {
 		// Arrange
 		final var statusReasons = Map.of(Status.BLOCKED, List.of("REASON_1", "REASON_2", "REASON_3"), Status.EXPIRED, List.of("REASON_3", "REASON_4"));
-		
+
 		when(serviceMock.getReasonsForAllStatuses()).thenReturn(statusReasons);
-		
+
 		// Act
 		final var response = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path("/metadata/statusreasons").build())
@@ -110,14 +109,14 @@ class MetadataStatusReasonResourceTest {
 			.contentType(APPLICATION_PROBLEM_JSON)
 			.expectBody()
 			.json(expectedJsonMessage);
-		;
 
 		// Assert
 		verifyNoInteractions(serviceMock);
 	}
 
 	@Test
-	void createStatusReasons(@Value("${local.server.port}") int serverPort) {
+	void createStatusReasons() {
+
 		// Arrange
 		final var status = Status.BLOCKED;
 		final var body = List.of("REASON_1", "REASON_2", "REASON_3", "REASON_4");
@@ -129,8 +128,7 @@ class MetadataStatusReasonResourceTest {
 			.exchange()
 			.expectStatus()
 			.isCreated()
-			.expectHeader()
-			.location("http://localhost:" + serverPort + "/metadata/statusreasons/" + status);
+			.expectHeader().location("/metadata/statusreasons/" + status);
 
 		// Assert
 		verify(serviceMock).createReasons(status, body);

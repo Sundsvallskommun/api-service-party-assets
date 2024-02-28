@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,6 +37,7 @@ import se.sundsvall.partyassets.service.StatusService;
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class AssetResourceTest {
+
 	private static final Map<Status, List<String>> VALID_STATUS_REASONS_FOR_STATUSES = Map.of(
 		Status.BLOCKED, List.of("IRREGULARITY", "LOST"));
 
@@ -111,7 +111,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAsset(@Value("${local.server.port}") int serverPort) {
+	void createAsset() {
 		// Arrange
 		final var uuid = UUID.randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString()).withStatusReason(null);
@@ -125,8 +125,7 @@ class AssetResourceTest {
 			.exchange()
 			.expectStatus()
 			.isCreated()
-			.expectHeader()
-			.location("http://localhost:" + serverPort + "/assets/" + uuid);
+			.expectHeader().location("/assets/" + uuid);
 
 		// Assert
 		verify(assetServiceMock).createAsset(assetRequest);
