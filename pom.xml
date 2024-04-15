@@ -15,7 +15,7 @@
 	<name>party-assets</name>
 	<properties>
 		<!-- PR3 import dependency versions -->
-		<fastexcel.version>0.17.0</fastexcel.version>
+		<fastexcel.version>0.18.0</fastexcel.version>
 		<!-- Pipeline properties -->
 		<docker.image.name>ms-party-assets</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
