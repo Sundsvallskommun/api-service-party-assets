@@ -16,11 +16,7 @@
 	<properties>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.18.0</fastexcel.version>
-		<!-- Pipeline properties -->
-		<docker.image.name>ms-party-assets</docker.image.name>
 		<exposed.app.port>8080</exposed.app.port>
-		<published.container.port.test>8720</published.container.port.test>
-		<published.container.port.production>8720</published.container.port.production>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
 		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
