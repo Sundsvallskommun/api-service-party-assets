@@ -19,7 +19,7 @@
         status_reason varchar(255),
         `type` varchar(255) not null,
         party_type enum ('ENTERPRISE','PRIVATE'),
-        status enum ('ACTIVE','EXPIRED','BLOCKED'),
+        status enum ('ACTIVE','BLOCKED','EXPIRED'),
         primary key (id)
     ) engine=InnoDB;
 
