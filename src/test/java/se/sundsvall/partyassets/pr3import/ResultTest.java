@@ -10,7 +10,7 @@ class ResultTest {
     void testGettersAndSetters() {
         var result = new PR3Importer.Result();
         result.setTotal(456);
-        result.setFailed(123);
+        result.setFailed();
         result.setFailedExcelData(new byte[] { 1, 2, 3, 4, 5});
 
         assertThat(result.getTotal()).isEqualTo(456);

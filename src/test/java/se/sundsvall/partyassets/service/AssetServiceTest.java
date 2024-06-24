@@ -37,6 +37,8 @@ import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
 
+	private static final String MUNICIPALITY_ID = "2281";
+
 	@Mock
 	private AssetRepository repositoryMock;
 
@@ -58,16 +60,16 @@ class AssetServiceTest {
 		final var partyId = UUID.randomUUID().toString();
 		final var entity = getAssetEntity(id, partyId);
 
-		try (MockedStatic<AssetSpecification> assetSpecificationMock = mockStatic(AssetSpecification.class)) {
+		try (final MockedStatic<AssetSpecification> assetSpecificationMock = mockStatic(AssetSpecification.class)) {
 			when(AssetSpecification.createAssetSpecification(any())).thenReturn(specificationMock);
 			when(repositoryMock.findAll(Mockito.<Specification<AssetEntity>>any())).thenReturn(List.of(entity));
 
-			final var result = service.getAssets(AssetSearchRequest.create());
+			final var result = service.getAssets(MUNICIPALITY_ID,AssetSearchRequest.create());
 
 			assertThat(result).isNotNull().hasSize(1);
-			assertThat(result.get(0)).usingRecursiveComparison().isEqualTo(entity);
+			assertThat(result.getFirst()).usingRecursiveComparison().isEqualTo(entity);
 
-		} ;
+		}
 
 		verify(repositoryMock).findAll(Mockito.<Specification<AssetEntity>>any());
 	}
@@ -82,7 +84,7 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID,assetCreateRequest);
 
 		verify(partyTypeProviderMock).calculatePartyType(partyId);
 		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
@@ -102,7 +104,7 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.ENTERPRISE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID,assetCreateRequest);
 
 		verify(partyTypeProviderMock).calculatePartyType(partyId);
 		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
@@ -120,7 +122,7 @@ class AssetServiceTest {
 		when(repositoryMock.existsByAssetId(assetCreateRequest.getAssetId())).thenReturn(true);
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAsset(assetCreateRequest))
+			.isThrownBy(() -> service.createAsset(MUNICIPALITY_ID,assetCreateRequest))
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
 		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
@@ -134,7 +136,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.existsById(uuid)).thenReturn(true);
 
-		service.deleteAsset(uuid);
+		service.deleteAsset(MUNICIPALITY_ID,uuid);
 		verify(repositoryMock).existsById(uuid);
 		verify(repositoryMock).deleteById(uuid);
 	}
@@ -144,7 +146,7 @@ class AssetServiceTest {
 		final var uuid = UUID.randomUUID().toString();
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.deleteAsset(uuid))
+			.isThrownBy(() -> service.deleteAsset(MUNICIPALITY_ID,uuid))
 			.withMessage("Asset not found: Asset with id " + uuid + " not found");
 		verify(repositoryMock).existsById(uuid);
 		verify(repositoryMock, never()).deleteById(uuid);
@@ -159,7 +161,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findById(any())).thenReturn(Optional.of(entity));
 
-		service.updateAsset(id, asssetUpdateRequest);
+		service.updateAsset(MUNICIPALITY_ID, id, asssetUpdateRequest);
 
 		verify(repositoryMock).findById(id);
 		verify(repositoryMock).save(any(AssetEntity.class));
@@ -174,7 +176,7 @@ class AssetServiceTest {
 		when(repositoryMock.findById(any(String.class))).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(uuid, assetUpdaterequest))
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID,uuid, assetUpdaterequest))
 			.withMessage("Asset not found: Asset with id " + uuid + " not found");
 
 		verify(repositoryMock).findById(any(String.class));

@@ -46,6 +46,10 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 })
 class AssetsIT extends AbstractAppTest {
 
+	private static final String MUNICIPALITY_ID = "2281";
+
+	private static final String PATH = "/" + MUNICIPALITY_ID + "/assets";
+
 	@Autowired
 	private AssetRepository repository;
 
@@ -60,11 +64,11 @@ class AssetsIT extends AbstractAppTest {
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
-			.withServicePath("/assets")
+			.withServicePath(PATH)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))
-			.withExpectedResponseHeader(LOCATION, List.of("^/assets/(.*)$"))
+			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
 			.sendRequestAndVerifyResponse();
 
 		// Verify that asset has been created for customer
@@ -97,10 +101,10 @@ class AssetsIT extends AbstractAppTest {
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
-			.withServicePath("/assets")
+			.withServicePath(PATH)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("^/assets/(.*)$"))
+			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
 			.sendRequestAndVerifyResponse();
 
 		// Verify that asset has been created for customer
@@ -130,7 +134,7 @@ class AssetsIT extends AbstractAppTest {
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
-			.withServicePath("/assets")
+			.withServicePath(PATH)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(NOT_FOUND)
 			.sendRequestAndVerifyResponse();
@@ -143,7 +147,7 @@ class AssetsIT extends AbstractAppTest {
 	void test04_findAllAssetsForPrivateParty() {
 		setupCall()
 			.withHttpMethod(GET)
-			.withServicePath("/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f")
+			.withServicePath(PATH + "?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f")
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("response.json")
 			.sendRequestAndVerifyResponse();
@@ -154,7 +158,7 @@ class AssetsIT extends AbstractAppTest {
 		setupCall()
 			.withHttpMethod(GET)
 			.withServicePath("""
-				/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f\
+				/2281/assets?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f\
 				&additionalParameters[first_key]=third_value\
 				&assetId=PRH-0000000002\
 				&description=Parkeringstillstånd\
@@ -181,7 +185,7 @@ class AssetsIT extends AbstractAppTest {
 		// Update asset
 		setupCall()
 			.withHttpMethod(PUT)
-			.withServicePath("/assets/" + id)
+			.withServicePath(PATH + "/" + id)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
@@ -205,7 +209,7 @@ class AssetsIT extends AbstractAppTest {
 		// Update asset
 		setupCall()
 			.withHttpMethod(PUT)
-			.withServicePath("/assets/" + id)
+			.withServicePath(PATH + "/" + id)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse("response.json")
@@ -227,7 +231,7 @@ class AssetsIT extends AbstractAppTest {
 		// Update asset
 		setupCall()
 			.withHttpMethod(DELETE)
-			.withServicePath("/assets/" + id)
+			.withServicePath(PATH + "/" + id)
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
@@ -235,4 +239,5 @@ class AssetsIT extends AbstractAppTest {
 		// Verify non existing asset after delete
 		assertThat(repository.findById(id)).isEmpty();
 	}
+
 }

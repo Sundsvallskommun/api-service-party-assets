@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,8 @@ import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 
 @ExtendWith(MockitoExtension.class)
 class StatusServiceTest {
+
+	private static final String MUNICIPALITY_ID = "2281";
 
 	@Mock
 	private StatusRepository repositoryMock;
@@ -45,13 +48,13 @@ class StatusServiceTest {
 		when(repositoryMock.findAll()).thenReturn(List.of(StatusEntity.create().withName(status.name()).withReasons(reasons)));
 
 		// Act
-		final var reasonsForAllStatuses = service.getReasonsForAllStatuses();
+		final var reasonsForAllStatuses = service.getReasonsForAllStatuses(MUNICIPALITY_ID);
 
 		// Assert
 		verify(repositoryMock).findAll();
 		verifyNoMoreInteractions(repositoryMock);
 		assertThat(reasonsForAllStatuses).isNotEmpty()
-			.extractingFromEntries(e -> e.getKey(), e -> e.getValue())
+			.extractingFromEntries(Map.Entry::getKey, Map.Entry::getValue)
 			.containsExactly(tuple(status, reasons));
 	}
 
@@ -64,7 +67,7 @@ class StatusServiceTest {
 		when(repositoryMock.findById(status.name())).thenReturn(Optional.of(StatusEntity.create().withReasons(reasons)));
 
 		// Act
-		final var blockedReasons = service.getReasons(status);
+		final var blockedReasons = service.getReasons(MUNICIPALITY_ID,status);
 
 		// Assert
 		verify(repositoryMock).findById(status.name());
@@ -78,7 +81,7 @@ class StatusServiceTest {
 		when(repositoryMock.findById(any())).thenReturn(Optional.empty());
 
 		// Act
-		final var blockedReasons = service.getReasons(Status.BLOCKED);
+		final var blockedReasons = service.getReasons(MUNICIPALITY_ID,Status.BLOCKED);
 
 		// Assert
 		verify(repositoryMock).findById(Status.BLOCKED.name());
@@ -93,7 +96,7 @@ class StatusServiceTest {
 		final var reasons = List.of("BLOCKED_REASON_1", "BLOCKED_REASON_2");
 
 		// Act
-		service.createReasons(status, reasons);
+		service.createReasons(MUNICIPALITY_ID,status, reasons);
 
 		// Assert
 		verify(repositoryMock).existsById(status.name());
@@ -113,7 +116,7 @@ class StatusServiceTest {
 		when(repositoryMock.existsById(status.name())).thenReturn(true);
 
 		// Act
-		final var e = assertThrows(ThrowableProblem.class, () -> service.createReasons(status, reasons));
+		final var e = assertThrows(ThrowableProblem.class, () -> service.createReasons(MUNICIPALITY_ID,status, reasons));
 
 		// Assert
 		verify(repositoryMock).existsById(status.name());
@@ -130,7 +133,7 @@ class StatusServiceTest {
 		when(repositoryMock.existsById(status.name())).thenReturn(true);
 
 		// Act
-		service.deleteReasons(status);
+		service.deleteReasons(MUNICIPALITY_ID, status);
 
 		// Assert
 		verify(repositoryMock).existsById(status.name());
@@ -143,7 +146,7 @@ class StatusServiceTest {
 		final var status = Status.ACTIVE;
 
 		// Act
-		final var e = assertThrows(ThrowableProblem.class, () -> service.deleteReasons(status));
+		final var e = assertThrows(ThrowableProblem.class, () -> service.deleteReasons(MUNICIPALITY_ID, status));
 
 		// Assert
 		verify(repositoryMock).existsById(status.name());

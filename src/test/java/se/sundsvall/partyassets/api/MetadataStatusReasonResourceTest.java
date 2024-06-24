@@ -32,6 +32,8 @@ import se.sundsvall.partyassets.service.StatusService;
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class MetadataStatusReasonResourceTest {
 
+	private static final String MUNICIPALITY_ID = "2281";
+
 	@MockBean
 	private StatusService serviceMock;
 
@@ -43,11 +45,11 @@ class MetadataStatusReasonResourceTest {
 		// Arrange
 		final var statusReasons = Map.of(Status.BLOCKED, List.of("REASON_1", "REASON_2", "REASON_3"), Status.EXPIRED, List.of("REASON_3", "REASON_4"));
 
-		when(serviceMock.getReasonsForAllStatuses()).thenReturn(statusReasons);
+		when(serviceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(statusReasons);
 
 		// Act
 		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.path("/metadata/statusreasons").build())
+			.uri(uriBuilder -> uriBuilder.path("/"+MUNICIPALITY_ID+"/metadata/statusreasons").build())
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -59,7 +61,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Assert
 		assertThat(response).isEqualTo(statusReasons);
-		verify(serviceMock).getReasonsForAllStatuses();
+		verify(serviceMock).getReasonsForAllStatuses(MUNICIPALITY_ID);
 		verifyNoMoreInteractions(serviceMock);
 	}
 
@@ -69,11 +71,11 @@ class MetadataStatusReasonResourceTest {
 		final var status = Status.EXPIRED;
 		final var statusReasons = List.of("REASON_3", "REASON_4");
 
-		when(serviceMock.getReasons(status)).thenReturn(statusReasons);
+		when(serviceMock.getReasons(MUNICIPALITY_ID,status)).thenReturn(statusReasons);
 
 		// Act
 		final var response = webTestClient.get()
-			.uri("/metadata/statusreasons/{status}", status)
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", status)
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -85,7 +87,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Assert
 		assertThat(response).isEqualTo(statusReasons);
-		verify(serviceMock).getReasons(status);
+		verify(serviceMock).getReasons(MUNICIPALITY_ID,status);
 		verifyNoMoreInteractions(serviceMock);
 	}
 
@@ -101,7 +103,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.get()
-			.uri("/metadata/statusreasons/{status}", "BOGUS_STATUS")
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", "BOGUS_STATUS")
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()
@@ -123,15 +125,15 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/metadata/statusreasons/{status}", status)
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", status)
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
 			.isCreated()
-			.expectHeader().location("/metadata/statusreasons/" + status);
+			.expectHeader().location("/"+MUNICIPALITY_ID+"/metadata/statusreasons/" + status);
 
 		// Assert
-		verify(serviceMock).createReasons(status, body);
+		verify(serviceMock).createReasons(MUNICIPALITY_ID,status, body);
 		verifyNoMoreInteractions(serviceMock);
 	}
 
@@ -148,7 +150,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/metadata/statusreasons/{status}", "BOGUS_STATUS")
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", "BOGUS_STATUS")
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
@@ -165,7 +167,7 @@ class MetadataStatusReasonResourceTest {
 	@ParameterizedTest
 	@ValueSource(strings = { " " })
 	@NullAndEmptySource
-	void createStatusReasonsFromInvalidStrings(String value) {
+	void createStatusReasonsFromInvalidStrings(final String value) {
 		// Arrange
 		final var status = Status.BLOCKED;
 		final var body = new ArrayList<>();
@@ -184,7 +186,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/metadata/statusreasons/{status}", status)
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", status)
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
@@ -216,7 +218,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.post()
-			.uri("/metadata/statusreasons/{status}", status)
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", status)
 			.bodyValue(body)
 			.exchange()
 			.expectStatus()
@@ -237,13 +239,13 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.delete()
-			.uri("/metadata/statusreasons/{status}", status)
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", status)
 			.exchange()
 			.expectStatus()
 			.isNoContent();
 
 		// Assert
-		verify(serviceMock).deleteReasons(status);
+		verify(serviceMock).deleteReasons(MUNICIPALITY_ID, status);
 		verifyNoMoreInteractions(serviceMock);
 	}
 
@@ -259,7 +261,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		webTestClient.delete()
-			.uri("/metadata/statusreasons/{status}", "BOGUS_STATUS")
+			.uri("/"+MUNICIPALITY_ID+"/metadata/statusreasons/{status}", "BOGUS_STATUS")
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()

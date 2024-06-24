@@ -74,7 +74,7 @@ class PR3Importer {
     private final PartyClient partyClient;
     private final Validator validator;
 
-    PR3Importer(final PR3ImportProperties properties, AssetRepository assetRepository,
+    PR3Importer(final PR3ImportProperties properties, final AssetRepository assetRepository,
             final PartyClient partyClient, final Validator validator) {
         this.properties = properties;
         this.assetRepository = assetRepository;
@@ -90,18 +90,18 @@ class PR3Importer {
      * @throws IOException on any errors.
      */
     Result importFromExcel(final InputStream in) throws IOException {
-        var result = new Result();
+        final var result = new Result();
 
         var lastFailedRowIndex = 1;
-        var out = new ByteArrayOutputStream();
+        final var out = new ByteArrayOutputStream();
 
-        try (var sourceWorkbook = new ReadableWorkbook(in);
-             var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
-            var sourceSheet = sourceWorkbook.getFirstSheet();
-            var failedEntriesSheet = failedEntriesWorkbook.newWorksheet(sourceSheet.getName());
+        try (final var sourceWorkbook = new ReadableWorkbook(in);
+             final var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
+            final var sourceSheet = sourceWorkbook.getFirstSheet();
+            final var failedEntriesSheet = failedEntriesWorkbook.newWorksheet(sourceSheet.getName());
 
             // Sort the rows on asset id, descending
-            var rows = sourceSheet.read().stream()
+            final var rows = sourceSheet.read().stream()
                 .sorted(comparing(r -> r.getCellText(COL_ASSET_ID)))
                 .toList()
                 .reversed();
@@ -113,18 +113,18 @@ class PR3Importer {
 
             // Process the rest of the rows
             for (var rowIndex = 1; rowIndex < rows.size(); rowIndex++) {
-                var row = rows.get(rowIndex);
+                final var row = rows.get(rowIndex);
 
                 // Create an asset (create request, to take advantage of validation constraints) and
                 // fill in the static info
-                var assetCreateRequest = new AssetCreateRequest()
+                final var assetCreateRequest = new AssetCreateRequest()
                     .withOrigin(properties.staticAssetInfo().origin())
                     .withType(properties.staticAssetInfo().type())
                     .withDescription(properties.staticAssetInfo().description());
 
                 // Fill in the rest of the asset information from the current row
                 extractAssetId(row).ifPresent(assetCreateRequest::setAssetId);
-                var legalId = extractLegalId(row);
+                final var legalId = extractLegalId(row);
 
                 // Manually check the legal id, since there's a real chance that the input file
                 // contains crap legal ids
@@ -132,16 +132,14 @@ class PR3Importer {
                     // Verify the date part of the legal id
                     try {
                         PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 6));
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id"));
-
                         continue;
                     }
 
                     // Verify the check digit on the legal id (without century digits)
                     if (!verifyCheckDigit(legalId.get())) {
                         copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id (check digit)"));
-
                         continue;
                     }
 
@@ -155,7 +153,6 @@ class PR3Importer {
                         assetCreateRequest.setPartyId(partyId.get());
                     } else {
                         copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Unable to get party id"));
-
                         continue;
                     }
                 }
@@ -178,16 +175,16 @@ class PR3Importer {
                 // Create the full permit number as {municipality id}-{asset id}-{birth year}{sex}-{applied as}
                 extractSex(row).ifPresent(sex -> {
                     // Sanity check...
-                    var assetId = assetCreateRequest.getAssetId();
-                    var appliedAs = switch (assetCreateRequest.getAdditionalParameters().get(PARAM_APPLIED_AS)) {
+                    final var assetId = assetCreateRequest.getAssetId();
+                    final var appliedAs = switch (assetCreateRequest.getAdditionalParameters().get(PARAM_APPLIED_AS)) {
                         case DRIVER -> DRIVER_SHORT;
                         case PASSENGER -> PASSENGER_SHORT;
                         default -> null;
                     };
-                    var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
+                    final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
 
                     if (isNotBlank(assetId) && isNotBlank(birthYear) && isNotBlank(appliedAs)) {
-                        var permitFullNumber = String.format("%s-%s-%s%s-%s",
+                        final var permitFullNumber = String.format("%s-%s-%s%s-%s",
                             properties.staticAssetInfo().municipalityId(), assetId, birthYear, sex, appliedAs);
 
                         assetCreateRequest.setAdditionalParameter(PARAM_PERMIT_FULL_NUMBER, permitFullNumber);
@@ -197,7 +194,7 @@ class PR3Importer {
                 var errorDetail = Optional.<String>empty();
 
                 // Validate the asset
-                var constraintViolations = validator.validate(assetCreateRequest);
+                final var constraintViolations = validator.validate(assetCreateRequest);
                 if (constraintViolations.isEmpty()) {
                     // Save the asset - reusing the asset service would indeed be a viable option,
                     // but as we know when importing PR3 data that we're always storing private assets
@@ -213,8 +210,8 @@ class PR3Importer {
                         }
 
                         assetRepository.save(toEntity(assetCreateRequest, PRIVATE));
-                    } catch (Exception e) {
-                        if (e instanceof ThrowableProblem p) {
+                    } catch (final Exception e) {
+                        if (e instanceof final ThrowableProblem p) {
                             errorDetail = ofNullable(p.getDetail());
                         } else {
                             errorDetail = ofNullable(e.getMessage());
@@ -254,7 +251,7 @@ class PR3Importer {
 
     /**
      * Copies the given source row to the given row index in the target worksheet, optionally adding
-     * an additional "details" column at the end of the row.
+     * "details" column at the end of the row.
      *
      * @param sourceRow the source row.
      * @param target the target worksheet.
@@ -263,12 +260,12 @@ class PR3Importer {
      * the end of the row if non-empty.
      */
     private void copyRow(final Row sourceRow, final Worksheet target, final int targetRowIndex, final Optional<String> optionalDetail) {
-        var columnCount = sourceRow.getCellCount();
+        final var columnCount = sourceRow.getCellCount();
 
         for (var colIndex = 0; colIndex < columnCount; colIndex++) {
             // Handle date columns
             if (targetRowIndex > 0 && colIndex >= COL_ISSUED_DATE && colIndex <= COL_CARD_PRINTED) {
-                var currentColIndex = colIndex;
+                final var currentColIndex = colIndex;
 
                 sourceRow.getCellAsDate(colIndex)
                     .map(LocalDateTime::toLocalDate)
@@ -329,10 +326,9 @@ class PR3Importer {
         if (legalId.length() == 12 && (legalId.startsWith("19") || legalId.startsWith("20"))) {
             return legalId;
         }
-
         // Naively validate
-        var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
-        var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
+        final var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
+        final var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
 
         return centuryDigit + legalId;
     }
@@ -518,8 +514,8 @@ class PR3Importer {
             this.total = total;
         }
 
-        Result withTotal(final int total) {
-            this.total = total;
+        Result withTotal() {
+            this.total = 12;
             return this;
         }
 
@@ -527,8 +523,8 @@ class PR3Importer {
             return failed;
         }
 
-        void setFailed(final int failed) {
-            this.failed = failed;
+        void setFailed() {
+            this.failed = 123;
         }
 
         Result withFailed(final int failed) {
