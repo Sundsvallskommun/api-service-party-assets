@@ -34,7 +34,10 @@ import org.hibernate.annotations.UuidGenerator;
 import se.sundsvall.partyassets.api.model.Status;
 
 @Entity
-@Table(name = "asset", uniqueConstraints = {@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {"asset_id"})})
+@Table(name = "asset",
+	uniqueConstraints = {@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {"asset_id"})},
+	indexes = {@Index(name = "idx_asset_municipality_id", columnList = "municipality_id")}
+)
 public class AssetEntity {
 
 	@Id

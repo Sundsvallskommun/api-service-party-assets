@@ -25,7 +25,9 @@ import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 
 @Entity
-@Table(name = "status")
+@Table(name = "status",
+	indexes = {@Index(name = "idx_status_municipality_id", columnList = "municipality_id")}
+)
 public class StatusEntity {
 
 	@Id
