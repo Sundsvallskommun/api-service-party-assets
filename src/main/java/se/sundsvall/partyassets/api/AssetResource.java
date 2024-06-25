@@ -26,12 +26,15 @@ import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
+import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
@@ -41,7 +44,7 @@ import se.sundsvall.partyassets.service.AssetService;
 
 @RestController
 @Validated
-@RequestMapping(value = "/assets")
+@RequestMapping(value = "/{municipalityId}/assets")
 @Tag(name = "Assets")
 @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = { Problem.class, ConstraintViolationProblem.class })))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
@@ -55,15 +58,19 @@ public class AssetResource {
 
 	@GetMapping(produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
-	public ResponseEntity<List<Asset>> getAssets(@ParameterObject @Valid final AssetSearchRequest request) {
-		return ok(service.getAssets(request));
+	public ResponseEntity<List<Asset>> getAssets(
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@ParameterObject @Valid final AssetSearchRequest request) {
+		return ok(service.getAssets(municipalityId,request));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
-	public ResponseEntity<Void> createAsset(@Valid @RequestBody final AssetCreateRequest asset) {
-		final var result = service.createAsset(asset);
-		return created(fromPath("/assets/{id}").buildAndExpand(result).toUri())
+	public ResponseEntity<Void> createAsset(
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Valid @RequestBody final AssetCreateRequest asset) {
+		final var result = service.createAsset(municipalityId,asset);
+		return created(fromPath("/"+municipalityId+"/assets/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
@@ -71,15 +78,19 @@ public class AssetResource {
 	@PutMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true)
 	@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	public ResponseEntity<Void> updateAsset(@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
-		service.updateAsset(id, asset);
+	public ResponseEntity<Void> updateAsset(
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
+		service.updateAsset(municipalityId,id, asset);
 		return noContent().build();
 	}
 
 	@DeleteMapping(path = "{id}", produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true)
-	public ResponseEntity<Void> deleteAsset(@PathVariable("id") @ValidUuid final String id) {
-		service.deleteAsset(id);
+	public ResponseEntity<Void> deleteAsset(
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable("id") @ValidUuid final String id) {
+		service.deleteAsset(municipalityId,id);
 		return noContent().build();
 	}
 }

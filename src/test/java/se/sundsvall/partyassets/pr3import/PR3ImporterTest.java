@@ -13,8 +13,10 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.dhatim.fastexcel.reader.Row;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +38,8 @@ class PR3ImporterTest {
     private AssetRepository mockAssetRepository;
     @MockBean
     private PartyClient mockPartyClient;
+    @MockBean
+    private Row mockRow;
 
     @Value("classpath:test.xlsx")
     private Resource importFileResource;
@@ -48,7 +52,7 @@ class PR3ImporterTest {
         when(mockPartyClient.getPartyId(eq(PRIVATE), anyString()))
             .thenReturn(of(UUID.randomUUID().toString()));
 
-        var result = importer.importFromExcel(importFileResource.getInputStream());
+        final var result = importer.importFromExcel(importFileResource.getInputStream());
 
         assertThat(result).isNotNull();
         assertThat(result.getTotal()).isEqualTo(3);
@@ -70,5 +74,42 @@ class PR3ImporterTest {
         assertThat(importer.addCenturyDigitToLegalId("200301021456")).isEqualTo("200301021456");
         assertThat(importer.addCenturyDigitToLegalId("6505018585")).isEqualTo("196505018585");
         assertThat(importer.addCenturyDigitToLegalId("0301021456")).isEqualTo("200301021456");
+    }
+
+
+    @Test
+    void testExtractLegalIdWithCenturyDigits() {
+        // Arrange
+        when(mockRow.getCellText(10)).thenReturn("191234567890");
+
+        // Act
+        final Optional<String> result = importer.extractLegalId(mockRow);
+
+        // Assert
+        assertThat(result).isPresent().contains("1234567890");
+    }
+
+    @Test
+    void testExtractLegalIdWithoutCenturyDigits() {
+        // Arrange
+        when(mockRow.getCellText(10)).thenReturn("1234567890");
+
+        // Act
+        final Optional<String> result = importer.extractLegalId(mockRow);
+
+        // Assert
+        assertThat(result).isPresent().contains("1234567890");
+    }
+
+    @Test
+    void testExtractLegalIdWithEmptyString() {
+        // Arrange
+        when(mockRow.getCellText(10)).thenReturn("");
+
+        // Act
+        final Optional<String> result = importer.extractLegalId(mockRow);
+
+        // Assert
+        assertThat(result).isNotPresent();
     }
 }

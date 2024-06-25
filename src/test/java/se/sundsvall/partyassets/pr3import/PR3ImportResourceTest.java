@@ -34,6 +34,7 @@ class PR3ImportResourceTest {
 
 	@MockBean
 	private PR3Importer mockImporter;
+
 	@MockBean
 	private PR3ImportMessagingClient mockMessagingClient;
 
@@ -42,18 +43,18 @@ class PR3ImportResourceTest {
 
 	@Test
 	void handleImport() throws IOException {
-		var importFile = new ClassPathResource("/test.xlsx");
-		var importResult = new PR3Importer.Result()
+		final var importFile = new ClassPathResource("/test.xlsx");
+		final var importResult = new PR3Importer.Result()
 			.withTotal(12)
 			.withFailed(2)
 			.withFailedExcelData(importFile.getContentAsByteArray());
 		when(mockImporter.importFromExcel(any(InputStream.class))).thenReturn(importResult);
 
-		var multipartBodyBuilder = new MultipartBodyBuilder();
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
 		multipartBodyBuilder.part("file", importFile);
 		multipartBodyBuilder.part("email", "someone@something.com");
 
-		var result = webTestClient.post()
+		final var result = webTestClient.post()
 			.uri("/pr3import")
 			.contentType(MULTIPART_FORM_DATA)
 			.body(fromMultipartData(multipartBodyBuilder.build()))
@@ -79,7 +80,7 @@ class PR3ImportResourceTest {
 
 	@Test
 	void handleImportWithInvalidInput() {
-		var response = webTestClient.post()
+		final var response = webTestClient.post()
 			.uri("/pr3import")
 			.contentType(MULTIPART_FORM_DATA)
 			.exchange()
@@ -98,4 +99,5 @@ class PR3ImportResourceTest {
 		verifyNoInteractions(mockImporter);
 		verifyNoInteractions(mockMessagingClient);
 	}
+
 }

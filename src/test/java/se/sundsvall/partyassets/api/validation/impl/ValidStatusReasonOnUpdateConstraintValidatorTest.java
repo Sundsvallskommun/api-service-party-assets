@@ -7,6 +7,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
+import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +20,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
@@ -28,6 +33,11 @@ import se.sundsvall.partyassets.service.StatusService;
 
 @ExtendWith(MockitoExtension.class)
 class ValidStatusReasonOnUpdateConstraintValidatorTest {
+
+	private static final String MUNICIPALITY_ID = "2281";
+
+	static final String PATH_VARIABLE_MUNICIPALITY_ID = "municipalityId";
+
 	private static final String ERROR_MESSAGE = "'%s' is not valid reason for status %s. Valid reasons are %s.";
 
 	private static final Map<Status, List<String>> VALID_STATUS_REASONS_FOR_STATUSES = Map.of(
@@ -42,23 +52,41 @@ class ValidStatusReasonOnUpdateConstraintValidatorTest {
 	@Mock
 	private StatusService statusServiceMock;
 
+	@Mock
+	private RequestAttributes requestAttributesMock;
+
 	@InjectMocks
 	private ValidStatusReasonOnUpdateConstraintValidator validator;
 
 	@ParameterizedTest
 	@MethodSource("validReasonStatusesProvider")
-	void testValidReasonStatuses(Status status, String statusReason, List<String> validReasons) {
-		lenient().when(statusServiceMock.getReasonsForAllStatuses()).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+	void testValidReasonStatuses(final Status status, final String statusReason, final List<String> validReasons) {
 
-		assertThat(validator.isValid(AssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isTrue();
+		final var attributes = Map.of(PATH_VARIABLE_MUNICIPALITY_ID, MUNICIPALITY_ID);
 
-		verifyNoInteractions(constraintValidatorContextMock);
+
+		try (final var requestContextHolderMock = Mockito.mockStatic(RequestContextHolder.class)) {
+			requestContextHolderMock.when(RequestContextHolder::getRequestAttributes).thenReturn(requestAttributesMock);
+			lenient().when(requestAttributesMock.getAttribute(URI_TEMPLATE_VARIABLES_ATTRIBUTE, SCOPE_REQUEST)).thenReturn(attributes);
+			lenient().when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+
+			assertThat(validator.isValid(AssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isTrue();
+
+			verifyNoInteractions(constraintValidatorContextMock);
+
+		}
 	}
 
 	@ParameterizedTest
 	@MethodSource("invalidReasonStatusesProvider")
-	void testInvalidReasonStatuses(Status status, String statusReason, List<String> validReasons) {
-		when(statusServiceMock.getReasonsForAllStatuses()).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+	void testInvalidReasonStatuses(final Status status, final String statusReason, final List<String> validReasons) {
+
+		final var attributes = Map.of(PATH_VARIABLE_MUNICIPALITY_ID, MUNICIPALITY_ID);
+
+		try (final var requestContextHolderMock = Mockito.mockStatic(RequestContextHolder.class)) {
+			requestContextHolderMock.when(RequestContextHolder::getRequestAttributes).thenReturn(requestAttributesMock);
+			lenient().when(requestAttributesMock.getAttribute(URI_TEMPLATE_VARIABLES_ATTRIBUTE, SCOPE_REQUEST)).thenReturn(attributes);
+		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
 
 		assertThat(validator.isValid(AssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isFalse();
@@ -66,6 +94,8 @@ class ValidStatusReasonOnUpdateConstraintValidatorTest {
 		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
 		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate(ERROR_MESSAGE.formatted(statusReason, status, validReasons));
 		verify(constraintViolationBuilderMock).addConstraintViolation();
+
+		}
 	}
 
 	private static Stream<Arguments> validReasonStatusesProvider() {

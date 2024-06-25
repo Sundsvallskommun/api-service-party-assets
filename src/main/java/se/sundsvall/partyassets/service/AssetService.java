@@ -31,14 +31,14 @@ public class AssetService {
 		this.partyTypeProvider = partyTypeProvider;
 	}
 
-	public List<Asset> getAssets(AssetSearchRequest request) {
+	public List<Asset> getAssets(final String municipalityId, AssetSearchRequest request) {
 		return repository.findAll(createAssetSpecification(request))
 			.stream()
 			.map(AssetMapper::toAsset)
 			.toList();
 	}
 
-	public String createAsset(final AssetCreateRequest request) {
+	public String createAsset(final String municipalityId,final AssetCreateRequest request) {
 		if (repository.existsByAssetId(request.getAssetId())) {
 			throw Problem.builder()
 				.withStatus(CONFLICT)
@@ -49,7 +49,7 @@ public class AssetService {
 		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(request.getPartyId()))).getId();
 	}
 
-	public void deleteAsset(final String id) {
+	public void deleteAsset(final String municipalityId, final String id) {
 		if (!repository.existsById(id)) {
 			throw Problem.builder()
 				.withStatus(NOT_FOUND)
@@ -60,7 +60,7 @@ public class AssetService {
 		repository.deleteById(id);
 	}
 
-	public void updateAsset(final String id, final AssetUpdateRequest request) {
+	public void updateAsset(final String municipalityId,final String id, final AssetUpdateRequest request) {
 
 		final var old = repository.findById(id)
 			.orElseThrow(() -> Problem.builder()

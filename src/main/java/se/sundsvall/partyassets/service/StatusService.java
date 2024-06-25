@@ -30,23 +30,23 @@ public class StatusService {
 		this.repository = repository;
 	}
 
-	@Cacheable(value = CACHE_NAME, key = "{#root.methodName}")
-	public Map<Status, List<String>> getReasonsForAllStatuses() {
+	@Cacheable(value = CACHE_NAME, key = "{#root.methodName, #municipalityId}")
+	public Map<Status, List<String>> getReasonsForAllStatuses(final String municipalityId) {
 		return toReasons(repository.findAll());
 	}
 
-	@Cacheable(value = CACHE_NAME, key = "{#root.methodName, #status}")
-	public List<String> getReasons(Status status) {
+	@Cacheable(value = CACHE_NAME, key = "{#root.methodName, #municipalityId, #status}")
+	public List<String> getReasons(final String municipalityId, final Status status) {
 		return repository.findById(status.name())
 			.map(StatusEntity::getReasons)
 			.orElse(emptyList());
 	}
 
 	@Caching(evict = {
-		@CacheEvict(value = CACHE_NAME, key = "{'getReasonsForAllStatuses'}"),
-		@CacheEvict(value = CACHE_NAME, key = "{'getReasons', #status}")
+		@CacheEvict(value = CACHE_NAME, key = "{'getReasonsForAllStatuses', #municipalityId}"),
+		@CacheEvict(value = CACHE_NAME, key = "{'getReasons', #municipalityId, #status}")
 	})
-	public void createReasons(Status status, List<String> statusReasons) {
+	public void createReasons(final String municipalityId, final Status status, final List<String> statusReasons) {
 		if (repository.existsById(status.name())) {
 			throw Problem.valueOf(CONFLICT, "Statusreasons already exists for status %s".formatted(status.name()));
 		}
@@ -54,13 +54,14 @@ public class StatusService {
 	}
 
 	@Caching(evict = {
-		@CacheEvict(value = CACHE_NAME, key = "{'getReasonsForAllStatuses'}"),
-		@CacheEvict(value = CACHE_NAME, key = "{'getReasons', #status}")
+		@CacheEvict(value = CACHE_NAME, key = "{'getReasonsForAllStatuses', #municipalityId}"),
+		@CacheEvict(value = CACHE_NAME, key = "{'getReasons', #municipalityId, #status}")
 	})
-	public void deleteReasons(Status status) {
+	public void deleteReasons(final String municipalityId, final Status status) {
 		if (!repository.existsById(status.name())) {
 			throw Problem.valueOf(NOT_FOUND, "Status %s does not have any statusreasons to delete".formatted(status.name()));
 		}
 		repository.deleteById(status.name());
 	}
+
 }

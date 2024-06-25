@@ -35,6 +35,8 @@ import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 })
 class MetadataStatusReasonsIT extends AbstractAppTest {
 
+	private static final String MUNICIPALITY_ID = "/2281";
+
 	@Autowired
 	private StatusRepository repository;
 
@@ -49,10 +51,10 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
-			.withServicePath("/metadata/statusreasons/%s".formatted(status.name()))
+			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("^/metadata/statusreasons/%s".formatted(status.name())))
+			.withExpectedResponseHeader(LOCATION, List.of("^"+MUNICIPALITY_ID+"/metadata/statusreasons/%s".formatted(status.name())))
 			.sendRequestAndVerifyResponse();
 
 		// Assert that status and corresponding status reasons has been created
@@ -71,7 +73,7 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Act and assert
 		setupCall()
 			.withHttpMethod(HttpMethod.GET)
-			.withServicePath("/metadata/statusreasons/%s".formatted(status.name()))
+			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("response.json")
 			.sendRequestAndVerifyResponse();
@@ -83,7 +85,7 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Act and assert
 		setupCall()
 			.withHttpMethod(HttpMethod.GET)
-			.withServicePath("/metadata/statusreasons")
+			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons")
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("response.json")
 			.sendRequestAndVerifyResponse();
@@ -100,9 +102,10 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Act and assert
 		setupCall()
 			.withHttpMethod(HttpMethod.DELETE)
-			.withServicePath("/metadata/statusreasons/%s".formatted(status.name()))
+			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
 			.withExpectedResponseStatus(NO_CONTENT)
 			.sendRequestAndVerifyResponse()
 			.andVerifyThat(() -> !repository.existsById(status.name()));
 	}
+
 }
