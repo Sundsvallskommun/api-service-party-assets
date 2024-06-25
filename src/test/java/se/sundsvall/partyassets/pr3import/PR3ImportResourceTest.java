@@ -34,6 +34,7 @@ class PR3ImportResourceTest {
 
 	@MockBean
 	private PR3Importer mockImporter;
+
 	@MockBean
 	private PR3ImportMessagingClient mockMessagingClient;
 
@@ -44,7 +45,7 @@ class PR3ImportResourceTest {
 	void handleImport() throws IOException {
 		final var importFile = new ClassPathResource("/test.xlsx");
 		final var importResult = new PR3Importer.Result()
-			.withTotal()
+			.withTotal(12)
 			.withFailed(2)
 			.withFailedExcelData(importFile.getContentAsByteArray());
 		when(mockImporter.importFromExcel(any(InputStream.class))).thenReturn(importResult);
@@ -98,4 +99,5 @@ class PR3ImportResourceTest {
 		verifyNoInteractions(mockImporter);
 		verifyNoInteractions(mockMessagingClient);
 	}
+
 }

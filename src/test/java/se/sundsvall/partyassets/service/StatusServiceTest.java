@@ -67,7 +67,7 @@ class StatusServiceTest {
 		when(repositoryMock.findById(status.name())).thenReturn(Optional.of(StatusEntity.create().withReasons(reasons)));
 
 		// Act
-		final var blockedReasons = service.getReasons(MUNICIPALITY_ID,status);
+		final var blockedReasons = service.getReasons(MUNICIPALITY_ID, status);
 
 		// Assert
 		verify(repositoryMock).findById(status.name());
@@ -81,7 +81,7 @@ class StatusServiceTest {
 		when(repositoryMock.findById(any())).thenReturn(Optional.empty());
 
 		// Act
-		final var blockedReasons = service.getReasons(MUNICIPALITY_ID,Status.BLOCKED);
+		final var blockedReasons = service.getReasons(MUNICIPALITY_ID, Status.BLOCKED);
 
 		// Assert
 		verify(repositoryMock).findById(Status.BLOCKED.name());
@@ -96,7 +96,7 @@ class StatusServiceTest {
 		final var reasons = List.of("BLOCKED_REASON_1", "BLOCKED_REASON_2");
 
 		// Act
-		service.createReasons(MUNICIPALITY_ID,status, reasons);
+		service.createReasons(MUNICIPALITY_ID, status, reasons);
 
 		// Assert
 		verify(repositoryMock).existsById(status.name());
@@ -116,7 +116,7 @@ class StatusServiceTest {
 		when(repositoryMock.existsById(status.name())).thenReturn(true);
 
 		// Act
-		final var e = assertThrows(ThrowableProblem.class, () -> service.createReasons(MUNICIPALITY_ID,status, reasons));
+		final var e = assertThrows(ThrowableProblem.class, () -> service.createReasons(MUNICIPALITY_ID, status, reasons));
 
 		// Assert
 		verify(repositoryMock).existsById(status.name());
@@ -154,4 +154,5 @@ class StatusServiceTest {
 		assertThat(e.getStatus()).isEqualTo(org.zalando.problem.Status.NOT_FOUND);
 		assertThat(e.getMessage()).isEqualTo("Not Found: Status ACTIVE does not have any statusreasons to delete");
 	}
+
 }

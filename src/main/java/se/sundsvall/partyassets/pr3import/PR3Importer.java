@@ -42,511 +42,537 @@ import generated.se.sundsvall.party.PartyType;
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)
 class PR3Importer {
 
-    private static final String PARAM_REGISTRATION_NUMBER = "registrationNumber";
-    private static final String PARAM_CARD_PRINTED = "cardPrinted";
-    private static final String PARAM_SMART_PARK_SYNC = "smartParkSync";
-    private static final String PARAM_ISSUED_BY_ADMINISTRATION = "issuedByAdministration";
-    private static final String PARAM_ISSUED_BY_ADMINISTRATOR = "issuedByAdministrator";
-    private static final String PARAM_APPLIED_AS = "appliedAs";
-    private static final String PARAM_PERMIT_FULL_NUMBER = "permitFullNumber";
+	static final String DRIVER = "driver";
 
-    private static final int COL_SEX                        = 4;
-    private static final int COL_APPLIED_AS                 = 5;
-    private static final int COL_ASSET_ID                   = 7;
-    private static final int COL_LEGAL_ID                   = 10;
-    private static final int COL_REGISTRATION_NUMBER        = 15;
-    private static final int COL_ISSUED_DATE                = 16;
-    private static final int COL_VALID_TO_DATE              = 18;
-    private static final int COL_CARD_PRINTED               = 21;
-    private static final int COL_ISSUED_BY_ADMINISTRATION   = 23;
-    private static final int COL_ISSUED_BY_ADMINISTRATOR    = 24;
-    private static final int COL_SMART_PARK_SYNC            = 27;
+	static final String PASSENGER = "passenger";
 
-    static final String DRIVER = "driver";
-    static final String PASSENGER = "passenger";
-    static final String DRIVER_SHORT = "F";
-    static final String PASSENGER_SHORT = "P";
+	static final String DRIVER_SHORT = "F";
 
-    private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
+	static final String PASSENGER_SHORT = "P";
 
-    private final PR3ImportProperties properties;
-    private final AssetRepository assetRepository;
-    private final PartyClient partyClient;
-    private final Validator validator;
+	private static final String PARAM_REGISTRATION_NUMBER = "registrationNumber";
 
-    PR3Importer(final PR3ImportProperties properties, final AssetRepository assetRepository,
-            final PartyClient partyClient, final Validator validator) {
-        this.properties = properties;
-        this.assetRepository = assetRepository;
-        this.partyClient = partyClient;
-        this.validator = validator;
-    }
+	private static final String PARAM_CARD_PRINTED = "cardPrinted";
 
-    /**
-     * Imports assets from the Excel file read from the given input stream.
-     *
-     * @param in the input stream to read the Excel file from.
-     * @return the import result.
-     * @throws IOException on any errors.
-     */
-    Result importFromExcel(final InputStream in) throws IOException {
-        final var result = new Result();
+	private static final String PARAM_SMART_PARK_SYNC = "smartParkSync";
 
-        var lastFailedRowIndex = 1;
-        final var out = new ByteArrayOutputStream();
+	private static final String PARAM_ISSUED_BY_ADMINISTRATION = "issuedByAdministration";
 
-        try (final var sourceWorkbook = new ReadableWorkbook(in);
-             final var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
-            final var sourceSheet = sourceWorkbook.getFirstSheet();
-            final var failedEntriesSheet = failedEntriesWorkbook.newWorksheet(sourceSheet.getName());
+	private static final String PARAM_ISSUED_BY_ADMINISTRATOR = "issuedByAdministrator";
 
-            // Sort the rows on asset id, descending
-            final var rows = sourceSheet.read().stream()
-                .sorted(comparing(r -> r.getCellText(COL_ASSET_ID)))
-                .toList()
-                .reversed();
+	private static final String PARAM_APPLIED_AS = "appliedAs";
 
-            result.setTotal(rows.size() - 1);
+	private static final String PARAM_PERMIT_FULL_NUMBER = "permitFullNumber";
 
-            // Copy the header row
-            copyHeaderRow(rows.getFirst(), failedEntriesSheet);
+	private static final int COL_SEX = 4;
 
-            // Process the rest of the rows
-            for (var rowIndex = 1; rowIndex < rows.size(); rowIndex++) {
-                final var row = rows.get(rowIndex);
+	private static final int COL_APPLIED_AS = 5;
 
-                // Create an asset (create request, to take advantage of validation constraints) and
-                // fill in the static info
-                final var assetCreateRequest = new AssetCreateRequest()
-                    .withOrigin(properties.staticAssetInfo().origin())
-                    .withType(properties.staticAssetInfo().type())
-                    .withDescription(properties.staticAssetInfo().description());
+	private static final int COL_ASSET_ID = 7;
 
-                // Fill in the rest of the asset information from the current row
-                extractAssetId(row).ifPresent(assetCreateRequest::setAssetId);
-                final var legalId = extractLegalId(row);
+	private static final int COL_LEGAL_ID = 10;
 
-                // Manually check the legal id, since there's a real chance that the input file
-                // contains crap legal ids
-                if (legalId.isPresent()) {
-                    // Verify the date part of the legal id
-                    try {
-                        PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 6));
-                    } catch (final Exception e) {
-                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id"));
-                        continue;
-                    }
+	private static final int COL_REGISTRATION_NUMBER = 15;
 
-                    // Verify the check digit on the legal id (without century digits)
-                    if (!verifyCheckDigit(legalId.get())) {
-                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id (check digit)"));
-                        continue;
-                    }
+	private static final int COL_ISSUED_DATE = 16;
 
-                    // Attempt to get the party id, by trying first "19" and then "20" as century digits
-                    var partyId = partyClient.getPartyId(PartyType.PRIVATE, "19" + legalId.get());
-                    if (partyId.isEmpty()) {
-                        partyId = partyClient.getPartyId(PartyType.PRIVATE, "20" + legalId.get());
-                    }
+	private static final int COL_VALID_TO_DATE = 18;
 
-                    if (partyId.isPresent()) {
-                        assetCreateRequest.setPartyId(partyId.get());
-                    } else {
-                        copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Unable to get party id"));
-                        continue;
-                    }
-                }
+	private static final int COL_CARD_PRINTED = 21;
 
-                extractIssuedDate(row).ifPresent(assetCreateRequest::setIssued);
-                extractValidToDate(row).ifPresent(assetCreateRequest::setValidTo);
-                extractStatus(row).ifPresent(assetCreateRequest::setStatus);
-                extractRegistrationNumber(row).ifPresent(value ->
-                    assetCreateRequest.setAdditionalParameter(PARAM_REGISTRATION_NUMBER, value));
-                extractCardPrinted(row).ifPresent(value ->
-                    assetCreateRequest.setAdditionalParameter(PARAM_CARD_PRINTED, value.format(DateTimeFormatter.ISO_DATE)));
-                extractSmartParkSync(row).ifPresent(value ->
-                    assetCreateRequest.setAdditionalParameter(PARAM_SMART_PARK_SYNC, value));
-                extractIssuedByAdministration(row).ifPresent(value ->
-                    assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATION, value));
-                extractIssuedByAdministrator(row).ifPresent(value ->
-                    assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATOR, value));
-                extractAppliedAs(row).ifPresent(value ->
-                    assetCreateRequest.setAdditionalParameter(PARAM_APPLIED_AS, value));
-                // Create the full permit number as {municipality id}-{asset id}-{birth year}{sex}-{applied as}
-                extractSex(row).ifPresent(sex -> {
-                    // Sanity check...
-                    final var assetId = assetCreateRequest.getAssetId();
-                    final var appliedAs = switch (assetCreateRequest.getAdditionalParameters().get(PARAM_APPLIED_AS)) {
-                        case DRIVER -> DRIVER_SHORT;
-                        case PASSENGER -> PASSENGER_SHORT;
-                        default -> null;
-                    };
-                    final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
+	private static final int COL_ISSUED_BY_ADMINISTRATION = 23;
 
-                    if (isNotBlank(assetId) && isNotBlank(birthYear) && isNotBlank(appliedAs)) {
-                        final var permitFullNumber = String.format("%s-%s-%s%s-%s",
-                            properties.staticAssetInfo().municipalityId(), assetId, birthYear, sex, appliedAs);
+	private static final int COL_ISSUED_BY_ADMINISTRATOR = 24;
 
-                        assetCreateRequest.setAdditionalParameter(PARAM_PERMIT_FULL_NUMBER, permitFullNumber);
-                    }
-                });
+	private static final int COL_SMART_PARK_SYNC = 27;
 
-                var errorDetail = Optional.<String>empty();
+	private static final DateTimeFormatter PERSONAL_NUMBER_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
-                // Validate the asset
-                final var constraintViolations = validator.validate(assetCreateRequest);
-                if (constraintViolations.isEmpty()) {
-                    // Save the asset - reusing the asset service would indeed be a viable option,
-                    // but as we know when importing PR3 data that we're always storing private assets
-                    // we won't need to make the extra calls to the party service to determine the
-                    // actual party type
-                    try {
-                        if (assetRepository.existsByAssetId(assetCreateRequest.getAssetId())) {
-                            throw Problem.builder()
-                                .withStatus(CONFLICT)
-                                .withTitle("Asset already exists")
-                                .withDetail("Asset with assetId %s already exists".formatted(assetCreateRequest.getAssetId()))
-                                .build();
-                        }
+	private final PR3ImportProperties properties;
 
-                        assetRepository.save(toEntity(assetCreateRequest, PRIVATE));
-                    } catch (final Exception e) {
-                        if (e instanceof final ThrowableProblem p) {
-                            errorDetail = ofNullable(p.getDetail());
-                        } else {
-                            errorDetail = ofNullable(e.getMessage());
-                        }
-                    }
-                } else {
-                    errorDetail = ofNullable(constraintViolations.stream()
-                        .map(cv -> cv.getPropertyPath().toString() + " " + cv.getMessage())
-                        .collect(Collectors.joining(", ")));
-                }
+	private final AssetRepository assetRepository;
 
-                // We have a failed row - copy it and the error details
-                if (errorDetail.isPresent()) {
-                    copyRow(row, failedEntriesSheet, lastFailedRowIndex++, errorDetail);
-                }
-            }
-        }
+	private final PartyClient partyClient;
 
-        return result
-            .withFailed(lastFailedRowIndex - 1)
-            .withFailedExcelData(out.toByteArray());
-    }
+	private final Validator validator;
 
-    /**
-     * Copies the given source row to the target worksheet and sets the background to gray.
-     *
-     * @param sourceRow the source row.
-     * @param target the target worksheet.
-     */
-    private void copyHeaderRow(final Row sourceRow, final Worksheet target) {
-        copyRow(sourceRow, target, 0, Optional.empty());
+	PR3Importer(final PR3ImportProperties properties, final AssetRepository assetRepository,
+		final PartyClient partyClient, final Validator validator) {
+		this.properties = properties;
+		this.assetRepository = assetRepository;
+		this.partyClient = partyClient;
+		this.validator = validator;
+	}
 
-        for (var colIndex = 0; colIndex < sourceRow.getCellCount(); colIndex++) {
-            target.style(0, colIndex).fillColor(Color.GRAY3).set();
-        }
-    }
+	static boolean verifyCheckDigit(final String legalId) {
+		var sum = 0;
+		var alternate = false;
 
-    /**
-     * Copies the given source row to the given row index in the target worksheet, optionally adding
-     * "details" column at the end of the row.
-     *
-     * @param sourceRow the source row.
-     * @param target the target worksheet.
-     * @param targetRowIndex the target row index.
-     * @param optionalDetail an {@code Optional} that may hold additional "details" that is added to
-     * the end of the row if non-empty.
-     */
-    private void copyRow(final Row sourceRow, final Worksheet target, final int targetRowIndex, final Optional<String> optionalDetail) {
-        final var columnCount = sourceRow.getCellCount();
+		// Start from the right, moving left
+		for (var i = legalId.length() - 1; i >= 0; --i) {
+			// Get the current digit
+			int digit = Character.getNumericValue(legalId.charAt(i));
+			// Double every other digit
+			digit = alternate ? (digit * 2) : digit;
+			// Subtract 9 if the value is greater than 9 (the same as summing the digits)
+			digit = (digit > 9) ? (digit - 9) : digit;
+			// Add the digit to the sum
+			sum += digit;
+			// Flip the alternate flag
+			alternate = !alternate;
+		}
 
-        for (var colIndex = 0; colIndex < columnCount; colIndex++) {
-            // Handle date columns
-            if (targetRowIndex > 0 && colIndex >= COL_ISSUED_DATE && colIndex <= COL_CARD_PRINTED) {
-                final var currentColIndex = colIndex;
+		return (sum % 10) == 0;
+	}
 
-                sourceRow.getCellAsDate(colIndex)
-                    .map(LocalDateTime::toLocalDate)
-                    .ifPresent(date -> target.value(targetRowIndex, currentColIndex, date));
-            } else {
-                target.value(targetRowIndex, colIndex, sourceRow.getCellText(colIndex));
-            }
-        }
+	/**
+	 * Imports assets from the Excel file read from the given input stream.
+	 *
+	 * @param in the input stream to read the Excel file from.
+	 * @return the import result.
+	 * @throws IOException on any errors.
+	 */
+	Result importFromExcel(final InputStream in) throws IOException {
+		final var result = new Result();
 
-        optionalDetail.ifPresent(detail -> {
-            target.value(targetRowIndex, columnCount + 1, detail);
-            target.style(targetRowIndex, columnCount + 1).fontColor(Color.RED).set();
-        });
-    }
+		var lastFailedRowIndex = 1;
+		final var out = new ByteArrayOutputStream();
 
-    /**
-     * Extracts the legal id from the given row (column 10, "PERSONNR") and adds a century digit if
-     * needed.
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the legal id, or is empty.
-     */
-    Optional<String> extractLegalId(final Row row) {
-        return extractCell(row, COL_LEGAL_ID)
-            .map(this::cleanLegalId)
-            .filter(not(String::isBlank))
-            .map(legalId -> {
-                // Strip off any century digits, if present
-                if (legalId.matches("^\\d{12}$")) {
-                    return legalId.substring(2);
-                }
-                return legalId;
-            });
-    }
+		try (final var sourceWorkbook = new ReadableWorkbook(in);
+		     final var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
+			final var sourceSheet = sourceWorkbook.getFirstSheet();
+			final var failedEntriesSheet = failedEntriesWorkbook.newWorksheet(sourceSheet.getName());
 
-    /**
-     * Cleans and returns the provided legal id, removing everything but digits.
-     *
-     * @param legalId the legal id to clean.
-     * @return a legal id with digits only
-     */
-    String cleanLegalId(final String legalId) {
-        return legalId.replaceAll("\\D", "");
-    }
+			// Sort the rows on asset id, descending
+			final var rows = sourceSheet.read().stream()
+				.sorted(comparing(r -> r.getCellText(COL_ASSET_ID)))
+				.toList()
+				.reversed();
 
-    /**
-     * Naively adds a century digit to the given legal id, if it's missing.
-     *
-     * @param legalId the legal id to add the century digit to.
-     * @return the original legal id with a leading century digit, if it was previously missing.
-     */
-    String addCenturyDigitToLegalId(final String legalId) {
-        // Make sure we have digits only
-        if (legalId.isBlank() || !legalId.matches("^\\d+$")) {
-            return null;
-        }
-        // Do nothing if we already have a legal id with century digits
-        if (legalId.length() == 12 && (legalId.startsWith("19") || legalId.startsWith("20"))) {
-            return legalId;
-        }
-        // Naively validate
-        final var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
-        final var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
+			result.setTotal(rows.size() - 1);
 
-        return centuryDigit + legalId;
-    }
+			// Copy the header row
+			copyHeaderRow(rows.getFirst(), failedEntriesSheet);
 
-    /**
-     * Extracts the asset id from the given row (column 7, "TILLSTNR").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the asset id, or is empty.
-     */
-    Optional<String> extractAssetId(final Row row) {
-        return extractCell(row, COL_ASSET_ID);
-    }
+			// Process the rest of the rows
+			for (var rowIndex = 1; rowIndex < rows.size(); rowIndex++) {
+				final var row = rows.get(rowIndex);
 
-    /**
-     * Extracts the issued date from the given row (column 16, "UTFARDAT").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the issued date, or is empty.
-     */
-    Optional<LocalDate> extractIssuedDate(final Row row) {
-        return row.getCellAsDate(COL_ISSUED_DATE).map(LocalDateTime::toLocalDate);
-    }
+				// Create an asset (create request, to take advantage of validation constraints) and
+				// fill in the static info
+				final var assetCreateRequest = new AssetCreateRequest()
+					.withOrigin(properties.staticAssetInfo().origin())
+					.withType(properties.staticAssetInfo().type())
+					.withDescription(properties.staticAssetInfo().description());
 
-    /**
-     * Extracts the valid-to date from the given row (column 18, "GILTIGTTOM").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the valid-to date, or is empty.
-     */
-    Optional<LocalDate> extractValidToDate(final Row row) {
-        return row.getCellAsDate(COL_VALID_TO_DATE).map(LocalDateTime::toLocalDate);
-    }
+				// Fill in the rest of the asset information from the current row
+				extractAssetId(row).ifPresent(assetCreateRequest::setAssetId);
+				final var legalId = extractLegalId(row);
 
-    /**
-     * Extracts the status from the given row, by checking whether the valid-to date is after today
-     * or not.
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the status, or is empty.
-     */
-    Optional<Status> extractStatus(final Row row) {
-        return extractValidToDate(row)
-            .map(validToDate -> validToDate.isAfter(LocalDate.now()) ? Status.ACTIVE : Status.EXPIRED);
-    }
+				// Manually check the legal id, since there's a real chance that the input file
+				// contains crap legal ids
+				if (legalId.isPresent()) {
+					// Verify the date part of the legal id
+					try {
+						PERSONAL_NUMBER_FORMATTER.parse(legalId.get().substring(0, 6));
+					} catch (final Exception e) {
+						copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id"));
+						continue;
+					}
 
-    /**
-     * Extracts the registration number from the given row (column 15, "DIARIENR").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the registration number, or is empty.
-     */
-    Optional<String> extractRegistrationNumber(final Row row) {
-        return extractCell(row, COL_REGISTRATION_NUMBER);
-    }
+					// Verify the check digit on the legal id (without century digits)
+					if (!verifyCheckDigit(legalId.get())) {
+						copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Invalid legal id (check digit)"));
+						continue;
+					}
 
-    /**
-     * Extracts the date the card was printed from the given row (column 21, "UTSKRIVET").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the date the card was printed, or is empty.
-     */
-    Optional<LocalDateTime> extractCardPrinted(final Row row) {
-        return row.getCellAsDate(COL_CARD_PRINTED);
-    }
+					// Attempt to get the party id, by trying first "19" and then "20" as century digits
+					var partyId = partyClient.getPartyId(PartyType.PRIVATE, "19" + legalId.get());
+					if (partyId.isEmpty()) {
+						partyId = partyClient.getPartyId(PartyType.PRIVATE, "20" + legalId.get());
+					}
 
-    /**
-     * Extracts the "SmartCardSync" flag from the given row (column 27, "SmartParkSync").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
-     */
-    Optional<String> extractSmartParkSync(final Row row) {
-        return extractCell(row, COL_SMART_PARK_SYNC)
-            .map(Integer::parseInt)
-            .map(intValue -> switch (intValue) {
-                case 0 -> "false";
-                case 1 -> "true";
-                default -> null;
-            });
-    }
+					if (partyId.isPresent()) {
+						assetCreateRequest.setPartyId(partyId.get());
+					} else {
+						copyRow(row, failedEntriesSheet, lastFailedRowIndex++, of("Unable to get party id"));
+						continue;
+					}
+				}
 
-    /**
-     * Extracts the (name of the) administration that issued the card from the given row (column 23, "EXTRA1").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the (name of the) administration that issued
-     * the card, or is empty.
-     */
-    Optional<String> extractIssuedByAdministration(final Row row) {
-        return extractCell(row, COL_ISSUED_BY_ADMINISTRATION);
-    }
+				extractIssuedDate(row).ifPresent(assetCreateRequest::setIssued);
+				extractValidToDate(row).ifPresent(assetCreateRequest::setValidTo);
+				extractStatus(row).ifPresent(assetCreateRequest::setStatus);
+				extractRegistrationNumber(row).ifPresent(value ->
+					assetCreateRequest.setAdditionalParameter(PARAM_REGISTRATION_NUMBER, value));
+				extractCardPrinted(row).ifPresent(value ->
+					assetCreateRequest.setAdditionalParameter(PARAM_CARD_PRINTED, value.format(DateTimeFormatter.ISO_DATE)));
+				extractSmartParkSync(row).ifPresent(value ->
+					assetCreateRequest.setAdditionalParameter(PARAM_SMART_PARK_SYNC, value));
+				extractIssuedByAdministration(row).ifPresent(value ->
+					assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATION, value));
+				extractIssuedByAdministrator(row).ifPresent(value ->
+					assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATOR, value));
+				extractAppliedAs(row).ifPresent(value ->
+					assetCreateRequest.setAdditionalParameter(PARAM_APPLIED_AS, value));
+				// Create the full permit number as {municipality id}-{asset id}-{birth year}{sex}-{applied as}
+				extractSex(row).ifPresent(sex -> {
+					// Sanity check...
+					final var assetId = assetCreateRequest.getAssetId();
+					final var appliedAs = switch (assetCreateRequest.getAdditionalParameters().get(PARAM_APPLIED_AS)) {
+						case DRIVER -> DRIVER_SHORT;
+						case PASSENGER -> PASSENGER_SHORT;
+						default -> null;
+					};
+					final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
 
-    /**
-     * Extracts the (name of the) administrator that issued the card from the given row (column 24, "EXTRA2").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the (name of the) administrator that issued
-     * the card, or is empty.
-     */
-    Optional<String> extractIssuedByAdministrator(final Row row) {
-        return extractCell(row, COL_ISSUED_BY_ADMINISTRATOR);
-    }
+					if (isNotBlank(assetId) && isNotBlank(birthYear) && isNotBlank(appliedAs)) {
+						final var permitFullNumber = String.format("%s-%s-%s%s-%s",
+							properties.staticAssetInfo().municipalityId(), assetId, birthYear, sex, appliedAs);
 
-    /**
-     * Extracts whether the card was applied for as a driver or passenger from the given row (column 5, "PASSAGE").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains whether the card was applied for as a driver
-     * or passenger, or is empty.
-     */
-    Optional<String> extractAppliedAs(final Row row) {
-        return extractCell(row, COL_APPLIED_AS)
-            .map(Integer::parseInt)
-            .map(intValue -> switch (intValue) {
-                case 1 -> PASSENGER;
-                case 2 -> DRIVER;
-                default -> null;
-            });
-    }
+						assetCreateRequest.setAdditionalParameter(PARAM_PERMIT_FULL_NUMBER, permitFullNumber);
+					}
+				});
 
-    /**
-     * Extracts the sex as "K" for women and "M" for men, from the given row (column 4, "KON").
-     *
-     * @param row the row.
-     * @return an {@code Optional} that either contains the sex, or is empty.
-     */
-    Optional<String> extractSex(final Row row) {
-        return extractCell(row, COL_SEX)
-            .map(Integer::parseInt)
-            .map(intValue -> switch (intValue) {
-                case 0 -> "K";
-                case 1 -> "M";
-                default -> null;
-            });
-    }
+				var errorDetail = Optional.<String>empty();
 
-    /**
-     * Convenience method to extract the contents of a cell as a string, regardless of what type
-     * Excel treats it as.
-     *
-     * @param row the row.
-     * @param cellIndex the cell index.
-     * @return an {@code Optional} that either contains the cell value as a string, or is empty
-     */
-    Optional<String> extractCell(final Row row, final int cellIndex) {
-        return Optional.of(row.getCellText(cellIndex)).filter(not(String::isBlank));
-    }
+				// Validate the asset
+				final var constraintViolations = validator.validate(assetCreateRequest);
+				if (constraintViolations.isEmpty()) {
+					// Save the asset - reusing the asset service would indeed be a viable option,
+					// but as we know when importing PR3 data that we're always storing private assets
+					// we won't need to make the extra calls to the party service to determine the
+					// actual party type
+					try {
+						if (assetRepository.existsByAssetId(assetCreateRequest.getAssetId())) {
+							throw Problem.builder()
+								.withStatus(CONFLICT)
+								.withTitle("Asset already exists")
+								.withDetail("Asset with assetId %s already exists".formatted(assetCreateRequest.getAssetId()))
+								.build();
+						}
 
-    static boolean verifyCheckDigit(final String legalId) {
-        var sum = 0;
-        var alternate = false;
+						assetRepository.save(toEntity(assetCreateRequest, PRIVATE));
+					} catch (final Exception e) {
+						if (e instanceof final ThrowableProblem p) {
+							errorDetail = ofNullable(p.getDetail());
+						} else {
+							errorDetail = ofNullable(e.getMessage());
+						}
+					}
+				} else {
+					errorDetail = ofNullable(constraintViolations.stream()
+						.map(cv -> cv.getPropertyPath().toString() + " " + cv.getMessage())
+						.collect(Collectors.joining(", ")));
+				}
 
-        // Start from the right, moving left
-        for (var i = legalId.length() - 1; i >= 0; --i) {
-            // Get the current digit
-            int digit = Character.getNumericValue(legalId.charAt(i));
-            // Double every other digit
-            digit = alternate ? (digit * 2) : digit;
-            // Subtract 9 if the value is greater than 9 (the same as summing the digits)
-            digit = (digit > 9) ? (digit - 9) : digit;
-            // Add the digit to the sum
-            sum += digit;
-            // Flip the alternate flag
-            alternate = !alternate;
-        }
+				// We have a failed row - copy it and the error details
+				if (errorDetail.isPresent()) {
+					copyRow(row, failedEntriesSheet, lastFailedRowIndex++, errorDetail);
+				}
+			}
+		}
 
-        return (sum % 10) == 0;
-    }
+		return result
+			.withFailed(lastFailedRowIndex - 1)
+			.withFailedExcelData(out.toByteArray());
+	}
 
-    static class Result {
+	/**
+	 * Copies the given source row to the target worksheet and sets the background to gray.
+	 *
+	 * @param sourceRow the source row.
+	 * @param target the target worksheet.
+	 */
+	private void copyHeaderRow(final Row sourceRow, final Worksheet target) {
+		copyRow(sourceRow, target, 0, Optional.empty());
 
-        private int total;
-        private int failed;
-        @JsonIgnore
-        private byte[] failedExcelData;
+		for (var colIndex = 0; colIndex < sourceRow.getCellCount(); colIndex++) {
+			target.style(0, colIndex).fillColor(Color.GRAY3).set();
+		}
+	}
 
-        public int getTotal() {
-            return total;
-        }
+	/**
+	 * Copies the given source row to the given row index in the target worksheet, optionally adding
+	 * "details" column at the end of the row.
+	 *
+	 * @param sourceRow the source row.
+	 * @param target the target worksheet.
+	 * @param targetRowIndex the target row index.
+	 * @param optionalDetail an {@code Optional} that may hold additional "details" that is added to
+	 * the end of the row if non-empty.
+	 */
+	private void copyRow(final Row sourceRow, final Worksheet target, final int targetRowIndex, final Optional<String> optionalDetail) {
+		final var columnCount = sourceRow.getCellCount();
 
-        void setTotal(final int total) {
-            this.total = total;
-        }
+		for (var colIndex = 0; colIndex < columnCount; colIndex++) {
+			// Handle date columns
+			if (targetRowIndex > 0 && colIndex >= COL_ISSUED_DATE && colIndex <= COL_CARD_PRINTED) {
+				final var currentColIndex = colIndex;
 
-        Result withTotal() {
-            this.total = 12;
-            return this;
-        }
+				sourceRow.getCellAsDate(colIndex)
+					.map(LocalDateTime::toLocalDate)
+					.ifPresent(date -> target.value(targetRowIndex, currentColIndex, date));
+			} else {
+				target.value(targetRowIndex, colIndex, sourceRow.getCellText(colIndex));
+			}
+		}
 
-        public int getFailed() {
-            return failed;
-        }
+		optionalDetail.ifPresent(detail -> {
+			target.value(targetRowIndex, columnCount + 1, detail);
+			target.style(targetRowIndex, columnCount + 1).fontColor(Color.RED).set();
+		});
+	}
 
-        void setFailed() {
-            this.failed = 123;
-        }
+	/**
+	 * Extracts the legal id from the given row (column 10, "PERSONNR") and adds a century digit if
+	 * needed.
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the legal id, or is empty.
+	 */
+	Optional<String> extractLegalId(final Row row) {
+		return extractCell(row, COL_LEGAL_ID)
+			.map(this::cleanLegalId)
+			.filter(not(String::isBlank))
+			.map(legalId -> {
+				// Strip off any century digits, if present
+				if (legalId.matches("^\\d{12}$")) {
+					return legalId.substring(2);
+				}
+				return legalId;
+			});
+	}
 
-        Result withFailed(final int failed) {
-            this.failed = failed;
-            return this;
-        }
+	/**
+	 * Cleans and returns the provided legal id, removing everything but digits.
+	 *
+	 * @param legalId the legal id to clean.
+	 * @return a legal id with digits only
+	 */
+	String cleanLegalId(final String legalId) {
+		return legalId.replaceAll("\\D", "");
+	}
 
-        public int getSuccessful() {
-            return total - failed;
-        }
+	/**
+	 * Naively adds a century digit to the given legal id, if it's missing.
+	 *
+	 * @param legalId the legal id to add the century digit to.
+	 * @return the original legal id with a leading century digit, if it was previously missing.
+	 */
+	String addCenturyDigitToLegalId(final String legalId) {
+		// Make sure we have digits only
+		if (legalId.isBlank() || !legalId.matches("^\\d+$")) {
+			return null;
+		}
+		// Do nothing if we already have a legal id with century digits
+		if (legalId.length() == 12 && (legalId.startsWith("19") || legalId.startsWith("20"))) {
+			return legalId;
+		}
+		// Naively validate
+		final var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
+		final var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
 
-        byte[] getFailedExcelData() {
-            return failedExcelData;
-        }
+		return centuryDigit + legalId;
+	}
 
-        void setFailedExcelData(final byte[] failedExcelData) {
-            this.failedExcelData = failedExcelData;
-        }
+	/**
+	 * Extracts the asset id from the given row (column 7, "TILLSTNR").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the asset id, or is empty.
+	 */
+	Optional<String> extractAssetId(final Row row) {
+		return extractCell(row, COL_ASSET_ID);
+	}
 
-        Result withFailedExcelData(final byte[] failedExcelData) {
-            this.failedExcelData = failedExcelData;
-            return this;
-        }
-    }
+	/**
+	 * Extracts the issued date from the given row (column 16, "UTFARDAT").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the issued date, or is empty.
+	 */
+	Optional<LocalDate> extractIssuedDate(final Row row) {
+		return row.getCellAsDate(COL_ISSUED_DATE).map(LocalDateTime::toLocalDate);
+	}
+
+	/**
+	 * Extracts the valid-to date from the given row (column 18, "GILTIGTTOM").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the valid-to date, or is empty.
+	 */
+	Optional<LocalDate> extractValidToDate(final Row row) {
+		return row.getCellAsDate(COL_VALID_TO_DATE).map(LocalDateTime::toLocalDate);
+	}
+
+	/**
+	 * Extracts the status from the given row, by checking whether the valid-to date is after today
+	 * or not.
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the status, or is empty.
+	 */
+	Optional<Status> extractStatus(final Row row) {
+		return extractValidToDate(row)
+			.map(validToDate -> validToDate.isAfter(LocalDate.now()) ? Status.ACTIVE : Status.EXPIRED);
+	}
+
+	/**
+	 * Extracts the registration number from the given row (column 15, "DIARIENR").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the registration number, or is empty.
+	 */
+	Optional<String> extractRegistrationNumber(final Row row) {
+		return extractCell(row, COL_REGISTRATION_NUMBER);
+	}
+
+	/**
+	 * Extracts the date the card was printed from the given row (column 21, "UTSKRIVET").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the date the card was printed, or is empty.
+	 */
+	Optional<LocalDateTime> extractCardPrinted(final Row row) {
+		return row.getCellAsDate(COL_CARD_PRINTED);
+	}
+
+	/**
+	 * Extracts the "SmartCardSync" flag from the given row (column 27, "SmartParkSync").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
+	 */
+	Optional<String> extractSmartParkSync(final Row row) {
+		return extractCell(row, COL_SMART_PARK_SYNC)
+			.map(Integer::parseInt)
+			.map(intValue -> switch (intValue) {
+				case 0 -> "false";
+				case 1 -> "true";
+				default -> null;
+			});
+	}
+
+	/**
+	 * Extracts the (name of the) administration that issued the card from the given row (column 23, "EXTRA1").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the (name of the) administration that issued
+	 * the card, or is empty.
+	 */
+	Optional<String> extractIssuedByAdministration(final Row row) {
+		return extractCell(row, COL_ISSUED_BY_ADMINISTRATION);
+	}
+
+	/**
+	 * Extracts the (name of the) administrator that issued the card from the given row (column 24, "EXTRA2").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the (name of the) administrator that issued
+	 * the card, or is empty.
+	 */
+	Optional<String> extractIssuedByAdministrator(final Row row) {
+		return extractCell(row, COL_ISSUED_BY_ADMINISTRATOR);
+	}
+
+	/**
+	 * Extracts whether the card was applied for as a driver or passenger from the given row (column 5, "PASSAGE").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains whether the card was applied for as a driver
+	 * or passenger, or is empty.
+	 */
+	Optional<String> extractAppliedAs(final Row row) {
+		return extractCell(row, COL_APPLIED_AS)
+			.map(Integer::parseInt)
+			.map(intValue -> switch (intValue) {
+				case 1 -> PASSENGER;
+				case 2 -> DRIVER;
+				default -> null;
+			});
+	}
+
+	/**
+	 * Extracts the sex as "K" for women and "M" for men, from the given row (column 4, "KON").
+	 *
+	 * @param row the row.
+	 * @return an {@code Optional} that either contains the sex, or is empty.
+	 */
+	Optional<String> extractSex(final Row row) {
+		return extractCell(row, COL_SEX)
+			.map(Integer::parseInt)
+			.map(intValue -> switch (intValue) {
+				case 0 -> "K";
+				case 1 -> "M";
+				default -> null;
+			});
+	}
+
+	/**
+	 * Convenience method to extract the contents of a cell as a string, regardless of what type
+	 * Excel treats it as.
+	 *
+	 * @param row the row.
+	 * @param cellIndex the cell index.
+	 * @return an {@code Optional} that either contains the cell value as a string, or is empty
+	 */
+	Optional<String> extractCell(final Row row, final int cellIndex) {
+		return Optional.of(row.getCellText(cellIndex)).filter(not(String::isBlank));
+	}
+
+	static class Result {
+
+		private int total;
+
+		private int failed;
+
+		@JsonIgnore
+		private byte[] failedExcelData;
+
+		public int getTotal() {
+			return total;
+		}
+
+		void setTotal(final int total) {
+			this.total = total;
+		}
+
+		Result withTotal(final int total) {
+			this.total = total;
+			return this;
+		}
+
+		public int getFailed() {
+			return failed;
+		}
+
+		void setFailed(final int failed) {
+			this.failed = failed;
+		}
+
+		Result withFailed(final int failed) {
+			this.failed = failed;
+			return this;
+		}
+
+		public int getSuccessful() {
+			return total - failed;
+		}
+
+		byte[] getFailedExcelData() {
+			return failedExcelData;
+		}
+
+		void setFailedExcelData(final byte[] failedExcelData) {
+			this.failedExcelData = failedExcelData;
+		}
+
+		Result withFailedExcelData(final byte[] failedExcelData) {
+			this.failedExcelData = failedExcelData;
+			return this;
+		}
+
+	}
+
 }
