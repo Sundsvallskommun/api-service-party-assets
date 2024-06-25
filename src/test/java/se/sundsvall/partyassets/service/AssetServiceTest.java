@@ -59,12 +59,13 @@ class AssetServiceTest {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
 		final var entity = getAssetEntity(id, partyId);
+		final var request = new AssetSearchRequest();
 
 		try (final MockedStatic<AssetSpecification> assetSpecificationMock = mockStatic(AssetSpecification.class)) {
-			when(AssetSpecification.createAssetSpecification(any())).thenReturn(specificationMock);
+			when(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request)).thenReturn(specificationMock);
 			when(repositoryMock.findAll(Mockito.<Specification<AssetEntity>>any())).thenReturn(List.of(entity));
 
-			final var result = service.getAssets(MUNICIPALITY_ID,AssetSearchRequest.create());
+			final var result = service.getAssets(MUNICIPALITY_ID, request);
 
 			assertThat(result).isNotNull().hasSize(1);
 			assertThat(result.getFirst()).usingRecursiveComparison().isEqualTo(entity);
@@ -84,10 +85,10 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(MUNICIPALITY_ID,assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
 
 		verify(partyTypeProviderMock).calculatePartyType(partyId);
-		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
+		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
@@ -104,10 +105,10 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.ENTERPRISE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(MUNICIPALITY_ID,assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
 
 		verify(partyTypeProviderMock).calculatePartyType(partyId);
-		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
+		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.ENTERPRISE);
@@ -119,13 +120,13 @@ class AssetServiceTest {
 		final var partyId = UUID.randomUUID().toString();
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(repositoryMock.existsByAssetId(assetCreateRequest.getAssetId())).thenReturn(true);
+		when(repositoryMock.existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID)).thenReturn(true);
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAsset(MUNICIPALITY_ID,assetCreateRequest))
+			.isThrownBy(() -> service.createAsset(MUNICIPALITY_ID, assetCreateRequest))
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
-		verify(repositoryMock).existsByAssetId(assetCreateRequest.getAssetId());
+		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(partyTypeProviderMock, never()).calculatePartyType(any());
 		verify(repositoryMock, never()).save(any(AssetEntity.class));
 	}
@@ -134,10 +135,10 @@ class AssetServiceTest {
 	void deleteAsset() {
 		final var uuid = UUID.randomUUID().toString();
 
-		when(repositoryMock.existsById(uuid)).thenReturn(true);
+		when(repositoryMock.existsByIdAndMunicipalityId(uuid, MUNICIPALITY_ID)).thenReturn(true);
 
-		service.deleteAsset(MUNICIPALITY_ID,uuid);
-		verify(repositoryMock).existsById(uuid);
+		service.deleteAsset(MUNICIPALITY_ID, uuid);
+		verify(repositoryMock).existsByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 		verify(repositoryMock).deleteById(uuid);
 	}
 
@@ -146,9 +147,9 @@ class AssetServiceTest {
 		final var uuid = UUID.randomUUID().toString();
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.deleteAsset(MUNICIPALITY_ID,uuid))
-			.withMessage("Asset not found: Asset with id " + uuid + " not found");
-		verify(repositoryMock).existsById(uuid);
+			.isThrownBy(() -> service.deleteAsset(MUNICIPALITY_ID, uuid))
+			.withMessage("Asset not found: Asset with id " + uuid + " not found for municipalityId " + MUNICIPALITY_ID);
+		verify(repositoryMock).existsByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 		verify(repositoryMock, never()).deleteById(uuid);
 	}
 
@@ -159,11 +160,11 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var asssetUpdateRequest = getAssetUpdateRequest();
 
-		when(repositoryMock.findById(any())).thenReturn(Optional.of(entity));
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
 		service.updateAsset(MUNICIPALITY_ID, id, asssetUpdateRequest);
 
-		verify(repositoryMock).findById(id);
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).save(any(AssetEntity.class));
 	}
 
@@ -173,13 +174,14 @@ class AssetServiceTest {
 		final var uuid = UUID.randomUUID().toString();
 		final var assetUpdaterequest = getAssetUpdateRequest();
 
-		when(repositoryMock.findById(any(String.class))).thenReturn(Optional.empty());
+		when(repositoryMock.findByIdAndMunicipalityId(uuid, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID,uuid, assetUpdaterequest))
-			.withMessage("Asset not found: Asset with id " + uuid + " not found");
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, uuid, assetUpdaterequest))
+			.withMessage("Asset not found: Asset with id " + uuid + " not found for municipalityId " + MUNICIPALITY_ID);
 
-		verify(repositoryMock).findById(any(String.class));
+		verify(repositoryMock).findByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 		verify(repositoryMock, never()).save(any());
 	}
+
 }

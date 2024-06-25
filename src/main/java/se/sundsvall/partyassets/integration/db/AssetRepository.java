@@ -12,8 +12,10 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 @CircuitBreaker(name = "assetRepository")
 public interface AssetRepository extends JpaRepository<AssetEntity, String>, JpaSpecificationExecutor<AssetEntity> {
 
-	Optional<AssetEntity> findByAssetId(String assetId);
+	boolean existsByIdAndMunicipalityId(String id, String municipalityId);
 
-	boolean existsByAssetId(String assetId);
+	Optional<AssetEntity> findByIdAndMunicipalityId(String id, String municipalityId);
+
+	boolean existsByAssetIdAndMunicipalityId(String assetId, String municipalityId);
 
 }

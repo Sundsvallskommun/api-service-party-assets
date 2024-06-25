@@ -31,43 +31,44 @@ public class AssetService {
 		this.partyTypeProvider = partyTypeProvider;
 	}
 
-	public List<Asset> getAssets(final String municipalityId, AssetSearchRequest request) {
-		return repository.findAll(createAssetSpecification(request))
+	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
+		return repository.findAll(createAssetSpecification(municipalityId, request))
 			.stream()
 			.map(AssetMapper::toAsset)
 			.toList();
 	}
 
-	public String createAsset(final String municipalityId,final AssetCreateRequest request) {
-		if (repository.existsByAssetId(request.getAssetId())) {
+	public String createAsset(final String municipalityId, final AssetCreateRequest request) {
+		if (repository.existsByAssetIdAndMunicipalityId(request.getAssetId(), municipalityId)) {
 			throw Problem.builder()
 				.withStatus(CONFLICT)
 				.withTitle("Asset already exists")
 				.withDetail("Asset with assetId %s already exists".formatted(request.getAssetId()))
 				.build();
 		}
-		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(request.getPartyId()))).getId();
+		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(request.getPartyId()), municipalityId)).getId();
 	}
 
 	public void deleteAsset(final String municipalityId, final String id) {
-		if (!repository.existsById(id)) {
+		if (!repository.existsByIdAndMunicipalityId(id, municipalityId)) {
 			throw Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found".formatted(id))
+				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
 				.build();
 		}
 		repository.deleteById(id);
 	}
 
-	public void updateAsset(final String municipalityId,final String id, final AssetUpdateRequest request) {
+	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 
-		final var old = repository.findById(id)
+		final var old = repository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found".formatted(id))
+				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
 				.build());
 		repository.save(updateEntity(old, request));
 	}
+
 }

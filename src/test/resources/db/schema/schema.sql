@@ -14,6 +14,7 @@
         asset_id varchar(255) not null,
         description varchar(255),
         id varchar(255) not null,
+        municipality_id varchar(255),
         origin varchar(255),
         party_id varchar(255) not null,
         status_reason varchar(255),
@@ -31,6 +32,7 @@
     create table status (
         created datetime(6),
         updated datetime(6),
+        municipality_id varchar(255),
         name varchar(255) not null,
         primary key (name)
     ) engine=InnoDB;
@@ -43,11 +45,17 @@
     create index idx_additional_parameter_asset_id 
        on additional_parameter (asset_id);
 
+    create index idx_asset_municipality_id 
+       on asset (municipality_id);
+
     alter table if exists asset 
        add constraint uc_asset_asset_id unique (asset_id);
 
     create index idx_case_reference_id_asset_id 
        on case_reference_id (asset_id);
+
+    create index idx_status_municipality_id 
+       on status (municipality_id);
 
     create index idx_status_reason_status_name 
        on status_reason (status_name);

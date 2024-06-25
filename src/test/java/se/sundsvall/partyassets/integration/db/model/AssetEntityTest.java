@@ -46,6 +46,7 @@ class AssetEntityTest {
 	void testBuilderMethods() {
 		final var additionParameters = Map.of("key", "value");
 		final var assetId = "assetId";
+		final var municipalityId = "municipalityId";
 		final var caseReferenceIds = List.of("entry");
 		final var created = OffsetDateTime.now().minusDays(1);
 		final var description = "description";
@@ -60,9 +61,11 @@ class AssetEntityTest {
 		final var updated = OffsetDateTime.now();
 		final var validTo = LocalDate.now();
 
+
 		final var bean = AssetEntity.create()
 			.withAdditionalParameters(additionParameters)
 			.withAssetId(assetId)
+			.withMunicipalityId(municipalityId)
 			.withCaseReferenceIds(caseReferenceIds)
 			.withCreated(created)
 			.withDescription(description)
@@ -80,6 +83,7 @@ class AssetEntityTest {
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionParameters);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
+		assertThat(bean.getMunicipalityId()).isEqualTo(municipalityId);
 		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getDescription()).isEqualTo(description);
@@ -120,4 +124,5 @@ class AssetEntityTest {
 		assertThat(bean.getCreated()).isNull();
 		assertThat(bean.getUpdated()).isCloseTo(now(), within(2, SECONDS));
 	}
+
 }

@@ -24,10 +24,11 @@ public class StatusMapper {
 			.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 	}
 
-	public static StatusEntity toEntity(final Status status, final List<String> reasons) {
+	public static StatusEntity toEntity(final Status status, final List<String> reasons, final String municipalityId) {
 		return StatusEntity.create()
 			.withName(status.name())
-			.withReasons(retreiveUniqueItems(reasons));
+			.withReasons(retreiveUniqueItems(reasons))
+			.withMunicipalityId(municipalityId);
 	}
 
 	private static List<String> retreiveUniqueItems(final List<String> list) {
@@ -38,4 +39,5 @@ public class StatusMapper {
 			.distinct()
 			.toList());
 	}
+
 }

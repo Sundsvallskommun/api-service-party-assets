@@ -8,6 +8,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,7 +29,7 @@ class SchemaVerificationTest {
 	@Test
 	void verifySchemaUpdates() throws IOException, URISyntaxException {
 
-		final var storedSchema = getResourceString(STORED_SCHEMA_FILE);
+		final var storedSchema = getResourceString();
 		final var generatedSchema = Files.readString(Path.of(generatedSchemaFile));
 
 		assertThat(storedSchema)
@@ -36,7 +37,8 @@ class SchemaVerificationTest {
 			.isEqualToNormalizingWhitespace(generatedSchema);
 	}
 
-	private String getResourceString(final String fileName) throws IOException, URISyntaxException {
-		return Files.readString(Paths.get(getClass().getClassLoader().getResource(fileName).toURI()));
+	private String getResourceString() throws IOException, URISyntaxException {
+		return Files.readString(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource(STORED_SCHEMA_FILE)).toURI()));
 	}
+
 }

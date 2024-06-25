@@ -33,7 +33,7 @@ public class AssetMapper {
 			.withValidTo(entity.getValidTo());
 	}
 
-	public static AssetEntity toEntity(final AssetCreateRequest request, PartyType partyType) {
+	public static AssetEntity toEntity(final AssetCreateRequest request, final PartyType partyType, final String municipalityId) {
 		return AssetEntity.create()
 			.withAdditionalParameters(request.getAdditionalParameters())
 			.withAssetId(request.getAssetId())
@@ -46,7 +46,8 @@ public class AssetMapper {
 			.withStatus(request.getStatus())
 			.withStatusReason(request.getStatusReason())
 			.withType(request.getType())
-			.withValidTo(request.getValidTo());
+			.withValidTo(request.getValidTo())
+			.withMunicipalityId(municipalityId);
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
@@ -80,4 +81,5 @@ public class AssetMapper {
 			.distinct()
 			.toList());
 	}
+
 }

@@ -3,7 +3,6 @@ package se.sundsvall.partyassets.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -45,13 +44,13 @@ class StatusServiceTest {
 		final var status = Status.EXPIRED;
 		final var reasons = List.of("REASON_1", "REASON_2");
 
-		when(repositoryMock.findAll()).thenReturn(List.of(StatusEntity.create().withName(status.name()).withReasons(reasons)));
+		when(repositoryMock.findAllByMunicipalityId(MUNICIPALITY_ID)).thenReturn(List.of(StatusEntity.create().withMunicipalityId(MUNICIPALITY_ID).withName(status.name()).withReasons(reasons)));
 
 		// Act
 		final var reasonsForAllStatuses = service.getReasonsForAllStatuses(MUNICIPALITY_ID);
 
 		// Assert
-		verify(repositoryMock).findAll();
+		verify(repositoryMock).findAllByMunicipalityId(MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
 		assertThat(reasonsForAllStatuses).isNotEmpty()
 			.extractingFromEntries(Map.Entry::getKey, Map.Entry::getValue)
@@ -64,13 +63,13 @@ class StatusServiceTest {
 		final var status = Status.BLOCKED;
 		final var reasons = List.of("BLOCKED_REASON_1", "BLOCKED_REASON_2");
 
-		when(repositoryMock.findById(status.name())).thenReturn(Optional.of(StatusEntity.create().withReasons(reasons)));
+		when(repositoryMock.findByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID)).thenReturn(Optional.of(StatusEntity.create().withReasons(reasons)));
 
 		// Act
 		final var blockedReasons = service.getReasons(MUNICIPALITY_ID, status);
 
 		// Assert
-		verify(repositoryMock).findById(status.name());
+		verify(repositoryMock).findByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
 		assertThat(blockedReasons).isEqualTo(reasons);
 	}
@@ -78,13 +77,14 @@ class StatusServiceTest {
 	@Test
 	void getNonExistingReasons() {
 		// Arrange
-		when(repositoryMock.findById(any())).thenReturn(Optional.empty());
+		final var status = Status.BLOCKED;
+		when(repositoryMock.findByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		// Act
-		final var blockedReasons = service.getReasons(MUNICIPALITY_ID, Status.BLOCKED);
+		final var blockedReasons = service.getReasons(MUNICIPALITY_ID, status);
 
 		// Assert
-		verify(repositoryMock).findById(Status.BLOCKED.name());
+		verify(repositoryMock).findByNameAndMunicipalityId(Status.BLOCKED.name(), MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
 		assertThat(blockedReasons).isEmpty();
 	}
@@ -99,7 +99,7 @@ class StatusServiceTest {
 		service.createReasons(MUNICIPALITY_ID, status, reasons);
 
 		// Assert
-		verify(repositoryMock).existsById(status.name());
+		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getName()).isEqualTo(status.name());
 		assertThat(entityCaptor.getValue().getReasons()).isEqualTo(reasons);
@@ -113,13 +113,13 @@ class StatusServiceTest {
 		final var status = Status.BLOCKED;
 		final var reasons = List.of("BLOCKED_REASON_1", "BLOCKED_REASON_2");
 
-		when(repositoryMock.existsById(status.name())).thenReturn(true);
+		when(repositoryMock.existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID)).thenReturn(true);
 
 		// Act
 		final var e = assertThrows(ThrowableProblem.class, () -> service.createReasons(MUNICIPALITY_ID, status, reasons));
 
 		// Assert
-		verify(repositoryMock).existsById(status.name());
+		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
 		assertThat(e.getStatus()).isEqualTo(org.zalando.problem.Status.CONFLICT);
 		assertThat(e.getMessage()).isEqualTo("Conflict: Statusreasons already exists for status BLOCKED");
@@ -130,13 +130,13 @@ class StatusServiceTest {
 		// Arrange
 		final var status = Status.ACTIVE;
 
-		when(repositoryMock.existsById(status.name())).thenReturn(true);
+		when(repositoryMock.existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID)).thenReturn(true);
 
 		// Act
 		service.deleteReasons(MUNICIPALITY_ID, status);
 
 		// Assert
-		verify(repositoryMock).existsById(status.name());
+		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verify(repositoryMock).deleteById(status.name());
 	}
 
@@ -149,7 +149,7 @@ class StatusServiceTest {
 		final var e = assertThrows(ThrowableProblem.class, () -> service.deleteReasons(MUNICIPALITY_ID, status));
 
 		// Assert
-		verify(repositoryMock).existsById(status.name());
+		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
 		assertThat(e.getStatus()).isEqualTo(org.zalando.problem.Status.NOT_FOUND);
 		assertThat(e.getMessage()).isEqualTo("Not Found: Status ACTIVE does not have any statusreasons to delete");

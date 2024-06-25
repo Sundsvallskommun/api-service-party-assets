@@ -35,7 +35,7 @@ import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 })
 class MetadataStatusReasonsIT extends AbstractAppTest {
 
-	private static final String MUNICIPALITY_ID = "/2281";
+	private static final String MUNICIPALITY_ID = "2281";
 
 	@Autowired
 	private StatusRepository repository;
@@ -51,10 +51,10 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Create asset
 		setupCall()
 			.withHttpMethod(HttpMethod.POST)
-			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
+			.withServicePath("/" + MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
 			.withRequest("request.json")
 			.withExpectedResponseStatus(CREATED)
-			.withExpectedResponseHeader(LOCATION, List.of("^"+MUNICIPALITY_ID+"/metadata/statusreasons/%s".formatted(status.name())))
+			.withExpectedResponseHeader(LOCATION, List.of("^/" + MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name())))
 			.sendRequestAndVerifyResponse();
 
 		// Assert that status and corresponding status reasons has been created
@@ -73,7 +73,7 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Act and assert
 		setupCall()
 			.withHttpMethod(HttpMethod.GET)
-			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
+			.withServicePath("/" + MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("response.json")
 			.sendRequestAndVerifyResponse();
@@ -85,7 +85,7 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Act and assert
 		setupCall()
 			.withHttpMethod(HttpMethod.GET)
-			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons")
+			.withServicePath("/" + MUNICIPALITY_ID + "/metadata/statusreasons")
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("response.json")
 			.sendRequestAndVerifyResponse();
@@ -96,13 +96,13 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 		// Arrange
 		final var status = Status.ACTIVE;
 
-		repository.save(StatusEntity.create().withName(status.name()).withReasons(List.of("PLEASE_DONT_GET_DRUNK_THIS_CHRISTMAS", "YES_SIR_I_CAN_BOOGIE")));
-		assertThat(repository.existsById(status.name())).isTrue(); // Verify that status and status reasons has been saved
+		repository.save(StatusEntity.create().withName(status.name()).withMunicipalityId(MUNICIPALITY_ID).withReasons(List.of("PLEASE_DONT_GET_DRUNK_THIS_CHRISTMAS", "YES_SIR_I_CAN_BOOGIE")));
+		assertThat(repository.existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID)).isTrue(); // Verify that status and status reasons has been saved
 
 		// Act and assert
 		setupCall()
 			.withHttpMethod(HttpMethod.DELETE)
-			.withServicePath(MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
+			.withServicePath("/" + MUNICIPALITY_ID + "/metadata/statusreasons/%s".formatted(status.name()))
 			.withExpectedResponseStatus(NO_CONTENT)
 			.sendRequestAndVerifyResponse()
 			.andVerifyThat(() -> !repository.existsById(status.name()));

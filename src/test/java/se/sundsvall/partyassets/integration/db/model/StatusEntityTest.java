@@ -41,18 +41,21 @@ class StatusEntityTest {
 	void testBuilderMethods() {
 		final var created = OffsetDateTime.now().minusDays(1);
 		final var name = "name";
+		final var municipalityId = "municipalityId";
 		final var reasons = List.of("reason1", "reason2");
 		final var updated = OffsetDateTime.now();
-		
+
 		final var bean = StatusEntity.create()
 			.withCreated(created)
 			.withName(name)
+			.withMunicipalityId(municipalityId)
 			.withReasons(reasons)
 			.withUpdated(updated);
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getName()).isEqualTo(name);
+		assertThat(bean.getMunicipalityId()).isEqualTo(municipalityId);
 		assertThat(bean.getReasons()).isEqualTo(reasons);
 		assertThat(bean.getUpdated()).isEqualTo(updated);
 	}
@@ -82,4 +85,5 @@ class StatusEntityTest {
 		assertThat(bean.getCreated()).isNull();
 		assertThat(bean.getUpdated()).isCloseTo(now(), within(2, SECONDS));
 	}
+
 }

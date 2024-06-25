@@ -7,6 +7,7 @@ import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.ADDITIO
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.ASSET_ID;
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.DESCRIPTION;
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.ISSUED;
+import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.MUNICIPALITY_ID;
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.PARTY_ID;
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.STATUS;
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.STATUS_REASON;
@@ -17,23 +18,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.springframework.data.jpa.domain.Specification;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
+import org.springframework.data.jpa.domain.Specification;
+
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
-public class AssetSpecification {
+public final class AssetSpecification {
+
 	private AssetSpecification() {}
 
-	public static Specification<AssetEntity> createAssetSpecification(final AssetSearchRequest request) {
+	public static Specification<AssetEntity> createAssetSpecification(final String municipalityId, final AssetSearchRequest request) {
 		return ((root, query, criteriaBuilder) -> {
 
 			final List<Predicate> predicates = new ArrayList<>();
 
+			addEqualCriteria(MUNICIPALITY_ID, municipalityId, predicates, criteriaBuilder, root);
 			addEqualCriteria(PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
 			addEqualCriteria(ASSET_ID, request.getAssetId(), predicates, criteriaBuilder, root);
 			addEqualCriteria(TYPE, request.getType(), predicates, criteriaBuilder, root);
@@ -44,7 +48,7 @@ public class AssetSpecification {
 			addEqualCriteria(DESCRIPTION, request.getDescription(), predicates, criteriaBuilder, root);
 
 			if (isNotEmpty(request.getAdditionalParameters())) {
-				List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(ADDITIONAL_PARAMETERS));
+				final List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(ADDITIONAL_PARAMETERS));
 				predicates.add(criteriaBuilder.or(parameterPredicates.toArray(new Predicate[0])));
 			}
 
@@ -52,7 +56,7 @@ public class AssetSpecification {
 		});
 	}
 
-	private static List<Predicate> createParameterPredicates(AssetSearchRequest request, CriteriaBuilder criteriaBuilder, MapJoin<AssetEntity, String, String> join) {
+	private static List<Predicate> createParameterPredicates(final AssetSearchRequest request, final CriteriaBuilder criteriaBuilder, final MapJoin<AssetEntity, String, String> join) {
 		return request.getAdditionalParameters().entrySet().stream()
 			.map(entry -> criteriaBuilder.and(
 				criteriaBuilder.equal(join.key(), entry.getKey()),
@@ -60,7 +64,7 @@ public class AssetSpecification {
 			.toList();
 	}
 
-	private static void addEqualCriteria(String attribute, Object value, List<Predicate> predicates, CriteriaBuilder criteriaBuilder, Root<AssetEntity> root) {
+	private static void addEqualCriteria(final String attribute, final Object value, final List<Predicate> predicates, final CriteriaBuilder criteriaBuilder, final Root<AssetEntity> root) {
 		Stream.of(value)
 			.filter(String.class::isInstance)
 			.findAny()
@@ -75,4 +79,5 @@ public class AssetSpecification {
 				}
 			});
 	}
+
 }
