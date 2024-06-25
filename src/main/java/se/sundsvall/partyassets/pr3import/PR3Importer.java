@@ -50,6 +50,8 @@ class PR3Importer {
 
 	static final String PASSENGER_SHORT = "P";
 
+	private static final String SUNDSVALL_MUNICIPALITY_ID = "2281"; // PR3import should only be run for Sundsvall
+
 	private static final String PARAM_REGISTRATION_NUMBER = "registrationNumber";
 
 	private static final String PARAM_CARD_PRINTED = "cardPrinted";
@@ -244,7 +246,7 @@ class PR3Importer {
 					// we won't need to make the extra calls to the party service to determine the
 					// actual party type
 					try {
-						if (assetRepository.existsByAssetId(assetCreateRequest.getAssetId())) {
+						if (assetRepository.existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), SUNDSVALL_MUNICIPALITY_ID)) {
 							throw Problem.builder()
 								.withStatus(CONFLICT)
 								.withTitle("Asset already exists")
@@ -252,7 +254,7 @@ class PR3Importer {
 								.build();
 						}
 
-						assetRepository.save(toEntity(assetCreateRequest, PRIVATE));
+						assetRepository.save(toEntity(assetCreateRequest, PRIVATE, SUNDSVALL_MUNICIPALITY_ID));
 					} catch (final Exception e) {
 						if (e instanceof final ThrowableProblem p) {
 							errorDetail = ofNullable(p.getDetail());

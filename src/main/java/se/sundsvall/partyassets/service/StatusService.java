@@ -32,12 +32,12 @@ public class StatusService {
 
 	@Cacheable(value = CACHE_NAME, key = "{#root.methodName, #municipalityId}")
 	public Map<Status, List<String>> getReasonsForAllStatuses(final String municipalityId) {
-		return toReasons(repository.findAll());
+		return toReasons(repository.findAllByMunicipalityId(municipalityId));
 	}
 
 	@Cacheable(value = CACHE_NAME, key = "{#root.methodName, #municipalityId, #status}")
 	public List<String> getReasons(final String municipalityId, final Status status) {
-		return repository.findById(status.name())
+		return repository.findByNameAndMunicipalityId(status.name(), municipalityId)
 			.map(StatusEntity::getReasons)
 			.orElse(emptyList());
 	}
@@ -47,10 +47,10 @@ public class StatusService {
 		@CacheEvict(value = CACHE_NAME, key = "{'getReasons', #municipalityId, #status}")
 	})
 	public void createReasons(final String municipalityId, final Status status, final List<String> statusReasons) {
-		if (repository.existsById(status.name())) {
+		if (repository.existsByNameAndMunicipalityId(status.name(), municipalityId)) {
 			throw Problem.valueOf(CONFLICT, "Statusreasons already exists for status %s".formatted(status.name()));
 		}
-		repository.save(toEntity(status, statusReasons));
+		repository.save(toEntity(status, statusReasons, municipalityId));
 	}
 
 	@Caching(evict = {
@@ -58,7 +58,7 @@ public class StatusService {
 		@CacheEvict(value = CACHE_NAME, key = "{'getReasons', #municipalityId, #status}")
 	})
 	public void deleteReasons(final String municipalityId, final Status status) {
-		if (!repository.existsById(status.name())) {
+		if (!repository.existsByNameAndMunicipalityId(status.name(), municipalityId)) {
 			throw Problem.valueOf(NOT_FOUND, "Status %s does not have any statusreasons to delete".formatted(status.name()));
 		}
 		repository.deleteById(status.name());

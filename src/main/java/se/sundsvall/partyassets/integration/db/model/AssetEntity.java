@@ -12,10 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.TimeZoneStorageType;
-import org.hibernate.annotations.UuidGenerator;
-
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -30,15 +26,23 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
+import org.hibernate.annotations.UuidGenerator;
+
 import se.sundsvall.partyassets.api.model.Status;
 
 @Entity
-@Table(name = "asset", uniqueConstraints = { @UniqueConstraint(name = "uc_asset_asset_id", columnNames = { "asset_id" }) })
+@Table(name = "asset", uniqueConstraints = {@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {"asset_id"})})
 public class AssetEntity {
 
 	@Id
 	@UuidGenerator
 	private String id;
+
+	@Column(name = "municipality_id")
+	private String municipalityId;
 
 	private String origin;
 
@@ -106,12 +110,25 @@ public class AssetEntity {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(final String id) {
 		this.id = id;
 	}
 
-	public AssetEntity withId(String id) {
+	public AssetEntity withId(final String id) {
 		this.id = id;
+		return this;
+	}
+
+	public String getMunicipalityId() {
+		return municipalityId;
+	}
+
+	public void setMunicipalityId(final String municipalityId) {
+		this.municipalityId = municipalityId;
+	}
+
+	public AssetEntity withMunicipalityId(final String municipalityId) {
+		this.municipalityId = municipalityId;
 		return this;
 	}
 
@@ -119,11 +136,11 @@ public class AssetEntity {
 		return origin;
 	}
 
-	public void setOrigin(String origin) {
+	public void setOrigin(final String origin) {
 		this.origin = origin;
 	}
 
-	public AssetEntity withOrigin(String origin) {
+	public AssetEntity withOrigin(final String origin) {
 		this.origin = origin;
 		return this;
 	}
@@ -132,11 +149,11 @@ public class AssetEntity {
 		return assetId;
 	}
 
-	public void setAssetId(String assetId) {
+	public void setAssetId(final String assetId) {
 		this.assetId = assetId;
 	}
 
-	public AssetEntity withAssetId(String assetId) {
+	public AssetEntity withAssetId(final String assetId) {
 		this.assetId = assetId;
 		return this;
 	}
@@ -145,11 +162,11 @@ public class AssetEntity {
 		return partyId;
 	}
 
-	public void setPartyId(String partyId) {
+	public void setPartyId(final String partyId) {
 		this.partyId = partyId;
 	}
 
-	public AssetEntity withPartyId(String partyId) {
+	public AssetEntity withPartyId(final String partyId) {
 		this.partyId = partyId;
 		return this;
 	}
@@ -158,11 +175,11 @@ public class AssetEntity {
 		return partyType;
 	}
 
-	public void setPartyType(PartyType partyType) {
+	public void setPartyType(final PartyType partyType) {
 		this.partyType = partyType;
 	}
 
-	public AssetEntity withPartyType(PartyType partyType) {
+	public AssetEntity withPartyType(final PartyType partyType) {
 		this.partyType = partyType;
 		return this;
 	}
@@ -171,11 +188,11 @@ public class AssetEntity {
 		return caseReferenceIds;
 	}
 
-	public void setCaseReferenceIds(List<String> caseReferenceIds) {
+	public void setCaseReferenceIds(final List<String> caseReferenceIds) {
 		this.caseReferenceIds = caseReferenceIds;
 	}
 
-	public AssetEntity withCaseReferenceIds(List<String> caseReferenceIds) {
+	public AssetEntity withCaseReferenceIds(final List<String> caseReferenceIds) {
 		this.caseReferenceIds = caseReferenceIds;
 		return this;
 	}
@@ -184,11 +201,11 @@ public class AssetEntity {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(final String type) {
 		this.type = type;
 	}
 
-	public AssetEntity withType(String type) {
+	public AssetEntity withType(final String type) {
 		this.type = type;
 		return this;
 	}
@@ -197,11 +214,11 @@ public class AssetEntity {
 		return issued;
 	}
 
-	public void setIssued(LocalDate issued) {
+	public void setIssued(final LocalDate issued) {
 		this.issued = issued;
 	}
 
-	public AssetEntity withIssued(LocalDate issued) {
+	public AssetEntity withIssued(final LocalDate issued) {
 		this.issued = issued;
 		return this;
 	}
@@ -210,11 +227,11 @@ public class AssetEntity {
 		return validTo;
 	}
 
-	public void setValidTo(LocalDate validTo) {
+	public void setValidTo(final LocalDate validTo) {
 		this.validTo = validTo;
 	}
 
-	public AssetEntity withValidTo(LocalDate validTo) {
+	public AssetEntity withValidTo(final LocalDate validTo) {
 		this.validTo = validTo;
 		return this;
 	}
@@ -223,11 +240,11 @@ public class AssetEntity {
 		return status;
 	}
 
-	public void setStatus(Status status) {
+	public void setStatus(final Status status) {
 		this.status = status;
 	}
 
-	public AssetEntity withStatus(Status status) {
+	public AssetEntity withStatus(final Status status) {
 		this.status = status;
 		return this;
 	}
@@ -236,11 +253,11 @@ public class AssetEntity {
 		return statusReason;
 	}
 
-	public void setStatusReason(String statusReason) {
+	public void setStatusReason(final String statusReason) {
 		this.statusReason = statusReason;
 	}
 
-	public AssetEntity withStatusReason(String statusReason) {
+	public AssetEntity withStatusReason(final String statusReason) {
 		this.statusReason = statusReason;
 		return this;
 	}
@@ -249,11 +266,11 @@ public class AssetEntity {
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void setDescription(final String description) {
 		this.description = description;
 	}
 
-	public AssetEntity withDescription(String description) {
+	public AssetEntity withDescription(final String description) {
 		this.description = description;
 		return this;
 	}
@@ -262,11 +279,11 @@ public class AssetEntity {
 		return additionalParameters;
 	}
 
-	public void setAdditionalParameters(Map<String, String> additionalParameters) {
+	public void setAdditionalParameters(final Map<String, String> additionalParameters) {
 		this.additionalParameters = additionalParameters;
 	}
 
-	public AssetEntity withAdditionalParameters(Map<String, String> additionalParameters) {
+	public AssetEntity withAdditionalParameters(final Map<String, String> additionalParameters) {
 		this.additionalParameters = additionalParameters;
 		return this;
 	}
@@ -275,11 +292,11 @@ public class AssetEntity {
 		return created;
 	}
 
-	public void setCreated(OffsetDateTime created) {
+	public void setCreated(final OffsetDateTime created) {
 		this.created = created;
 	}
 
-	public AssetEntity withCreated(OffsetDateTime created) {
+	public AssetEntity withCreated(final OffsetDateTime created) {
 		this.created = created;
 		return this;
 	}
@@ -288,40 +305,48 @@ public class AssetEntity {
 		return updated;
 	}
 
-	public void setUpdated(OffsetDateTime updated) {
+	public void setUpdated(final OffsetDateTime updated) {
 		this.updated = updated;
 	}
 
-	public AssetEntity withUpdated(OffsetDateTime updated) {
+	public AssetEntity withUpdated(final OffsetDateTime updated) {
 		this.updated = updated;
 		return this;
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, origin, partyId, partyType, status, statusReason, type, updated, validTo);
+	public boolean equals(final Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		final AssetEntity that = (AssetEntity) o;
+		return Objects.equals(id, that.id) && Objects.equals(municipalityId, that.municipalityId) && Objects.equals(origin, that.origin) && Objects.equals(assetId, that.assetId) && Objects.equals(partyId, that.partyId) && partyType == that.partyType && Objects.equals(caseReferenceIds, that.caseReferenceIds) && Objects.equals(type, that.type) && Objects.equals(issued, that.issued) && Objects.equals(validTo, that.validTo) && status == that.status && Objects.equals(statusReason, that.statusReason) && Objects.equals(description, that.description) && Objects.equals(additionalParameters, that.additionalParameters) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof AssetEntity)) {
-			return false;
-		}
-		AssetEntity other = (AssetEntity) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created, other.created) && Objects.equals(
-			description, other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType
-			&& status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
+	public int hashCode() {
+		return Objects.hash(id, municipalityId, origin, assetId, partyId, partyType, caseReferenceIds, type, issued, validTo, status, statusReason, description, additionalParameters, created, updated);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("AssetEntity [id=").append(id).append(", origin=").append(origin).append(", assetId=").append(assetId).append(", partyId=").append(partyId).append(", partyType=").append(partyType).append(", caseReferenceIds=").append(
-			caseReferenceIds).append(", type=").append(type).append(", issued=").append(issued).append(", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(
-				description).append(", additionalParameters=").append(additionalParameters).append(", created=").append(created).append(", updated=").append(updated).append("]");
-		return builder.toString();
+		return "AssetEntity{" +
+			"id='" + id + '\'' +
+			", municipalityId='" + municipalityId + '\'' +
+			", origin='" + origin + '\'' +
+			", assetId='" + assetId + '\'' +
+			", partyId='" + partyId + '\'' +
+			", partyType=" + partyType +
+			", caseReferenceIds=" + caseReferenceIds +
+			", type='" + type + '\'' +
+			", issued=" + issued +
+			", validTo=" + validTo +
+			", status=" + status +
+			", statusReason='" + statusReason + '\'' +
+			", description='" + description + '\'' +
+			", additionalParameters=" + additionalParameters +
+			", created=" + created +
+			", updated=" + updated +
+			'}';
 	}
+
 }

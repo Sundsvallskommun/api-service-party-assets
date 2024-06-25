@@ -40,11 +40,18 @@ import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 class AssetRepositoryTest {
 
 	private static final String PRIVATE_PARTY_1 = "f2ef7992-7b01-4185-a7f8-cf97dc7f438f";
+
 	private static final String PRIVATE_PARTY_ASSET_ID_1 = "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884";
+
 	private static final String PRIVATE_PARTY_ASSET_1 = "PRH-0000000001";
+
 	private static final String PRIVATE_PARTY_ASSET_2 = "PRH-0000000002";
+
 	private static final String PRIVATE_PARTY_ASSET_3 = "CON-0000000003";
+
 	private static final String ENTERPRISE_PARTY_ASSET_ID_3 = "647e3062-62dc-499f-9faa-e54cb97aa214";
+
+	private static final String MUNICIPALITY_ID = "2281";
 
 	@Autowired
 	private AssetRepository repository;
@@ -60,9 +67,9 @@ class AssetRepositoryTest {
 	}
 
 	@Test
-	void testExistsByAssetId() {
-		assertThat(repository.existsByAssetId(PRIVATE_PARTY_ASSET_1)).isTrue();
-		assertThat(repository.existsByAssetId("NON_EXISTING_ASSET_ID")).isFalse();
+	void testExistsByAssetIdAndMunicipalityId() {
+		assertThat(repository.existsByAssetIdAndMunicipalityId(PRIVATE_PARTY_ASSET_1, MUNICIPALITY_ID)).isTrue();
+		assertThat(repository.existsByAssetIdAndMunicipalityId("NON_EXISTING_ASSET_ID", MUNICIPALITY_ID)).isFalse();
 	}
 
 	@Test
@@ -79,7 +86,7 @@ class AssetRepositoryTest {
 			.withType("PERMIT")
 			.withValidTo(LocalDate.of(2023, 12, 31));
 
-		final var result = repository.findAll(AssetSpecification.createAssetSpecification(request));
+		final var result = repository.findAll(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request));
 
 		assertThat(result).hasSize(1)
 			.extracting(
@@ -95,7 +102,7 @@ class AssetRepositoryTest {
 	@Test
 	void testFindAllAssetsForCustomer() {
 		final var request = AssetSearchRequest.create().withPartyId(PRIVATE_PARTY_1);
-		final var result = repository.findAll(AssetSpecification.createAssetSpecification(request));
+		final var result = repository.findAll(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request));
 
 		assertThat(result).hasSize(3)
 			.extracting(AssetEntity::getAssetId)
@@ -103,13 +110,13 @@ class AssetRepositoryTest {
 	}
 
 	@Test
-	void findById() {
-		assertThat(repository.findById(PRIVATE_PARTY_ASSET_ID_1)).isPresent();
+	void findByIdAndMunicipalityId() {
+		assertThat(repository.findByIdAndMunicipalityId(PRIVATE_PARTY_ASSET_ID_1, MUNICIPALITY_ID)).isPresent();
 	}
 
 	@Test
-	void findByIdNotFound() {
-		assertThat(repository.findById("does-not-exist")).isNotPresent();
+	void findByIdAndMunicipalityIdNotFound() {
+		assertThat(repository.findByIdAndMunicipalityId("does-not-exist", MUNICIPALITY_ID)).isNotPresent();
 	}
 
 	@Test
@@ -143,4 +150,5 @@ class AssetRepositoryTest {
 
 		assertThat(repository.findById(ENTERPRISE_PARTY_ASSET_ID_3)).isNotPresent();
 	}
+
 }

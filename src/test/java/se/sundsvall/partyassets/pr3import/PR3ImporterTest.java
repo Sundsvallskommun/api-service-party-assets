@@ -34,82 +34,85 @@ import se.sundsvall.partyassets.integration.party.PartyClient;
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class PR3ImporterTest {
 
-    @MockBean
-    private AssetRepository mockAssetRepository;
-    @MockBean
-    private PartyClient mockPartyClient;
-    @MockBean
-    private Row mockRow;
+	@MockBean
+	private AssetRepository mockAssetRepository;
 
-    @Value("classpath:test.xlsx")
-    private Resource importFileResource;
+	@MockBean
+	private PartyClient mockPartyClient;
 
-    @Autowired
-    private PR3Importer importer;
+	@MockBean
+	private Row mockRow;
 
-    @Test
-    void importFromExcel() throws IOException {
-        when(mockPartyClient.getPartyId(eq(PRIVATE), anyString()))
-            .thenReturn(of(UUID.randomUUID().toString()));
+	@Value("classpath:test.xlsx")
+	private Resource importFileResource;
 
-        final var result = importer.importFromExcel(importFileResource.getInputStream());
+	@Autowired
+	private PR3Importer importer;
 
-        assertThat(result).isNotNull();
-        assertThat(result.getTotal()).isEqualTo(3);
-        assertThat(result.getSuccessful()).isEqualTo(2);
-        assertThat(result.getFailed()).isOne();
+	@Test
+	void importFromExcel() throws IOException {
+		when(mockPartyClient.getPartyId(eq(PRIVATE), anyString()))
+			.thenReturn(of(UUID.randomUUID().toString()));
 
-        verify(mockPartyClient, times(2)).getPartyId(eq(PRIVATE), any(String.class));
-        verifyNoMoreInteractions(mockPartyClient);
-        verify(mockAssetRepository, times(2)).existsByAssetId(any(String.class));
-        verify(mockAssetRepository, times(2)).save(any(AssetEntity.class));
-        verifyNoMoreInteractions(mockAssetRepository);
-    }
+		final var result = importer.importFromExcel(importFileResource.getInputStream());
 
-    @Test
-    void addCenturyDigitToLegalId() {
-        assertThat(importer.addCenturyDigitToLegalId("")).isNull();
-        assertThat(importer.addCenturyDigitToLegalId("not-a-legal-id")).isNull();
-        assertThat(importer.addCenturyDigitToLegalId("196505018585")).isEqualTo("196505018585");
-        assertThat(importer.addCenturyDigitToLegalId("200301021456")).isEqualTo("200301021456");
-        assertThat(importer.addCenturyDigitToLegalId("6505018585")).isEqualTo("196505018585");
-        assertThat(importer.addCenturyDigitToLegalId("0301021456")).isEqualTo("200301021456");
-    }
+		assertThat(result).isNotNull();
+		assertThat(result.getTotal()).isEqualTo(3);
+		assertThat(result.getSuccessful()).isEqualTo(2);
+		assertThat(result.getFailed()).isOne();
+
+		verify(mockPartyClient, times(2)).getPartyId(eq(PRIVATE), any(String.class));
+		verifyNoMoreInteractions(mockPartyClient);
+		verify(mockAssetRepository, times(2)).existsByAssetIdAndMunicipalityId(any(String.class), any(String.class));
+		verify(mockAssetRepository, times(2)).save(any(AssetEntity.class));
+		verifyNoMoreInteractions(mockAssetRepository);
+	}
+
+	@Test
+	void addCenturyDigitToLegalId() {
+		assertThat(importer.addCenturyDigitToLegalId("")).isNull();
+		assertThat(importer.addCenturyDigitToLegalId("not-a-legal-id")).isNull();
+		assertThat(importer.addCenturyDigitToLegalId("196505018585")).isEqualTo("196505018585");
+		assertThat(importer.addCenturyDigitToLegalId("200301021456")).isEqualTo("200301021456");
+		assertThat(importer.addCenturyDigitToLegalId("6505018585")).isEqualTo("196505018585");
+		assertThat(importer.addCenturyDigitToLegalId("0301021456")).isEqualTo("200301021456");
+	}
 
 
-    @Test
-    void testExtractLegalIdWithCenturyDigits() {
-        // Arrange
-        when(mockRow.getCellText(10)).thenReturn("191234567890");
+	@Test
+	void testExtractLegalIdWithCenturyDigits() {
+		// Arrange
+		when(mockRow.getCellText(10)).thenReturn("191234567890");
 
-        // Act
-        final Optional<String> result = importer.extractLegalId(mockRow);
+		// Act
+		final Optional<String> result = importer.extractLegalId(mockRow);
 
-        // Assert
-        assertThat(result).isPresent().contains("1234567890");
-    }
+		// Assert
+		assertThat(result).isPresent().contains("1234567890");
+	}
 
-    @Test
-    void testExtractLegalIdWithoutCenturyDigits() {
-        // Arrange
-        when(mockRow.getCellText(10)).thenReturn("1234567890");
+	@Test
+	void testExtractLegalIdWithoutCenturyDigits() {
+		// Arrange
+		when(mockRow.getCellText(10)).thenReturn("1234567890");
 
-        // Act
-        final Optional<String> result = importer.extractLegalId(mockRow);
+		// Act
+		final Optional<String> result = importer.extractLegalId(mockRow);
 
-        // Assert
-        assertThat(result).isPresent().contains("1234567890");
-    }
+		// Assert
+		assertThat(result).isPresent().contains("1234567890");
+	}
 
-    @Test
-    void testExtractLegalIdWithEmptyString() {
-        // Arrange
-        when(mockRow.getCellText(10)).thenReturn("");
+	@Test
+	void testExtractLegalIdWithEmptyString() {
+		// Arrange
+		when(mockRow.getCellText(10)).thenReturn("");
 
-        // Act
-        final Optional<String> result = importer.extractLegalId(mockRow);
+		// Act
+		final Optional<String> result = importer.extractLegalId(mockRow);
 
-        // Assert
-        assertThat(result).isNotPresent();
-    }
+		// Assert
+		assertThat(result).isNotPresent();
+	}
+
 }

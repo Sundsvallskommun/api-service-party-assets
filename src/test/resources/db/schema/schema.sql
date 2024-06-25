@@ -14,6 +14,7 @@
         asset_id varchar(255) not null,
         description varchar(255),
         id varchar(255) not null,
+        municipality_id varchar(255),
         origin varchar(255),
         party_id varchar(255) not null,
         status_reason varchar(255),
@@ -31,6 +32,7 @@
     create table status (
         created datetime(6),
         updated datetime(6),
+        municipality_id varchar(255),
         name varchar(255) not null,
         primary key (name)
     ) engine=InnoDB;

@@ -59,7 +59,7 @@ class AssetsIT extends AbstractAppTest {
 		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
 
 		// Verify no existing assets on customer before create
-		assertThat(repository.findOne(createAssetSpecification(searchRequestForPartyId))).isEmpty();
+		assertThat(repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId))).isEmpty();
 
 		// Create asset
 		setupCall()
@@ -72,7 +72,7 @@ class AssetsIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Verify that asset has been created for customer
-		final var asset = repository.findOne(createAssetSpecification(searchRequestForPartyId));
+		final var asset = repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId));
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000021");
@@ -96,7 +96,7 @@ class AssetsIT extends AbstractAppTest {
 		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
 
 		// Verify no existing assets on customer before create
-		assertThat(repository.findOne(createAssetSpecification(searchRequestForPartyId))).isEmpty();
+		assertThat(repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId))).isEmpty();
 
 		// Create asset
 		setupCall()
@@ -108,7 +108,7 @@ class AssetsIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Verify that asset has been created for customer
-		final var asset = repository.findOne(createAssetSpecification(searchRequestForPartyId));
+		final var asset = repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId));
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000055");
@@ -140,7 +140,7 @@ class AssetsIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 
 		// Verify that no asset has been created for customer
-		assertThat(repository.findOne(createAssetSpecification(searchRequestForPartyId))).isEmpty();
+		assertThat(repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId))).isEmpty();
 	}
 
 	@Test

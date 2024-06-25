@@ -34,7 +34,8 @@ class AssetMapperTest {
 	void toEntity() {
 		final var request = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
 		final var partyType = PartyType.PRIVATE;
-		final var entity = AssetMapper.toEntity(request, partyType);
+		final var municipalityId = "2281";
+		final var entity = AssetMapper.toEntity(request, partyType, municipalityId);
 
 		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getAssetId()).isEqualTo(request.getAssetId());
@@ -98,4 +99,5 @@ class AssetMapperTest {
 		assertThat(entity.getType()).isEqualTo(original.getType());
 		assertThat(entity.getId()).isEqualTo(original.getId());
 	}
+
 }
