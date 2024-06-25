@@ -39,6 +39,7 @@ class AssetMapperTest {
 
 		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getAssetId()).isEqualTo(request.getAssetId());
+		assertThat(entity.getMunicipalityId()).isEqualTo(municipalityId);
 		assertThat(entity.getCaseReferenceIds()).isEqualTo(request.getCaseReferenceIds());
 		assertThat(entity.getDescription()).isEqualTo(request.getDescription());
 		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
@@ -75,6 +76,7 @@ class AssetMapperTest {
 		assertThat(entity.getPartyId()).isEqualTo(original.getPartyId());
 		assertThat(entity.getType()).isEqualTo(original.getType());
 		assertThat(entity.getId()).isEqualTo(original.getId());
+		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 	}
 
 	@Test
@@ -98,6 +100,7 @@ class AssetMapperTest {
 		assertThat(entity.getPartyId()).isEqualTo(original.getPartyId());
 		assertThat(entity.getType()).isEqualTo(original.getType());
 		assertThat(entity.getId()).isEqualTo(original.getId());
+		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 	}
 
 }

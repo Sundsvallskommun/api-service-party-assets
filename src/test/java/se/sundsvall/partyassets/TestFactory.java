@@ -21,6 +21,7 @@ public final class TestFactory {
 		return AssetEntity.create()
 			.withAdditionalParameters(new HashMap<>(Map.of("key", "value")))
 			.withAssetId("assetId")
+			.withMunicipalityId("municipalityId")
 			.withCaseReferenceIds(new ArrayList<>(List.of("caseReferenceId")))
 			.withCreated(OffsetDateTime.now().minusDays(7))
 			.withDescription("description")
@@ -84,4 +85,5 @@ public final class TestFactory {
 			.withType("type")
 			.withValidTo(LocalDate.of(2010, 1, 1));
 	}
+
 }

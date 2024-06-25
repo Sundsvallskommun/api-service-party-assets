@@ -65,6 +65,7 @@ class StatusMapperTest {
 		assertThat(entity.getReasons()).isEqualTo(expectedReasons);
 		assertThat(entity.getCreated()).isNull();
 		assertThat(entity.getUpdated()).isNull();
+		assertThat(entity.getMunicipalityId()).isEqualTo(municipalityId);
 	}
 
 }
