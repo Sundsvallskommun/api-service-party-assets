@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" 
-		 xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+		xmlns="http://maven.apache.org/POM/4.0.0">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>se.sundsvall.dept44</groupId>
@@ -11,7 +12,7 @@
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-party-assets</artifactId>
-	<version>1.2</version>
+	<version>2.0</version>
 	<name>party-assets</name>
 	<properties>
 		<!-- PR3 import dependency versions -->
@@ -19,7 +20,8 @@
 		<exposed.app.port>8080</exposed.app.port>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
-		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
+		<generated-sources-path>${project.build.directory}/generated-sources
+		</generated-sources-path>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -40,7 +42,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
- 		<dependency>
+		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
 		</dependency>
@@ -95,7 +97,7 @@
 						<exclude>**/se/sundsvall/partyassets/Application*</exclude>
 						<exclude>**/se/sundsvall/partyassets/integration/db/model/*_.*</exclude>
 						<exclude>**/generated/se/sundsvall/**/*</exclude>
-  					</excludes>
+					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -132,7 +134,8 @@
 							<goal>generate</goal>
 						</goals>
 						<configuration>
-							<inputSpec>src/main/resources/integrations/messaging-api.yaml</inputSpec>
+							<inputSpec>src/main/resources/integrations/messaging-api.yaml
+							</inputSpec>
 							<output>${generated-sources-path}</output>
 							<generatorName>spring</generatorName>
 							<generateApis>false</generateApis>
@@ -165,8 +168,10 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>${generated-sources-path}/models</source> <!-- API-model classes -->
-								<source>${generated-sources-path}/annotations</source> <!-- JPAModelGen classes -->
+								<source>${generated-sources-path}/models
+								</source> <!-- API-model classes -->
+								<source>${generated-sources-path}/annotations
+								</source> <!-- JPAModelGen classes -->
 							</sources>
 						</configuration>
 					</execution>

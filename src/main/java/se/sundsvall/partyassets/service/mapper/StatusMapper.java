@@ -14,9 +14,11 @@ import org.apache.commons.lang3.StringUtils;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 
-public class StatusMapper {
+public final class StatusMapper {
 
-	private StatusMapper() {}
+	private StatusMapper() {
+		// Private constructor to prevent instantiation
+	}
 
 	public static Map<Status, List<String>> toReasons(final List<StatusEntity> entities) {
 		return ofNullable(entities).orElse(emptyList()).stream()
