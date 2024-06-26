@@ -13,9 +13,11 @@ import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
-public class AssetMapper {
+public final class AssetMapper {
 
-	private AssetMapper() {}
+	private AssetMapper() {
+		// Private constructor to prevent instantiation
+	}
 
 	public static Asset toAsset(final AssetEntity entity) {
 		return Asset.create()
