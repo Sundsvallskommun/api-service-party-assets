@@ -82,12 +82,12 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.PRIVATE);
+		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
 		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
 
-		verify(partyTypeProviderMock).calculatePartyType(partyId);
+		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 
@@ -102,12 +102,12 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
 
-		when(partyTypeProviderMock.calculatePartyType(partyId)).thenReturn(PartyType.ENTERPRISE);
+		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.ENTERPRISE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
 		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
 
-		verify(partyTypeProviderMock).calculatePartyType(partyId);
+		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 
@@ -127,7 +127,7 @@ class AssetServiceTest {
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
-		verify(partyTypeProviderMock, never()).calculatePartyType(any());
+		verify(partyTypeProviderMock, never()).calculatePartyType(any(), any());
 		verify(repositoryMock, never()).save(any(AssetEntity.class));
 	}
 

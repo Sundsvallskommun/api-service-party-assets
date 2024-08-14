@@ -49,7 +49,7 @@ class PR3Importer {
 	static final String DRIVER_SHORT = "F";
 
 	static final String PASSENGER_SHORT = "P";
-	
+
 	private static final String PARAM_REGISTRATION_NUMBER = "registrationNumber";
 
 	private static final String PARAM_CARD_PRINTED = "cardPrinted";
@@ -187,9 +187,9 @@ class PR3Importer {
 					}
 
 					// Attempt to get the party id, by trying first "19" and then "20" as century digits
-					var partyId = partyClient.getPartyId(PartyType.PRIVATE, "19" + legalId.get());
+					var partyId = partyClient.getPartyId(municipalityId, PartyType.PRIVATE, "19" + legalId.get());
 					if (partyId.isEmpty()) {
-						partyId = partyClient.getPartyId(PartyType.PRIVATE, "20" + legalId.get());
+						partyId = partyClient.getPartyId(municipalityId, PartyType.PRIVATE, "20" + legalId.get());
 					}
 
 					if (partyId.isPresent()) {

@@ -13,18 +13,19 @@ public class PartyTypeProvider {
 
 	private final PartyClient partyClient;
 
-	public PartyTypeProvider(PartyClient partyClient) {
+	public PartyTypeProvider(final PartyClient partyClient) {
 		this.partyClient = partyClient;
 	}
 
-	public se.sundsvall.partyassets.integration.db.model.PartyType calculatePartyType(String partyId) {
-		if (partyClient.getLegalId(PRIVATE, partyId).isPresent()) {
+	public se.sundsvall.partyassets.integration.db.model.PartyType calculatePartyType(final String municipalityId, final String partyId) {
+		if (partyClient.getLegalId(municipalityId, PRIVATE, partyId).isPresent()) {
 			return se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
 		}
-		if (partyClient.getLegalId(ENTERPRISE, partyId).isPresent()) {
+		if (partyClient.getLegalId(municipalityId, ENTERPRISE, partyId).isPresent()) {
 			return se.sundsvall.partyassets.integration.db.model.PartyType.ENTERPRISE;
 		}
 
 		throw Problem.valueOf(NOT_FOUND, format("PartyId '%s' could not be found as a private customer or an enterprise customer", partyId));
 	}
+
 }

@@ -51,7 +51,7 @@ class PR3ImporterTest {
 
 	@Test
 	void importFromExcel() throws IOException {
-		when(mockPartyClient.getPartyId(eq(PRIVATE), anyString()))
+		when(mockPartyClient.getPartyId(eq("2281"), eq(PRIVATE), anyString()))
 			.thenReturn(of(UUID.randomUUID().toString()));
 
 		final var result = importer.importFromExcel(importFileResource.getInputStream(), "2281");
@@ -61,7 +61,7 @@ class PR3ImporterTest {
 		assertThat(result.getSuccessful()).isEqualTo(2);
 		assertThat(result.getFailed()).isOne();
 
-		verify(mockPartyClient, times(2)).getPartyId(eq(PRIVATE), any(String.class));
+		verify(mockPartyClient, times(2)).getPartyId(eq("2281"), eq(PRIVATE), any(String.class));
 		verifyNoMoreInteractions(mockPartyClient);
 		verify(mockAssetRepository, times(2)).existsByAssetIdAndMunicipalityId(any(String.class), any(String.class));
 		verify(mockAssetRepository, times(2)).save(any(AssetEntity.class));
