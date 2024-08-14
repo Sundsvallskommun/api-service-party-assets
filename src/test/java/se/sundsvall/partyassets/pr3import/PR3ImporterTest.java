@@ -54,7 +54,7 @@ class PR3ImporterTest {
 		when(mockPartyClient.getPartyId(eq(PRIVATE), anyString()))
 			.thenReturn(of(UUID.randomUUID().toString()));
 
-		final var result = importer.importFromExcel(importFileResource.getInputStream());
+		final var result = importer.importFromExcel(importFileResource.getInputStream(), "2281");
 
 		assertThat(result).isNotNull();
 		assertThat(result.getTotal()).isEqualTo(3);

@@ -49,9 +49,7 @@ class PR3Importer {
 	static final String DRIVER_SHORT = "F";
 
 	static final String PASSENGER_SHORT = "P";
-
-	private static final String SUNDSVALL_MUNICIPALITY_ID = "2281"; // PR3import should only be run for Sundsvall
-
+	
 	private static final String PARAM_REGISTRATION_NUMBER = "registrationNumber";
 
 	private static final String PARAM_CARD_PRINTED = "cardPrinted";
@@ -134,7 +132,7 @@ class PR3Importer {
 	 * @return the import result.
 	 * @throws IOException on any errors.
 	 */
-	Result importFromExcel(final InputStream in) throws IOException {
+	Result importFromExcel(final InputStream in, final String municipalityId) throws IOException {
 		final var result = new Result();
 
 		var lastFailedRowIndex = 1;
@@ -246,7 +244,7 @@ class PR3Importer {
 					// we won't need to make the extra calls to the party service to determine the
 					// actual party type
 					try {
-						if (assetRepository.existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), SUNDSVALL_MUNICIPALITY_ID)) {
+						if (assetRepository.existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), municipalityId)) {
 							throw Problem.builder()
 								.withStatus(CONFLICT)
 								.withTitle("Asset already exists")
@@ -254,7 +252,7 @@ class PR3Importer {
 								.build();
 						}
 
-						assetRepository.save(toEntity(assetCreateRequest, PRIVATE, SUNDSVALL_MUNICIPALITY_ID));
+						assetRepository.save(toEntity(assetCreateRequest, PRIVATE, municipalityId));
 					} catch (final Exception e) {
 						if (e instanceof final ThrowableProblem p) {
 							errorDetail = ofNullable(p.getDetail());
