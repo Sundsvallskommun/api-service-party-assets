@@ -32,6 +32,10 @@ import generated.se.sundsvall.messaging.EmailRequest;
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class PR3ImportResourceTest {
 
+	private static final String MUNICIPALITY_ID = "2281";
+
+	private static final String PATH = "/" + MUNICIPALITY_ID + "/pr3import";
+
 	@MockBean
 	private PR3Importer mockImporter;
 
@@ -48,14 +52,14 @@ class PR3ImportResourceTest {
 			.withTotal(12)
 			.withFailed(2)
 			.withFailedExcelData(importFile.getContentAsByteArray());
-		when(mockImporter.importFromExcel(any(InputStream.class))).thenReturn(importResult);
+		when(mockImporter.importFromExcel(any(InputStream.class), any(String.class))).thenReturn(importResult);
 
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
 		multipartBodyBuilder.part("file", importFile);
 		multipartBodyBuilder.part("email", "someone@something.com");
 
 		final var result = webTestClient.post()
-			.uri("/pr3import")
+			.uri(PATH)
 			.contentType(MULTIPART_FORM_DATA)
 			.body(fromMultipartData(multipartBodyBuilder.build()))
 			.exchange()
@@ -72,8 +76,8 @@ class PR3ImportResourceTest {
 		assertThat(result.getFailed()).isEqualTo(importResult.getFailed());
 		assertThat(result.getFailedExcelData()).isNull();
 
-		verify(mockImporter).importFromExcel(any(InputStream.class));
-		verify(mockMessagingClient).sendEmail(any(EmailRequest.class));
+		verify(mockImporter).importFromExcel(any(InputStream.class), any(String.class));
+		verify(mockMessagingClient).sendEmail(any(String.class), any(EmailRequest.class));
 		verifyNoMoreInteractions(mockImporter);
 		verifyNoMoreInteractions(mockMessagingClient);
 	}
@@ -81,7 +85,7 @@ class PR3ImportResourceTest {
 	@Test
 	void handleImportWithInvalidInput() {
 		final var response = webTestClient.post()
-			.uri("/pr3import")
+			.uri(PATH)
 			.contentType(MULTIPART_FORM_DATA)
 			.exchange()
 			.expectStatus()
