@@ -20,6 +20,7 @@ public interface PartyClient {
 	/**
 	 * Get legal-ID by type and partyId.
 	 *
+	 * @param municipalityId the municipality ID.
 	 * @param partyType the type of party.
 	 * @param partyId the ID of the party. I.e. the personId or organizationId.
 	 * @return an optional string containing the legalId that corresponds to the provided partyType and partyId.
@@ -31,6 +32,7 @@ public interface PartyClient {
 	/**
 	 * Get partyId by type and legal-ID.
 	 *
+	 * @param municipalityId the municipality ID.
 	 * @param partyType the type of party.
 	 * @param legalId the legal-ID.
 	 * @return an optional string containing the partyId that corresponds to the provided partyType and legalId.
