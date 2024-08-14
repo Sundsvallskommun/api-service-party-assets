@@ -19,23 +19,26 @@ public interface PartyClient {
 
 	/**
 	 * Get legal-ID by type and partyId.
-	 * 
+	 *
+	 * @param municipalityId the municipality ID.
 	 * @param partyType the type of party.
-	 * @param partyId   the ID of the party. I.e. the personId or organizationId.
+	 * @param partyId the ID of the party. I.e. the personId or organizationId.
 	 * @return an optional string containing the legalId that corresponds to the provided partyType and partyId.
 	 * @throws org.zalando.problem.ThrowableProblem
 	 */
-	@GetMapping(path = "/{type}/{partyId}/legalId", produces = { TEXT_PLAIN_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-	Optional<String> getLegalId(@PathVariable("type") PartyType partyType, @PathVariable("partyId") String partyId);
+	@GetMapping(path = "/{municipalityId}/{type}/{partyId}/legalId", produces = {TEXT_PLAIN_VALUE, APPLICATION_PROBLEM_JSON_VALUE})
+	Optional<String> getLegalId(@PathVariable("municipalityId") String municipalityId, @PathVariable("type") PartyType partyType, @PathVariable("partyId") String partyId);
 
 	/**
 	 * Get partyId by type and legal-ID.
 	 *
+	 * @param municipalityId the municipality ID.
 	 * @param partyType the type of party.
-	 * @param legalId   the legal-ID.
+	 * @param legalId the legal-ID.
 	 * @return an optional string containing the partyId that corresponds to the provided partyType and legalId.
 	 * @throws org.zalando.problem.ThrowableProblem
 	 */
-	@GetMapping(path = "/{type}/{legalId}/partyId", produces = { TEXT_PLAIN_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
-	Optional<String> getPartyId(@PathVariable("type") PartyType partyType, @PathVariable("legalId") String legalId);
+	@GetMapping(path = "/{municipalityId}/{type}/{legalId}/partyId", produces = {TEXT_PLAIN_VALUE, APPLICATION_PROBLEM_JSON_VALUE})
+	Optional<String> getPartyId(@PathVariable("municipalityId") String municipalityId, @PathVariable("type") PartyType partyType, @PathVariable("legalId") String legalId);
+
 }

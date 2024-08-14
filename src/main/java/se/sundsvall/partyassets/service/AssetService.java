@@ -46,7 +46,7 @@ public class AssetService {
 				.withDetail("Asset with assetId %s already exists".formatted(request.getAssetId()))
 				.build();
 		}
-		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(request.getPartyId()), municipalityId)).getId();
+		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
 	}
 
 	public void deleteAsset(final String municipalityId, final String id) {
