@@ -16,7 +16,7 @@
 	<name>party-assets</name>
 	<properties>
 		<!-- PR3 import dependency versions -->
-		<fastexcel.version>0.18.1</fastexcel.version>
+		<fastexcel.version>0.18.2</fastexcel.version>
 		<exposed.app.port>8080</exposed.app.port>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
