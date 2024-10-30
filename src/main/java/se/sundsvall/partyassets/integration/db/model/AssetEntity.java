@@ -35,9 +35,14 @@ import se.sundsvall.partyassets.api.model.Status;
 
 @Entity
 @Table(name = "asset",
-	uniqueConstraints = {@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {"asset_id"})},
-	indexes = {@Index(name = "idx_asset_municipality_id", columnList = "municipality_id")}
-)
+	uniqueConstraints = {
+		@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {
+			"asset_id"
+		})
+	},
+	indexes = {
+		@Index(name = "idx_asset_municipality_id", columnList = "municipality_id")
+	})
 public class AssetEntity {
 
 	@Id
@@ -81,7 +86,8 @@ public class AssetEntity {
 	private String description;
 
 	@ElementCollection(fetch = EAGER)
-	@CollectionTable(name = "additional_parameter", joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_additional_parameter_asset_id")),
+	@CollectionTable(name = "additional_parameter",
+		joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_additional_parameter_asset_id")),
 		indexes = {
 			@Index(name = "idx_additional_parameter_asset_id", columnList = "asset_id")
 		})
@@ -319,10 +325,14 @@ public class AssetEntity {
 
 	@Override
 	public boolean equals(final Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 		final AssetEntity that = (AssetEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(municipalityId, that.municipalityId) && Objects.equals(origin, that.origin) && Objects.equals(assetId, that.assetId) && Objects.equals(partyId, that.partyId) && partyType == that.partyType && Objects.equals(caseReferenceIds, that.caseReferenceIds) && Objects.equals(type, that.type) && Objects.equals(issued, that.issued) && Objects.equals(validTo, that.validTo) && status == that.status && Objects.equals(statusReason, that.statusReason) && Objects.equals(description, that.description) && Objects.equals(additionalParameters, that.additionalParameters) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated);
+		return Objects.equals(id, that.id) && Objects.equals(municipalityId, that.municipalityId) && Objects.equals(origin, that.origin) && Objects.equals(assetId, that.assetId) && Objects.equals(partyId, that.partyId) && partyType == that.partyType
+			&& Objects.equals(caseReferenceIds, that.caseReferenceIds) && Objects.equals(type, that.type) && Objects.equals(issued, that.issued) && Objects.equals(validTo, that.validTo) && status == that.status && Objects.equals(statusReason,
+				that.statusReason) && Objects.equals(description, that.description) && Objects.equals(additionalParameters, that.additionalParameters) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated);
 	}
 
 	@Override

@@ -34,7 +34,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Validated
 @RequestMapping(value = "/{municipalityId}/pr3import")
 @Tag(name = "PR3 Import")
-@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = {Problem.class, ConstraintViolationProblem.class})))
+@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = {
+	Problem.class, ConstraintViolationProblem.class
+})))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 class PR3ImportResource {
 
@@ -49,7 +51,9 @@ class PR3ImportResource {
 		this.messagingClient = messagingClient;
 	}
 
-	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE, produces = {APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE})
+	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE, produces = {
+		APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	})
 	PR3Importer.Result handleImport(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@RequestParam("file") final MultipartFile file,

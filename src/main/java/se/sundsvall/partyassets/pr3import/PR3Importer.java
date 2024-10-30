@@ -128,8 +128,8 @@ class PR3Importer {
 	/**
 	 * Imports assets from the Excel file read from the given input stream.
 	 *
-	 * @param in the input stream to read the Excel file from.
-	 * @return the import result.
+	 * @param  in          the input stream to read the Excel file from.
+	 * @return             the import result.
 	 * @throws IOException on any errors.
 	 */
 	Result importFromExcel(final InputStream in, final String municipalityId) throws IOException {
@@ -139,7 +139,7 @@ class PR3Importer {
 		final var out = new ByteArrayOutputStream();
 
 		try (final var sourceWorkbook = new ReadableWorkbook(in);
-		     final var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
+			final var failedEntriesWorkbook = new Workbook(out, "party-assets", null)) {
 			final var sourceSheet = sourceWorkbook.getFirstSheet();
 			final var failedEntriesSheet = failedEntriesWorkbook.newWorksheet(sourceSheet.getName());
 
@@ -203,18 +203,12 @@ class PR3Importer {
 				extractIssuedDate(row).ifPresent(assetCreateRequest::setIssued);
 				extractValidToDate(row).ifPresent(assetCreateRequest::setValidTo);
 				extractStatus(row).ifPresent(assetCreateRequest::setStatus);
-				extractRegistrationNumber(row).ifPresent(value ->
-					assetCreateRequest.setAdditionalParameter(PARAM_REGISTRATION_NUMBER, value));
-				extractCardPrinted(row).ifPresent(value ->
-					assetCreateRequest.setAdditionalParameter(PARAM_CARD_PRINTED, value.format(DateTimeFormatter.ISO_DATE)));
-				extractSmartParkSync(row).ifPresent(value ->
-					assetCreateRequest.setAdditionalParameter(PARAM_SMART_PARK_SYNC, value));
-				extractIssuedByAdministration(row).ifPresent(value ->
-					assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATION, value));
-				extractIssuedByAdministrator(row).ifPresent(value ->
-					assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATOR, value));
-				extractAppliedAs(row).ifPresent(value ->
-					assetCreateRequest.setAdditionalParameter(PARAM_APPLIED_AS, value));
+				extractRegistrationNumber(row).ifPresent(value -> assetCreateRequest.setAdditionalParameter(PARAM_REGISTRATION_NUMBER, value));
+				extractCardPrinted(row).ifPresent(value -> assetCreateRequest.setAdditionalParameter(PARAM_CARD_PRINTED, value.format(DateTimeFormatter.ISO_DATE)));
+				extractSmartParkSync(row).ifPresent(value -> assetCreateRequest.setAdditionalParameter(PARAM_SMART_PARK_SYNC, value));
+				extractIssuedByAdministration(row).ifPresent(value -> assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATION, value));
+				extractIssuedByAdministrator(row).ifPresent(value -> assetCreateRequest.setAdditionalParameter(PARAM_ISSUED_BY_ADMINISTRATOR, value));
+				extractAppliedAs(row).ifPresent(value -> assetCreateRequest.setAdditionalParameter(PARAM_APPLIED_AS, value));
 				// Create the full permit number as {municipality id}-{asset id}-{birth year}{sex}-{applied as}
 				extractSex(row).ifPresent(sex -> {
 					// Sanity check...
@@ -282,7 +276,7 @@ class PR3Importer {
 	 * Copies the given source row to the target worksheet and sets the background to gray.
 	 *
 	 * @param sourceRow the source row.
-	 * @param target the target worksheet.
+	 * @param target    the target worksheet.
 	 */
 	private void copyHeaderRow(final Row sourceRow, final Worksheet target) {
 		copyRow(sourceRow, target, 0, Optional.empty());
@@ -296,11 +290,11 @@ class PR3Importer {
 	 * Copies the given source row to the given row index in the target worksheet, optionally adding
 	 * "details" column at the end of the row.
 	 *
-	 * @param sourceRow the source row.
-	 * @param target the target worksheet.
+	 * @param sourceRow      the source row.
+	 * @param target         the target worksheet.
 	 * @param targetRowIndex the target row index.
 	 * @param optionalDetail an {@code Optional} that may hold additional "details" that is added to
-	 * the end of the row if non-empty.
+	 *                       the end of the row if non-empty.
 	 */
 	private void copyRow(final Row sourceRow, final Worksheet target, final int targetRowIndex, final Optional<String> optionalDetail) {
 		final var columnCount = sourceRow.getCellCount();
@@ -328,8 +322,8 @@ class PR3Importer {
 	 * Extracts the legal id from the given row (column 10, "PERSONNR") and adds a century digit if
 	 * needed.
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the legal id, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the legal id, or is empty.
 	 */
 	Optional<String> extractLegalId(final Row row) {
 		return extractCell(row, COL_LEGAL_ID)
@@ -347,8 +341,8 @@ class PR3Importer {
 	/**
 	 * Cleans and returns the provided legal id, removing everything but digits.
 	 *
-	 * @param legalId the legal id to clean.
-	 * @return a legal id with digits only
+	 * @param  legalId the legal id to clean.
+	 * @return         a legal id with digits only
 	 */
 	String cleanLegalId(final String legalId) {
 		return legalId.replaceAll("\\D", "");
@@ -357,8 +351,8 @@ class PR3Importer {
 	/**
 	 * Naively adds a century digit to the given legal id, if it's missing.
 	 *
-	 * @param legalId the legal id to add the century digit to.
-	 * @return the original legal id with a leading century digit, if it was previously missing.
+	 * @param  legalId the legal id to add the century digit to.
+	 * @return         the original legal id with a leading century digit, if it was previously missing.
 	 */
 	String addCenturyDigitToLegalId(final String legalId) {
 		// Make sure we have digits only
@@ -379,8 +373,8 @@ class PR3Importer {
 	/**
 	 * Extracts the asset id from the given row (column 7, "TILLSTNR").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the asset id, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the asset id, or is empty.
 	 */
 	Optional<String> extractAssetId(final Row row) {
 		return extractCell(row, COL_ASSET_ID);
@@ -389,8 +383,8 @@ class PR3Importer {
 	/**
 	 * Extracts the issued date from the given row (column 16, "UTFARDAT").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the issued date, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the issued date, or is empty.
 	 */
 	Optional<LocalDate> extractIssuedDate(final Row row) {
 		return row.getCellAsDate(COL_ISSUED_DATE).map(LocalDateTime::toLocalDate);
@@ -399,8 +393,8 @@ class PR3Importer {
 	/**
 	 * Extracts the valid-to date from the given row (column 18, "GILTIGTTOM").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the valid-to date, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the valid-to date, or is empty.
 	 */
 	Optional<LocalDate> extractValidToDate(final Row row) {
 		return row.getCellAsDate(COL_VALID_TO_DATE).map(LocalDateTime::toLocalDate);
@@ -410,8 +404,8 @@ class PR3Importer {
 	 * Extracts the status from the given row, by checking whether the valid-to date is after today
 	 * or not.
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the status, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the status, or is empty.
 	 */
 	Optional<Status> extractStatus(final Row row) {
 		return extractValidToDate(row)
@@ -421,8 +415,8 @@ class PR3Importer {
 	/**
 	 * Extracts the registration number from the given row (column 15, "DIARIENR").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the registration number, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the registration number, or is empty.
 	 */
 	Optional<String> extractRegistrationNumber(final Row row) {
 		return extractCell(row, COL_REGISTRATION_NUMBER);
@@ -431,8 +425,8 @@ class PR3Importer {
 	/**
 	 * Extracts the date the card was printed from the given row (column 21, "UTSKRIVET").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the date the card was printed, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the date the card was printed, or is empty.
 	 */
 	Optional<LocalDateTime> extractCardPrinted(final Row row) {
 		return row.getCellAsDate(COL_CARD_PRINTED);
@@ -441,13 +435,14 @@ class PR3Importer {
 	/**
 	 * Extracts the "SmartCardSync" flag from the given row (column 27, "SmartParkSync").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains value of the "SmartParkSync" flag, or is empty.
 	 */
 	Optional<String> extractSmartParkSync(final Row row) {
 		return extractCell(row, COL_SMART_PARK_SYNC)
 			.map(Integer::parseInt)
-			.map(intValue -> switch (intValue) {
+			.map(intValue -> switch (intValue)
+			{
 				case 0 -> "false";
 				case 1 -> "true";
 				default -> null;
@@ -457,9 +452,9 @@ class PR3Importer {
 	/**
 	 * Extracts the (name of the) administration that issued the card from the given row (column 23, "EXTRA1").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the (name of the) administration that issued
-	 * the card, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the (name of the) administration that issued
+	 *             the card, or is empty.
 	 */
 	Optional<String> extractIssuedByAdministration(final Row row) {
 		return extractCell(row, COL_ISSUED_BY_ADMINISTRATION);
@@ -468,9 +463,9 @@ class PR3Importer {
 	/**
 	 * Extracts the (name of the) administrator that issued the card from the given row (column 24, "EXTRA2").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the (name of the) administrator that issued
-	 * the card, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the (name of the) administrator that issued
+	 *             the card, or is empty.
 	 */
 	Optional<String> extractIssuedByAdministrator(final Row row) {
 		return extractCell(row, COL_ISSUED_BY_ADMINISTRATOR);
@@ -479,14 +474,15 @@ class PR3Importer {
 	/**
 	 * Extracts whether the card was applied for as a driver or passenger from the given row (column 5, "PASSAGE").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains whether the card was applied for as a driver
-	 * or passenger, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains whether the card was applied for as a driver
+	 *             or passenger, or is empty.
 	 */
 	Optional<String> extractAppliedAs(final Row row) {
 		return extractCell(row, COL_APPLIED_AS)
 			.map(Integer::parseInt)
-			.map(intValue -> switch (intValue) {
+			.map(intValue -> switch (intValue)
+			{
 				case 1 -> PASSENGER;
 				case 2 -> DRIVER;
 				default -> null;
@@ -496,13 +492,14 @@ class PR3Importer {
 	/**
 	 * Extracts the sex as "K" for women and "M" for men, from the given row (column 4, "KON").
 	 *
-	 * @param row the row.
-	 * @return an {@code Optional} that either contains the sex, or is empty.
+	 * @param  row the row.
+	 * @return     an {@code Optional} that either contains the sex, or is empty.
 	 */
 	Optional<String> extractSex(final Row row) {
 		return extractCell(row, COL_SEX)
 			.map(Integer::parseInt)
-			.map(intValue -> switch (intValue) {
+			.map(intValue -> switch (intValue)
+			{
 				case 0 -> "K";
 				case 1 -> "M";
 				default -> null;
@@ -513,9 +510,9 @@ class PR3Importer {
 	 * Convenience method to extract the contents of a cell as a string, regardless of what type
 	 * Excel treats it as.
 	 *
-	 * @param row the row.
-	 * @param cellIndex the cell index.
-	 * @return an {@code Optional} that either contains the cell value as a string, or is empty
+	 * @param  row       the row.
+	 * @param  cellIndex the cell index.
+	 * @return           an {@code Optional} that either contains the cell value as a string, or is empty
 	 */
 	Optional<String> extractCell(final Row row, final int cellIndex) {
 		return Optional.of(row.getCellText(cellIndex)).filter(not(String::isBlank));

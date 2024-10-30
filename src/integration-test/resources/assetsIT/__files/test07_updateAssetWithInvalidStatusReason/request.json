@@ -1,4 +1,4 @@
 {
-	"status": "BLOCKED",
-	"statusReason": "NON_VALID_REASON"
+	"statusReason": "NON_VALID_REASON",
+	"status": "BLOCKED"
 }

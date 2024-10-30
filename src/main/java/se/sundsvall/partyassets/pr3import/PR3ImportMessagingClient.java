@@ -13,8 +13,7 @@ import generated.se.sundsvall.messaging.EmailRequest;
 @FeignClient(
 	name = INTEGRATION_NAME,
 	url = "${pr3import.messaging-integration.url}",
-	configuration = PR3ImportConfiguration.class
-)
+	configuration = PR3ImportConfiguration.class)
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)
 interface PR3ImportMessagingClient {
 

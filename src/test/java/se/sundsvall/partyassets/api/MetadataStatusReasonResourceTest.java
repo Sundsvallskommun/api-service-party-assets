@@ -1,20 +1,5 @@
 package se.sundsvall.partyassets.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
-import static org.zalando.problem.Status.BAD_REQUEST;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -27,10 +12,24 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
-
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.StatusService;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
+import static org.zalando.problem.Status.BAD_REQUEST;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -96,7 +95,6 @@ class MetadataStatusReasonResourceTest {
 		verifyNoInteractions(serviceMock);
 	}
 
-
 	@Test
 	void getReasonsForStatus() {
 		// Arrange
@@ -130,9 +128,9 @@ class MetadataStatusReasonResourceTest {
 		// Arrange
 		final var expectedJsonMessage = """
 			{
-			  "title" : "Bad Request",
-			  "status" : 400,
-			  "detail" : "Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
+			"title" : "Bad Request",
+			"status" : 400,
+			"detail" : "Method parameter 'status': Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
 			}""";
 
 		// Act
@@ -203,9 +201,9 @@ class MetadataStatusReasonResourceTest {
 		final var body = List.of("REASON");
 		final var expectedJsonMessage = """
 			{
-			  "title" : "Bad Request",
-			  "status" : 400,
-			  "detail" : "Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
+			"title" : "Bad Request",
+			"status" : 400,
+			"detail" : "Method parameter 'status': Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
 			}""";
 
 		// Act
@@ -225,7 +223,9 @@ class MetadataStatusReasonResourceTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {" "})
+	@ValueSource(strings = {
+		" "
+	})
 	@NullAndEmptySource
 	void createStatusReasonsFromInvalidStrings(final String value) {
 		// Arrange
@@ -342,9 +342,9 @@ class MetadataStatusReasonResourceTest {
 		// Arrange
 		final var expectedJsonMessage = """
 			{
-			  "title" : "Bad Request",
-			  "status" : 400,
-			  "detail" : "Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
+			"title" : "Bad Request",
+			"status" : 400,
+			"detail" : "Method parameter 'status': Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
 			}""";
 
 		// Act

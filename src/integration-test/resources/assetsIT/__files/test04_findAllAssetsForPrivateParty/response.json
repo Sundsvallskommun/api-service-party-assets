@@ -1,52 +1,48 @@
 [
 	{
-		"id": "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884",
 		"assetId": "PRH-0000000001",
 		"origin": "CASEDATA",
-		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+		"description": "Parkeringstillstånd",
+		"additionalParameters": {
+			"first_key": "first_value",
+			"second_key": "second_value"
+		},
+		"id": "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884",
 		"caseReferenceIds": [
 			"case_reference_1",
 			"case_reference_2"
 		],
+		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
 		"type": "PERMIT",
 		"issued": "2022-01-01",
 		"validTo": "2022-12-31",
-		"status": "EXPIRED",
-		"description": "Parkeringstillstånd",
-		"additionalParameters": {
-			"second_key": "second_value",
-			"first_key": "first_value"
-		}
+		"status": "EXPIRED"
 	},
 	{
-		"id": "945576d3-6e92-4118-ba33-53582d338ad3",
+		"statusReason": "Stöldanmäld",
 		"assetId": "PRH-0000000002",
 		"origin": "CASEDATA",
+		"description": "Parkeringstillstånd",
+		"additionalParameters": {"first_key": "third_value"},
+		"id": "945576d3-6e92-4118-ba33-53582d338ad3",
+		"caseReferenceIds": ["case_reference_3"],
 		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
-		"caseReferenceIds": [
-			"case_reference_3"
-		],
 		"type": "PERMIT",
 		"issued": "2023-01-01",
 		"validTo": "2023-12-31",
-		"status": "BLOCKED",
-		"statusReason": "Stöldanmäld",
-		"description": "Parkeringstillstånd",
-		"additionalParameters": {
-			"first_key": "third_value"
-		}
+		"status": "BLOCKED"
 	},
 	{
-		"id": "e84b72ee-1a34-44b5-b8f6-2e0e42e99010",
 		"assetId": "CON-0000000003",
 		"origin": "MAZEDATA",
-		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+		"description": "Bygglov",
+		"additionalParameters": {},
+		"id": "e84b72ee-1a34-44b5-b8f6-2e0e42e99010",
 		"caseReferenceIds": [],
+		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
 		"type": "PERMIT",
 		"issued": "2023-01-01",
 		"validTo": "2023-12-31",
-		"status": "ACTIVE",
-		"description": "Bygglov",
-		"additionalParameters": {}
+		"status": "ACTIVE"
 	}
 ]

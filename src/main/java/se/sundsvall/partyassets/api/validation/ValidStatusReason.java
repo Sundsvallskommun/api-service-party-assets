@@ -12,9 +12,13 @@ import se.sundsvall.partyassets.api.validation.impl.ValidStatusReasonOnCreateCon
 import se.sundsvall.partyassets.api.validation.impl.ValidStatusReasonOnUpdateConstraintValidator;
 
 @Documented
-@Target({ ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE })
+@Target({
+	ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE
+})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = { ValidStatusReasonOnCreateConstraintValidator.class, ValidStatusReasonOnUpdateConstraintValidator.class })
+@Constraint(validatedBy = {
+	ValidStatusReasonOnCreateConstraintValidator.class, ValidStatusReasonOnUpdateConstraintValidator.class
+})
 public @interface ValidStatusReason {
 	String message() default "one or more of properties in list are not present in entity.";
 

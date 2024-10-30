@@ -1,5 +1,5 @@
 {
+	"detail": "PartyId '0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f' could not be found as a private customer or an enterprise customer",
 	"title": "Not Found",
-	"status": 404,
-	"detail": "PartyId '0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f' could not be found as a private customer or an enterprise customer"
+	"status": 404
 }

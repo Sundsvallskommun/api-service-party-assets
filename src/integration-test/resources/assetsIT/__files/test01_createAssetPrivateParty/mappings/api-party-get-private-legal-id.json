@@ -1,19 +1,13 @@
 {
-  "name": "api-party-get-legal-id",
-  "request": {
-    "method": "GET",
-    "urlPath": "/api-party/2281/PRIVATE/a6c380f3-6d26-496d-93fe-10b1e0160354/legalId",
-    "headers": {
-      "Authorization": {
-        "equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
-      }
-    }
-  },
-  "response": {
-    "headers": {
-      "Content-Type": "text/plain"
-    },
-    "status": 200,
-    "body": "190101011234"
-  }
+	"request": {
+		"headers": {"Authorization": {"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"}},
+		"method": "GET",
+		"urlPath": "/api-party/2281/PRIVATE/a6c380f3-6d26-496d-93fe-10b1e0160354/legalId"
+	},
+	"response": {
+		"headers": {"Content-Type": "text/plain"},
+		"body": "190101011234",
+		"status": 200
+	},
+	"name": "api-party-get-legal-id"
 }

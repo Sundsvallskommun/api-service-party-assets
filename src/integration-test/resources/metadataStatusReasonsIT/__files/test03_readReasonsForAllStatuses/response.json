@@ -1,6 +1,4 @@
-{
-	"BLOCKED" : [
-		"IRREGULARITY",
-		"LOST"
-	] 
-}
+{"BLOCKED": [
+	"IRREGULARITY",
+	"LOST"
+]}

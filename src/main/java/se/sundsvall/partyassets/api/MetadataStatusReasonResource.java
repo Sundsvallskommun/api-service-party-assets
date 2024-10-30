@@ -42,7 +42,9 @@ import se.sundsvall.partyassets.service.StatusService;
 @Validated
 @RequestMapping(value = "/{municipalityId}/metadata/statusreasons")
 @Tag(name = "Metadata for statusreasons", description = "Statusreasons metadata operations")
-@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = { Problem.class, ConstraintViolationProblem.class })))
+@ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = {
+	Problem.class, ConstraintViolationProblem.class
+})))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 public class MetadataStatusReasonResource {
 
@@ -52,39 +54,46 @@ public class MetadataStatusReasonResource {
 		this.service = service;
 	}
 
-	@GetMapping(produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
+	@GetMapping(produces = {
+		APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	})
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	public ResponseEntity<Map<Status, List<String>>> readAllReasons(
-		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId
-	) {
+		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId) {
 		return ok(service.getReasonsForAllStatuses(municipalityId));
 	}
 
-	@GetMapping(path = "{status}", produces = { APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
+	@GetMapping(path = "{status}", produces = {
+		APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	})
 	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	public ResponseEntity<List<String>> readReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable final Status status) {
-		return ResponseEntity.ok(service.getReasons(municipalityId,status));
+		return ResponseEntity.ok(service.getReasons(municipalityId, status));
 	}
 
-	@PostMapping(path = "{status}", consumes = APPLICATION_JSON_VALUE, produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
+	@PostMapping(path = "{status}", consumes = APPLICATION_JSON_VALUE, produces = {
+		ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	})
 	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
 	public ResponseEntity<Void> createReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable final Status status, @RequestBody @NotEmpty final List<@NotBlank String> statusReasons) {
-		service.createReasons(municipalityId,status, statusReasons);
-		return created(fromPath("/"+municipalityId+"/metadata/statusreasons/{status}").buildAndExpand(status).toUri())
+		service.createReasons(municipalityId, status, statusReasons);
+		return created(fromPath("/" + municipalityId + "/metadata/statusreasons/{status}").buildAndExpand(status).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
 
-	@DeleteMapping(path = "{status}", produces = { ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE })
+	@DeleteMapping(path = "{status}", produces = {
+		ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	})
 	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
 	public ResponseEntity<Void> deleteReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable final Status status) {
-		service.deleteReasons(municipalityId,status);
+		service.deleteReasons(municipalityId, status);
 		return noContent().build();
 	}
 }

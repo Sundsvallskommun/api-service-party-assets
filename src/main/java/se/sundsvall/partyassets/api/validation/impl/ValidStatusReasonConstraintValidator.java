@@ -78,10 +78,10 @@ abstract class ValidStatusReasonConstraintValidator {
 
 		constraintContext.disableDefaultConstraintViolation();
 		constraintContext.buildConstraintViolationWithTemplate(InterpolationHelper.escapeMessageParameter(
-				String.format(ERROR_MESSAGE_TEMPLATE,
-					statusReason,
-					status,
-					statusService.getReasonsForAllStatuses(municipalityId).getOrDefault(status, emptyList()))))
+			String.format(ERROR_MESSAGE_TEMPLATE,
+				statusReason,
+				status,
+				statusService.getReasonsForAllStatuses(municipalityId).getOrDefault(status, emptyList()))))
 			.addConstraintViolation();
 	}
 

@@ -229,7 +229,7 @@ public class Asset {
 		StringBuilder builder = new StringBuilder();
 		builder.append("Asset [id=").append(id).append(", assetId=").append(assetId).append(", origin=").append(origin).append(", partyId=").append(partyId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(
 			", issued=").append(issued).append(
-			", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
+				", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
 		return builder.toString();
 	}
 }

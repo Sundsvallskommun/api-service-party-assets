@@ -1,11 +1,9 @@
 {
+	"violations": [{
+		"field": "assetUpdateRequest",
+		"message": "'NON_VALID_REASON' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
+	}],
 	"type": "https://zalando.github.io/problem/constraint-violation",
-	"status": 400,
-	"violations": [
-		{
-			"field": "assetUpdateRequest",
-			"message": "'NON_VALID_REASON' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
-		}
-	],
-	"title": "Constraint Violation"
+	"title": "Constraint Violation",
+	"status": 400
 }
