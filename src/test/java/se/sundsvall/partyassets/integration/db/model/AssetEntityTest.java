@@ -61,7 +61,6 @@ class AssetEntityTest {
 		final var updated = OffsetDateTime.now();
 		final var validTo = LocalDate.now();
 
-
 		final var bean = AssetEntity.create()
 			.withAdditionalParameters(additionParameters)
 			.withAssetId(assetId)

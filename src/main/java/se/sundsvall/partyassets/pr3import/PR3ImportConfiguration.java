@@ -20,22 +20,22 @@ import se.sundsvall.dept44.configuration.feign.decoder.ProblemErrorDecoder;
 @EnableConfigurationProperties(PR3ImportProperties.class)
 class PR3ImportConfiguration implements WebMvcConfigurer {
 
-    static final String INTEGRATION_NAME = "pr3import-messaging";
+	static final String INTEGRATION_NAME = "pr3import-messaging";
 
-    @Bean
-    FeignBuilderCustomizer feignBuilderCustomizer(final PR3ImportProperties properties) {
-        return FeignMultiCustomizer.create()
-            .withErrorDecoder(new ProblemErrorDecoder(INTEGRATION_NAME))
-            .withRetryableOAuth2InterceptorForClientRegistration(ClientRegistration
-                .withRegistrationId(INTEGRATION_NAME)
-                .tokenUri(properties.messagingIntegration().oauth2().tokenUri())
-                .clientId(properties.messagingIntegration().oauth2().clientId())
-                .clientSecret(properties.messagingIntegration().oauth2().clientSecret())
-                .authorizationGrantType(
-                    new AuthorizationGrantType(properties.messagingIntegration().oauth2().grantType()))
-                .build())
-            .withRequestTimeoutsInSeconds(properties.messagingIntegration().connectTimeout(),
-                properties.messagingIntegration().readTimeout())
-            .composeCustomizersToOne();
-    }
+	@Bean
+	FeignBuilderCustomizer feignBuilderCustomizer(final PR3ImportProperties properties) {
+		return FeignMultiCustomizer.create()
+			.withErrorDecoder(new ProblemErrorDecoder(INTEGRATION_NAME))
+			.withRetryableOAuth2InterceptorForClientRegistration(ClientRegistration
+				.withRegistrationId(INTEGRATION_NAME)
+				.tokenUri(properties.messagingIntegration().oauth2().tokenUri())
+				.clientId(properties.messagingIntegration().oauth2().clientId())
+				.clientSecret(properties.messagingIntegration().oauth2().clientSecret())
+				.authorizationGrantType(
+					new AuthorizationGrantType(properties.messagingIntegration().oauth2().grantType()))
+				.build())
+			.withRequestTimeoutsInSeconds(properties.messagingIntegration().connectTimeout(),
+				properties.messagingIntegration().readTimeout())
+			.composeCustomizersToOne();
+	}
 }

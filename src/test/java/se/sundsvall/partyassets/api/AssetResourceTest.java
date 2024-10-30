@@ -94,7 +94,9 @@ class AssetResourceTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = {"imNotARealUUID", "1", "1234-1234-1234-1234"})
+	@ValueSource(strings = {
+		"imNotARealUUID", "1", "1234-1234-1234-1234"
+	})
 	void getAssets_faultyPartyId(final String uuid) {
 		// Act
 		final var test = webTestClient.get()

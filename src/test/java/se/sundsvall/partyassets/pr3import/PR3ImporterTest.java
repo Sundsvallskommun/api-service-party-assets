@@ -78,7 +78,6 @@ class PR3ImporterTest {
 		assertThat(importer.addCenturyDigitToLegalId("0301021456")).isEqualTo("200301021456");
 	}
 
-
 	@Test
 	void testExtractLegalIdWithCenturyDigits() {
 		// Arrange

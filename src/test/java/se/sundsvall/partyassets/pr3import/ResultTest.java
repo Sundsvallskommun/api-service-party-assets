@@ -11,7 +11,9 @@ class ResultTest {
 		final var result = new PR3Importer.Result()
 			.withTotal(456)
 			.withFailed(123)
-			.withFailedExcelData(new byte[]{1, 2, 3, 4, 5});
+			.withFailedExcelData(new byte[] {
+				1, 2, 3, 4, 5
+			});
 
 		assertThat(result.getTotal()).isEqualTo(456);
 		assertThat(result.getFailed()).isEqualTo(123);

@@ -1,19 +1,13 @@
 {
-	"name": "api-gateway",
 	"request": {
-		"urlPath": "/api-gateway/token",
 		"method": "POST",
-		"bodyPatterns": [
-			{
-				"matches": "^grant_type=client_credentials&scope=device_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
-			}
-		]
+		"bodyPatterns": [{"matches": "^grant_type=client_credentials&scope=device_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"}],
+		"urlPath": "/api-gateway/token"
 	},
 	"response": {
-		"headers": {
-			"Content-Type": "application/json"
-		},
-		"status": 200,
-		"bodyFileName": "common/api-gateway-token-response.json"
-	}
+		"headers": {"Content-Type": "application/json"},
+		"bodyFileName": "common/api-gateway-token-response.json",
+		"status": 200
+	},
+	"name": "api-gateway"
 }

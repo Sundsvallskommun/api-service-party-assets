@@ -93,8 +93,7 @@ class ValidStatusReasonOnCreateConstraintValidatorTest {
 			verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate(ERROR_MESSAGE.formatted(statusReason, status, validReasons));
 			verify(constraintViolationBuilderMock).addConstraintViolation();
 		}
-		}
-
+	}
 
 	private static Stream<Arguments> validReasonStatusesProvider() {
 		return Stream.of(

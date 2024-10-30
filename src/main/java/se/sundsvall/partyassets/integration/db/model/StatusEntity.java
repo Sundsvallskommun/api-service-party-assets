@@ -26,8 +26,9 @@ import org.hibernate.annotations.TimeZoneStorageType;
 
 @Entity
 @Table(name = "status",
-	indexes = {@Index(name = "idx_status_municipality_id", columnList = "municipality_id")}
-)
+	indexes = {
+		@Index(name = "idx_status_municipality_id", columnList = "municipality_id")
+	})
 public class StatusEntity {
 
 	@Id
@@ -130,8 +131,10 @@ public class StatusEntity {
 
 	@Override
 	public boolean equals(final Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 		final StatusEntity that = (StatusEntity) o;
 		return Objects.equals(name, that.name) && Objects.equals(municipalityId, that.municipalityId) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated) && Objects.equals(reasons, that.reasons);
 	}

@@ -34,8 +34,7 @@ class StatusMapperTest {
 		final var entities = List.of(
 			StatusEntity.create().withName(Status.ACTIVE.name()).withReasons(activeReasons),
 			StatusEntity.create().withName(Status.BLOCKED.name()).withReasons(blockedReasons),
-			StatusEntity.create().withName(Status.EXPIRED.name()).withReasons(expiredReasons)
-		);
+			StatusEntity.create().withName(Status.EXPIRED.name()).withReasons(expiredReasons));
 
 		// Act
 		final var reasonMap = StatusMapper.toReasons(entities);

@@ -206,7 +206,6 @@ public class AssetCreateRequest {
 		this.additionalParameters = additionalParameters;
 	}
 
-
 	public AssetCreateRequest withAdditionalParameters(Map<String, String> additionalParameters) {
 		this.additionalParameters = additionalParameters;
 		return this;

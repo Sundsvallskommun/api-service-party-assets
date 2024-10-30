@@ -10,32 +10,24 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "pr3import")
 record PR3ImportProperties(StaticAssetInfo staticAssetInfo, MessagingIntegration messagingIntegration) {
 
-    record StaticAssetInfo(
-        @DefaultValue("PR3")
-        String origin,
+	record StaticAssetInfo(
+		@DefaultValue("PR3") String origin,
 
-        @DefaultValue("PARKING_PERMIT")
-        String type,
+		@DefaultValue("PARKING_PERMIT") String type,
 
-        @DefaultValue("Parkeringstillstånd för rörelsehindrade")
-        String description,
+		@DefaultValue("Parkeringstillstånd för rörelsehindrade") String description,
 
-        @DefaultValue("2281")
-        String municipalityId) { }
+		@DefaultValue("2281") String municipalityId) {}
 
-    record MessagingIntegration(String url, Oauth2 oauth2, @DefaultValue("5") int connectTimeout, @DefaultValue("30") int readTimeout) {
+	record MessagingIntegration(String url, Oauth2 oauth2, @DefaultValue("5") int connectTimeout, @DefaultValue("30") int readTimeout) {
 
-        record Oauth2(
-            @NotBlank
-            String tokenUri,
+		record Oauth2(
+			@NotBlank String tokenUri,
 
-            @NotBlank
-            String clientId,
+			@NotBlank String clientId,
 
-            @NotBlank
-            String clientSecret,
+			@NotBlank String clientSecret,
 
-            @DefaultValue("client_credentials")
-            String grantType) { }
-    }
+			@DefaultValue("client_credentials") String grantType) {}
+	}
 }
