@@ -15,7 +15,6 @@
 	<properties>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.18.4</fastexcel.version>
-		<exposed.app.port>8080</exposed.app.port>
 		<!-- Service properties -->
 		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
 		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
