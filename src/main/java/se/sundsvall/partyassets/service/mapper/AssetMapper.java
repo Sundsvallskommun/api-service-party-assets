@@ -6,7 +6,6 @@ import static java.util.Optional.ofNullable;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;

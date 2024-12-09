@@ -1,11 +1,17 @@
 {
 	"request": {
-		"headers": {"Authorization": {"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"}},
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			}
+		},
 		"method": "GET",
 		"urlPath": "/api-party/2281/PRIVATE/b566819b-9133-4ba6-9ce2-f12aafbc047b/legalId"
 	},
 	"response": {
-		"headers": {"Content-Type": "application/problem+json"},
+		"headers": {
+			"Content-Type": "application/problem+json"
+		},
 		"jsonBody": {
 			"detail": "citizenmapping error: {status=404 Not Found, title=Not Found}",
 			"title": "Not Found",

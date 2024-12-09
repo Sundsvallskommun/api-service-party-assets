@@ -2,19 +2,16 @@ package se.sundsvall.partyassets.api.model;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 @ValidStatusReason
 public class AssetCreateRequest {

@@ -1,11 +1,10 @@
 package se.sundsvall.partyassets.api.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 
 @ValidStatusReason

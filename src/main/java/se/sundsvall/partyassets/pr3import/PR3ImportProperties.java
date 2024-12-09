@@ -1,7 +1,6 @@
 package se.sundsvall.partyassets.pr3import;
 
 import jakarta.validation.constraints.NotBlank;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;

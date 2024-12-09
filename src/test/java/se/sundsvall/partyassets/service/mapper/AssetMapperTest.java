@@ -3,9 +3,7 @@ package se.sundsvall.partyassets.service.mapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
-
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
