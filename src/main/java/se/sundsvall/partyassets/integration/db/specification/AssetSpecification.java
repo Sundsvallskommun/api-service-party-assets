@@ -14,17 +14,14 @@ import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.STATUS_
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.TYPE;
 import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.VALID_TO;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 import org.springframework.data.jpa.domain.Specification;
-
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 

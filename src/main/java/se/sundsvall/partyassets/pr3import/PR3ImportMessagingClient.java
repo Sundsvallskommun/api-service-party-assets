@@ -2,13 +2,12 @@ package se.sundsvall.partyassets.pr3import;
 
 import static se.sundsvall.partyassets.pr3import.PR3ImportConfiguration.INTEGRATION_NAME;
 
+import generated.se.sundsvall.messaging.EmailRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-import generated.se.sundsvall.messaging.EmailRequest;
 
 @FeignClient(
 	name = INTEGRATION_NAME,
