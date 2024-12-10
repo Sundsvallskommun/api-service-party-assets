@@ -7,10 +7,8 @@ import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 
 import java.util.List;
-
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
-
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;

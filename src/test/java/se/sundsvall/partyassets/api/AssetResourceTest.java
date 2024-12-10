@@ -15,18 +15,16 @@ import static org.zalando.problem.Status.BAD_REQUEST;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
-
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.Asset;
@@ -50,10 +48,10 @@ class AssetResourceTest {
 
 	private static final String INVALID = "#invalid#";
 
-	@MockBean
+	@MockitoBean
 	private AssetService assetServiceMock;
 
-	@MockBean
+	@MockitoBean
 	private StatusService statusServiceMock; // Used by status reason validators
 
 	@Autowired

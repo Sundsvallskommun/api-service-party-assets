@@ -2,11 +2,10 @@ package se.sundsvall.partyassets.api.model;
 
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Objects;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 public class AssetSearchRequest {
