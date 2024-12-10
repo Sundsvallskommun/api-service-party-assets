@@ -17,7 +17,7 @@ import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.ActiveProfiles;
@@ -36,10 +36,10 @@ class PR3ImportResourceTest {
 
 	private static final String PATH = "/" + MUNICIPALITY_ID + "/pr3import";
 
-	@MockBean
+	@MockitoBean
 	private PR3Importer mockImporter;
 
-	@MockBean
+	@MockitoBean
 	private PR3ImportMessagingClient mockMessagingClient;
 
 	@Autowired

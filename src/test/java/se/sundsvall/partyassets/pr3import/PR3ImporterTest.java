@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -34,13 +34,13 @@ import se.sundsvall.partyassets.integration.party.PartyClient;
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class PR3ImporterTest {
 
-	@MockBean
+	@MockitoBean
 	private AssetRepository mockAssetRepository;
 
-	@MockBean
+	@MockitoBean
 	private PartyClient mockPartyClient;
 
-	@MockBean
+	@MockitoBean
 	private Row mockRow;
 
 	@Value("classpath:test.xlsx")
