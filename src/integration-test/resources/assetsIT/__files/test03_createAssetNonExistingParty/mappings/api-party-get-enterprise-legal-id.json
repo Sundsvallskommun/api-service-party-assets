@@ -1,11 +1,17 @@
 {
 	"request": {
-		"headers": {"Authorization": {"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"}},
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			}
+		},
 		"method": "GET",
 		"urlPath": "/api-party/2281/ENTERPRISE/0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f/legalId"
 	},
 	"response": {
-		"headers": {"Content-Type": "application/problem+json"},
+		"headers": {
+			"Content-Type": "application/problem+json"
+		},
 		"jsonBody": {
 			"detail": "legalentity error: {detail=A LegalEntity with id 0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f was not found, status=404 Not Found, title=The LegalEntity was not found.}",
 			"title": "Not Found",

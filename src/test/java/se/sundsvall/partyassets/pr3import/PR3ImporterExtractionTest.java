@@ -11,7 +11,6 @@ import static se.sundsvall.partyassets.pr3import.PR3Importer.PASSENGER;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import org.dhatim.fastexcel.reader.Row;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

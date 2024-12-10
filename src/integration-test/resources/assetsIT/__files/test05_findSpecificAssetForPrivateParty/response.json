@@ -1,14 +1,20 @@
-[{
-	"statusReason": "Stöldanmäld",
-	"assetId": "PRH-0000000002",
-	"origin": "CASEDATA",
-	"description": "Parkeringstillstånd",
-	"additionalParameters": {"first_key": "third_value"},
-	"id": "945576d3-6e92-4118-ba33-53582d338ad3",
-	"caseReferenceIds": ["case_reference_3"],
-	"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
-	"type": "PERMIT",
-	"issued": "2023-01-01",
-	"validTo": "2023-12-31",
-	"status": "BLOCKED"
-}]
+[
+	{
+		"statusReason": "Stöldanmäld",
+		"assetId": "PRH-0000000002",
+		"origin": "CASEDATA",
+		"description": "Parkeringstillstånd",
+		"additionalParameters": {
+			"first_key": "third_value"
+		},
+		"id": "945576d3-6e92-4118-ba33-53582d338ad3",
+		"caseReferenceIds": [
+			"case_reference_3"
+		],
+		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+		"type": "PERMIT",
+		"issued": "2023-01-01",
+		"validTo": "2023-12-31",
+		"status": "BLOCKED"
+	}
+]
