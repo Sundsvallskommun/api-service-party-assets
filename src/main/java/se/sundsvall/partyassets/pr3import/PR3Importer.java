@@ -9,6 +9,9 @@ import static org.zalando.problem.Status.CONFLICT;
 import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import generated.se.sundsvall.party.PartyType;
+import jakarta.validation.Validator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,10 +20,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import jakarta.validation.Validator;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.dhatim.fastexcel.Color;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
@@ -30,13 +29,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.zalando.problem.Problem;
 import org.zalando.problem.ThrowableProblem;
-
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.party.PartyClient;
-
-import generated.se.sundsvall.party.PartyType;
 
 @Component
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)

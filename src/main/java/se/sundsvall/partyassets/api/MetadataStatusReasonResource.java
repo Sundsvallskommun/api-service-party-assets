@@ -10,9 +10,17 @@ import static org.springframework.http.ResponseEntity.noContent;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.web.util.UriComponentsBuilder.fromPath;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,16 +32,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
-
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.headers.Header;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.StatusService;
@@ -54,29 +52,39 @@ public class MetadataStatusReasonResource {
 		this.service = service;
 	}
 
-	@GetMapping(produces = {
-		APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	@GetMapping(produces = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Get all status reasons", responses = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "OK",
+			useReturnTypeSchema = true)
 	})
-	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	public ResponseEntity<Map<Status, List<String>>> readAllReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId) {
 		return ok(service.getReasonsForAllStatuses(municipalityId));
 	}
 
-	@GetMapping(path = "{status}", produces = {
-		APPLICATION_JSON_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	@GetMapping(path = "{status}", produces = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Get status reasons", responses = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "OK",
+			useReturnTypeSchema = true)
 	})
-	@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	public ResponseEntity<List<String>> readReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable final Status status) {
 		return ResponseEntity.ok(service.getReasons(municipalityId, status));
 	}
 
-	@PostMapping(path = "{status}", consumes = APPLICATION_JSON_VALUE, produces = {
-		ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	@PostMapping(path = "{status}", consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
+	@Operation(summary = "Create status reasons", responses = {
+		@ApiResponse(
+			responseCode = "201",
+			description = "Created - Successful operation",
+			headers = @Header(name = LOCATION, description = "Location of the created resource."),
+			useReturnTypeSchema = true)
 	})
-	@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
 	public ResponseEntity<Void> createReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable final Status status, @RequestBody @NotEmpty final List<@NotBlank String> statusReasons) {
@@ -86,10 +94,12 @@ public class MetadataStatusReasonResource {
 			.build();
 	}
 
-	@DeleteMapping(path = "{status}", produces = {
-		ALL_VALUE, APPLICATION_PROBLEM_JSON_VALUE
+	@DeleteMapping(path = "{status}", produces = ALL_VALUE)
+	@Operation(summary = "Delete status reasons", responses = {
+		@ApiResponse(
+			responseCode = "204",
+			description = "No content - Successful operation")
 	})
-	@ApiResponse(responseCode = "204", description = "No content - Successful operation")
 	public ResponseEntity<Void> deleteReasons(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable final Status status) {

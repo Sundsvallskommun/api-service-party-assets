@@ -1,7 +1,9 @@
 {
 	"assetId": "CON-0000000021",
 	"description": "Bygglov",
-	"caseReferenceIds": ["48649f4b-ec9f-4653-8586-14d69487c4be"],
+	"caseReferenceIds": [
+		"48649f4b-ec9f-4653-8586-14d69487c4be"
+	],
 	"partyId": "a6c380f3-6d26-496d-93fe-10b1e0160354",
 	"type": "PERMIT",
 	"issued": "2023-01-01",

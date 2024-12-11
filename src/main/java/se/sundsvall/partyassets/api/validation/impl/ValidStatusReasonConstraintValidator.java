@@ -7,15 +7,12 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
-
-import jakarta.validation.ConstraintValidatorContext;
-
 import org.hibernate.validator.internal.engine.messageinterpolation.util.InterpolationHelper;
 import org.springframework.web.context.request.RequestContextHolder;
-
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.StatusService;
 

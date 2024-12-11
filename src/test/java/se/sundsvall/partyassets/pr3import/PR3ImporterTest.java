@@ -15,16 +15,14 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.dhatim.fastexcel.reader.Row;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ActiveProfiles;
-
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
@@ -34,13 +32,13 @@ import se.sundsvall.partyassets.integration.party.PartyClient;
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 class PR3ImporterTest {
 
-	@MockBean
+	@MockitoBean
 	private AssetRepository mockAssetRepository;
 
-	@MockBean
+	@MockitoBean
 	private PartyClient mockPartyClient;
 
-	@MockBean
+	@MockitoBean
 	private Row mockRow;
 
 	@Value("classpath:test.xlsx")

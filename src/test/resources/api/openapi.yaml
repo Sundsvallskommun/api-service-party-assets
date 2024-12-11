@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "2.0"
+  version: "2.1"
 servers:
-  - url: http://localhost:61599
+  - url: http://localhost:52913
     description: Generated server url
 tags:
   - name: Metadata for statusreasons
@@ -17,6 +17,7 @@ paths:
     put:
       tags:
         - Assets
+      summary: Update an asset
       operationId: updateAsset
       parameters:
         - name: municipalityId
@@ -38,20 +39,14 @@ paths:
               $ref: "#/components/schemas/AssetUpdateRequest"
         required: true
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
+        "204":
+          description: No content - Successful operation
         "404":
           description: Not Found
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "204":
-          description: No content - Successful operation
         "400":
           description: Bad Request
           content:
@@ -60,9 +55,16 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
     delete:
       tags:
         - Assets
+      summary: Delete an asset
       operationId: deleteAsset
       parameters:
         - name: municipalityId
@@ -78,12 +80,6 @@ paths:
           schema:
             type: string
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "204":
           description: No content - Successful operation
         "400":
@@ -94,6 +90,12 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/pr3import:
     post:
       tags:
@@ -124,12 +126,6 @@ paths:
                   type: string
                   format: binary
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "400":
           description: Bad Request
           content:
@@ -138,10 +134,17 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/metadata/statusreasons/{status}:
     get:
       tags:
         - Metadata for statusreasons
+      summary: Get status reasons
       operationId: readReasons
       parameters:
         - name: municipalityId
@@ -157,21 +160,10 @@ paths:
           schema:
             $ref: "#/components/schemas/Status"
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "200":
           description: OK
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-            application/problem+json:
               schema:
                 type: array
                 items:
@@ -184,9 +176,16 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
     post:
       tags:
         - Metadata for statusreasons
+      summary: Create status reasons
       operationId: createReasons
       parameters:
         - name: municipalityId
@@ -210,12 +209,14 @@ paths:
                 type: string
         required: true
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
+        "201":
+          description: Created - Successful operation
+          headers:
+            Location:
+              description: Location of the created resource.
+              style: simple
               schema:
-                $ref: "#/components/schemas/Problem"
+                type: string
         "400":
           description: Bad Request
           content:
@@ -224,15 +225,16 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
-        "201":
-          description: Created - Successful operation
-          headers:
-            Location:
-              description: Location of the created resource.
-              style: simple
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
     delete:
       tags:
         - Metadata for statusreasons
+      summary: Delete status reasons
       operationId: deleteReasons
       parameters:
         - name: municipalityId
@@ -248,12 +250,6 @@ paths:
           schema:
             $ref: "#/components/schemas/Status"
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "204":
           description: No content - Successful operation
         "400":
@@ -264,10 +260,17 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/assets:
     get:
       tags:
         - Assets
+      summary: Get assets
       operationId: getAssets
       parameters:
         - name: municipalityId
@@ -320,6 +323,7 @@ paths:
           schema:
             type: string
             description: Issued date
+            format: date
             example: 2021-01-01
           example: 2021-01-01
         - name: validTo
@@ -329,6 +333,7 @@ paths:
           schema:
             type: string
             description: Valid to date
+            format: date
             example: 2021-12-31
           example: 2021-12-31
         - name: status
@@ -336,9 +341,7 @@ paths:
           description: Asset status
           required: false
           schema:
-            type: string
-            description: Asset status
-            example: ACTIVE
+            $ref: "#/components/schemas/Status"
           example: ACTIVE
         - name: statusReason
           in: query
@@ -359,21 +362,10 @@ paths:
             example: Asset description
           example: Asset description
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "200":
           description: OK
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Asset"
-            application/problem+json:
               schema:
                 type: array
                 items:
@@ -386,9 +378,16 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
     post:
       tags:
         - Assets
+      summary: Create an asset
       operationId: createAsset
       parameters:
         - name: municipalityId
@@ -405,12 +404,14 @@ paths:
               $ref: "#/components/schemas/AssetCreateRequest"
         required: true
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
+        "201":
+          description: Created - Successful operation
+          headers:
+            Location:
+              description: Location of the created resource.
+              style: simple
               schema:
-                $ref: "#/components/schemas/Problem"
+                type: string
         "400":
           description: Bad Request
           content:
@@ -419,16 +420,17 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
-        "201":
-          description: Created - Successful operation
-          headers:
-            Location:
-              description: Location of the created resource.
-              style: simple
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/metadata/statusreasons:
     get:
       tags:
         - Metadata for statusreasons
+      summary: Get all status reasons
       operationId: readAllReasons
       parameters:
         - name: municipalityId
@@ -439,23 +441,10 @@ paths:
             type: string
           example: 2281
       responses:
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
         "200":
           description: OK
           content:
             application/json:
-              schema:
-                type: object
-                additionalProperties:
-                  type: array
-                  items:
-                    type: string
-            application/problem+json:
               schema:
                 type: object
                 additionalProperties:
@@ -470,6 +459,12 @@ paths:
                 oneOf:
                   - $ref: "#/components/schemas/Problem"
                   - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /api-docs:
     get:
       tags:
@@ -488,6 +483,33 @@ paths:
       x-wso2-mutual-ssl: Optional
 components:
   schemas:
+    Problem:
+      type: object
+      properties:
+        instance:
+          type: string
+          format: uri
+        type:
+          type: string
+          format: uri
+        parameters:
+          type: object
+          additionalProperties:
+            type: object
+        title:
+          type: string
+        detail:
+          type: string
+        status:
+          $ref: "#/components/schemas/StatusType"
+    StatusType:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          format: int32
+        reasonPhrase:
+          type: string
     AssetUpdateRequest:
       type: object
       properties:
@@ -528,33 +550,6 @@ components:
         - ACTIVE
         - EXPIRED
         - BLOCKED
-    Problem:
-      type: object
-      properties:
-        instance:
-          type: string
-          format: uri
-        type:
-          type: string
-          format: uri
-        parameters:
-          type: object
-          additionalProperties:
-            type: object
-        title:
-          type: string
-        detail:
-          type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
-    StatusType:
-      type: object
-      properties:
-        reasonPhrase:
-          type: string
-        statusCode:
-          type: integer
-          format: int32
     ConstraintViolationProblem:
       type: object
       properties:
