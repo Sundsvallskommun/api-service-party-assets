@@ -87,10 +87,11 @@ Configuration is crucial for the application to run successfully. Ensure all nec
 
 - **Server Port:**
 
-  ```yaml
-  server:
-    port: 8080
-  ```
+```yaml
+server:
+  port: 8080
+```
+
 - **Database Settings:**
 
 ```yaml
@@ -104,31 +105,30 @@ spring:
 - **External Service URLs:**
 
 ```yaml
-  integration:
-    party:
-      url: http://dependency_service_url
+integration:
+  party:
+    url: http://dependency_service_url
 
-  spring:
-    security:
-      oauth2:
-        client:
-          provider:
-            party:
-              token-uri: http://token_url
-          registration:
-            party:
-              client-id: some-client-id
-              client-secret: some-client-secret
+spring:
+  security:
+    oauth2:
+      client:
+        provider:
+          party:
+            token-uri: http://token_url
+        registration:
+          party:
+            client-id: some-client-id
+            client-secret: some-client-secret
 
-  pr3import:
-    messaging-integration:
-      url: http://dependency_service_url
-      oauth2:
-        token-uri: http://token_url
-        client-id: some-client-id
-        client-secret: some-client-secret
-        grant-type: client_credentials
-
+pr3import:
+  messaging-integration:
+    url: http://dependency_service_url
+    oauth2:
+      token-uri: http://token_url
+      client-id: some-client-id
+      client-secret: some-client-secret
+      grant-type: client_credentials
 ```
 
 ### Database Initialization
