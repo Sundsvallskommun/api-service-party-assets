@@ -93,7 +93,13 @@ Configuration is crucial for the application to run successfully. Ensure all nec
   ```
 - **Database Settings:**
 
-  No database is used by this microservice
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://database-server:port/your_database
+    username: your_db_username
+    password: your_db_password
+```
 
 - **External Service URLs:**
 
@@ -124,6 +130,18 @@ Configuration is crucial for the application to run successfully. Ensure all nec
         grant-type: client_credentials
 
 ```
+
+### Database Initialization
+
+The project is set up with [Flyway](https://github.com/flyway/flyway) for database migrations. Flyway is disabled by default so you will have to enable it to automatically populate the database schema upon application startup.
+
+```yaml
+config:
+  flyway:
+    enabled: true
+```
+
+- **No additional setup is required** for database initialization, as long as the database connection settings are correctly configured.
 
 ### Additional Notes
 
