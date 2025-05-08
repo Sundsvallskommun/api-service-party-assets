@@ -66,6 +66,7 @@ public class AssetService {
 				.withTitle("Asset not found")
 				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
 				.build());
+
 		repository.save(updateEntity(old, request));
 	}
 
