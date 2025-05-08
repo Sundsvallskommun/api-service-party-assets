@@ -38,7 +38,7 @@ public final class AssetMapper {
 		return AssetEntity.create()
 			.withAdditionalParameters(request.getAdditionalParameters())
 			.withAssetId(request.getAssetId())
-			.withCaseReferenceIds(retreiveUniqueItems(request.getCaseReferenceIds())) // Filter out distinct values to save
+			.withCaseReferenceIds(retrieveUniqueItems(request.getCaseReferenceIds())) // Filter out distinct values to save
 			.withDescription(request.getDescription())
 			.withIssued(request.getIssued())
 			.withOrigin(request.getOrigin())
@@ -58,7 +58,7 @@ public final class AssetMapper {
 		}
 
 		if (nonNull(request.getCaseReferenceIds())) {
-			entity.setCaseReferenceIds(retreiveUniqueItems(request.getCaseReferenceIds()));
+			entity.setCaseReferenceIds(retrieveUniqueItems(request.getCaseReferenceIds()));
 		}
 
 		if (nonNull(request.getStatus())) {
@@ -76,7 +76,7 @@ public final class AssetMapper {
 		return entity;
 	}
 
-	private static ArrayList<String> retreiveUniqueItems(final List<String> list) {
+	private static ArrayList<String> retrieveUniqueItems(final List<String> list) {
 		return new ArrayList<>(ofNullable(list).orElse(emptyList())
 			.stream()
 			.distinct()

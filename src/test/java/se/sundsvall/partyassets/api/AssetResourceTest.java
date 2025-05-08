@@ -262,7 +262,7 @@ class AssetResourceTest {
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 
 		// Act
-		webTestClient.put()
+		webTestClient.patch()
 			.uri(PATH + "/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
@@ -283,7 +283,7 @@ class AssetResourceTest {
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 
 		// Act
-		final var response = webTestClient.put()
+		final var response = webTestClient.patch()
 			.uri(PATH + "/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
@@ -313,7 +313,7 @@ class AssetResourceTest {
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 
 		// Act
-		final var response = webTestClient.put()
+		final var response = webTestClient.patch()
 			.uri(PATH + "/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
@@ -341,7 +341,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
 
 		// Act
-		final var response = webTestClient.put()
+		final var response = webTestClient.patch()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
 				.queryParam("partyId", UUID.randomUUID())
 				.build())
