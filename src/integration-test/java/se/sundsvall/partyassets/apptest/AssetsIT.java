@@ -7,7 +7,7 @@ import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.PUT;
+import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -20,12 +20,10 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
-
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
@@ -184,7 +182,7 @@ class AssetsIT extends AbstractAppTest {
 
 		// Update asset
 		setupCall()
-			.withHttpMethod(PUT)
+			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + id)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(NO_CONTENT)
@@ -208,7 +206,7 @@ class AssetsIT extends AbstractAppTest {
 
 		// Update asset
 		setupCall()
-			.withHttpMethod(PUT)
+			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + id)
 			.withRequest("request.json")
 			.withExpectedResponseStatus(BAD_REQUEST)
