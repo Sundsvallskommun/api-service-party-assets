@@ -14,5 +14,4 @@ public interface StatusRepository extends JpaRepository<StatusEntity, String> {
 	boolean existsByNameAndMunicipalityId(String id, String municipalityId);
 
 	Optional<StatusEntity> findByNameAndMunicipalityId(String id, String municipalityId);
-
 }

@@ -20,5 +20,4 @@ interface PR3ImportMessagingClient {
 
 	@PostMapping("/{municipalityId}/email")
 	void sendEmail(@PathVariable String municipalityId, @RequestBody EmailRequest request);
-
 }
