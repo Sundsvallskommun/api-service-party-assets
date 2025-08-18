@@ -14,9 +14,7 @@ import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 
 public final class StatusMapper {
 
-	private StatusMapper() {
-		// Private constructor to prevent instantiation
-	}
+	private StatusMapper() {}
 
 	public static Map<Status, List<String>> toReasons(final List<StatusEntity> entities) {
 		return ofNullable(entities).orElse(emptyList()).stream()
@@ -39,5 +37,4 @@ public final class StatusMapper {
 			.distinct()
 			.toList());
 	}
-
 }

@@ -48,11 +48,11 @@ import se.sundsvall.partyassets.service.AssetService;
 	Problem.class, ConstraintViolationProblem.class
 })))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-public class AssetResource {
+class AssetResource {
 
 	private final AssetService service;
 
-	public AssetResource(final AssetService service) {
+	AssetResource(final AssetService service) {
 		this.service = service;
 	}
 
@@ -63,9 +63,10 @@ public class AssetResource {
 			description = "OK",
 			useReturnTypeSchema = true)
 	})
-	public ResponseEntity<List<Asset>> getAssets(
+	ResponseEntity<List<Asset>> getAssets(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@ParameterObject @Valid final AssetSearchRequest request) {
+
 		return ok(service.getAssets(municipalityId, request));
 	}
 
@@ -77,9 +78,10 @@ public class AssetResource {
 			headers = @Header(name = LOCATION, description = "Location of the created resource."),
 			useReturnTypeSchema = true)
 	})
-	public ResponseEntity<Void> createAsset(
+	ResponseEntity<Void> createAsset(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Valid @RequestBody final AssetCreateRequest asset) {
+
 		final var result = service.createAsset(municipalityId, asset);
 		return created(fromPath("/" + municipalityId + "/assets/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
@@ -97,9 +99,10 @@ public class AssetResource {
 			description = "Not Found",
 			content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
-	public ResponseEntity<Void> updateAsset(
+	ResponseEntity<Void> updateAsset(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable("id") @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
+
 		service.updateAsset(municipalityId, id, asset);
 		return noContent().build();
 	}
@@ -111,9 +114,10 @@ public class AssetResource {
 			description = "No content - Successful operation",
 			useReturnTypeSchema = true)
 	})
-	public ResponseEntity<Void> deleteAsset(
+	ResponseEntity<Void> deleteAsset(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable("id") @ValidUuid final String id) {
+
 		service.deleteAsset(municipalityId, id);
 		return noContent().build();
 	}

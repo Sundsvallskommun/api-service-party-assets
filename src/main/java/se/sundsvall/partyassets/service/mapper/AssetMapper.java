@@ -1,11 +1,11 @@
 package se.sundsvall.partyassets.service.mapper;
 
 import static java.util.Collections.emptyList;
-import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
@@ -14,9 +14,7 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 public final class AssetMapper {
 
-	private AssetMapper() {
-		// Private constructor to prevent instantiation
-	}
+	private AssetMapper() {}
 
 	public static Asset toAsset(final AssetEntity entity) {
 		return Asset.create()
@@ -52,26 +50,11 @@ public final class AssetMapper {
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
-
-		if (nonNull(request.getAdditionalParameters())) {
-			entity.setAdditionalParameters(request.getAdditionalParameters());
-		}
-
-		if (nonNull(request.getCaseReferenceIds())) {
-			entity.setCaseReferenceIds(retrieveUniqueItems(request.getCaseReferenceIds()));
-		}
-
-		if (nonNull(request.getStatus())) {
-			entity.setStatus(request.getStatus());
-		}
-
-		if (nonNull(request.getStatusReason())) {
-			entity.setStatusReason(request.getStatusReason());
-		}
-
-		if (nonNull(request.getValidTo())) {
-			entity.setValidTo(request.getValidTo());
-		}
+		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
+		Optional.ofNullable(request.getCaseReferenceIds()).ifPresent(s -> entity.setCaseReferenceIds(retrieveUniqueItems(s)));
+		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
+		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
+		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 
 		return entity;
 	}
@@ -82,5 +65,4 @@ public final class AssetMapper {
 			.distinct()
 			.toList());
 	}
-
 }
