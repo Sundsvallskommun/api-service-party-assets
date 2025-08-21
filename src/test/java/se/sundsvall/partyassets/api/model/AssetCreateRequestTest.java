@@ -41,6 +41,7 @@ class AssetCreateRequestTest {
 		final var caseReferenceIds = List.of("entry");
 		final var description = "description";
 		final var issued = LocalDate.now();
+		final var jsonParameters = List.of(JsonParameter.create());
 		final var origin = "origin";
 		final var partyId = "partyId";
 		final var status = Status.ACTIVE;
@@ -54,6 +55,7 @@ class AssetCreateRequestTest {
 			.withCaseReferenceIds(caseReferenceIds)
 			.withDescription(description)
 			.withIssued(issued)
+			.withJsonParameters(jsonParameters)
 			.withOrigin(origin)
 			.withPartyId(partyId)
 			.withStatus(status)
@@ -67,6 +69,7 @@ class AssetCreateRequestTest {
 		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getIssued()).isEqualTo(issued);
+		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
 		assertThat(bean.getStatus()).isEqualTo(status);

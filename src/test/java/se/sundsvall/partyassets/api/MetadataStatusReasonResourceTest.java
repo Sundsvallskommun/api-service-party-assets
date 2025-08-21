@@ -44,6 +44,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void getReasonsForAllStatuses() {
+
 		// Arrange
 		final var statusReasons = Map.of(Status.BLOCKED, List.of("REASON_1", "REASON_2", "REASON_3"), Status.EXPIRED, List.of("REASON_3", "REASON_4"));
 
@@ -51,7 +52,7 @@ class MetadataStatusReasonResourceTest {
 
 		// Act
 		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.path("/" + MUNICIPALITY_ID + "/metadata/statusreasons").build())
+			.uri("/" + MUNICIPALITY_ID + "/metadata/statusreasons")
 			.exchange()
 			.expectStatus()
 			.isOk()
@@ -71,6 +72,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void getReasonsForAllStatusesInvalidMunicipalityId() {
+
 		// Arrange
 		final var invalidMunicipalityId = "INVALID";
 
@@ -96,6 +98,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void getReasonsForStatus() {
+
 		// Arrange
 		final var status = Status.EXPIRED;
 		final var statusReasons = List.of("REASON_3", "REASON_4");
@@ -124,6 +127,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void getReasonsForNonExistingStatus() {
+
 		// Arrange
 		final var expectedJsonMessage = """
 			{
@@ -149,6 +153,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void getReasonsForStatusInvalidMunicipalityId() {
+
 		// Arrange
 		final var status = Status.EXPIRED;
 		final var invalidMunicipalityId = "INVALID";
@@ -196,6 +201,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void createStatusReasonsForNonExistingStatus() {
+
 		// Arrange
 		final var body = List.of("REASON");
 		final var expectedJsonMessage = """
@@ -261,6 +267,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void createStatusReasonsWithEmptyList() {
+
 		// Arrange
 		final var status = Status.BLOCKED;
 		final var body = new ArrayList<>();
@@ -293,6 +300,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void createStatusReasonsInvalidMunicipalityId() {
+
 		// Arrange
 		final var status = Status.BLOCKED;
 		final var body = List.of("REASON_1", "REASON_2", "REASON_3", "REASON_4");
@@ -321,6 +329,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void deleteStatusReasons() {
+
 		// Arrange
 		final var status = Status.ACTIVE;
 
@@ -338,6 +347,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void deleteStatusReasonsForNonExistingStatus() {
+
 		// Arrange
 		final var expectedJsonMessage = """
 			{
@@ -361,6 +371,7 @@ class MetadataStatusReasonResourceTest {
 
 	@Test
 	void deleteStatusReasonsInvalidMunicipalityId() {
+
 		// Arrange
 		final var status = Status.ACTIVE;
 		final var invalidMunicipalityId = "INVALID";
@@ -384,5 +395,4 @@ class MetadataStatusReasonResourceTest {
 			.containsExactly(tuple("deleteReasons.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(serviceMock);
 	}
-
 }

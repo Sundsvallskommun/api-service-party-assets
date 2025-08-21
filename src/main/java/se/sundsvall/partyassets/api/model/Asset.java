@@ -44,6 +44,9 @@ public class Asset {
 	@Schema(description = "Additional parameters", example = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
 
+	@Schema(description = "JSON parameters")
+	private List<JsonParameter> jsonParameters;
+
 	public static Asset create() {
 		return new Asset();
 	}
@@ -204,9 +207,22 @@ public class Asset {
 		return this;
 	}
 
+	public List<JsonParameter> getJsonParameters() {
+		return jsonParameters;
+	}
+
+	public void setJsonParameters(List<JsonParameter> jsonParameters) {
+		this.jsonParameters = jsonParameters;
+	}
+
+	public Asset withJsonParameters(List<JsonParameter> jsonParameters) {
+		this.jsonParameters = jsonParameters;
+		return this;
+	}
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, id, issued, origin, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, id, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -214,21 +230,21 @@ public class Asset {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof Asset)) {
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
 		}
 		Asset other = (Asset) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(
-			id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason) &&
-			Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(id,
+			other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(
+				statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("Asset [id=").append(id).append(", assetId=").append(assetId).append(", origin=").append(origin).append(", partyId=").append(partyId).append(", caseReferenceIds=").append(caseReferenceIds).append(", type=").append(type).append(
-			", issued=").append(issued).append(
-				", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", description=").append(description).append(", additionalParameters=").append(additionalParameters).append("]");
-		return builder.toString();
+		return "Asset [id=" + id + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", caseReferenceIds=" + caseReferenceIds + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status
+			+ ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 }

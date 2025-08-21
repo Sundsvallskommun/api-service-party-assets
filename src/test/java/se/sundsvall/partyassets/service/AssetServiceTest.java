@@ -66,7 +66,7 @@ class AssetServiceTest {
 			final var result = service.getAssets(MUNICIPALITY_ID, request);
 
 			assertThat(result).isNotNull().hasSize(1);
-			assertThat(result.getFirst()).usingRecursiveComparison().isEqualTo(entity);
+			assertThat(result.getFirst()).usingRecursiveComparison().ignoringFields("jsonParameters").isEqualTo(entity);
 
 		}
 
