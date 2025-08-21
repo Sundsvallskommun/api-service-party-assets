@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.api;
 
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
@@ -14,7 +15,6 @@ import static org.zalando.problem.Status.BAD_REQUEST;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -67,14 +67,14 @@ class AssetResourceTest {
 		// Act
 		final var result = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path(PATH)
-				.queryParam("partyId", UUID.randomUUID())
+				.queryParam("partyId", randomUUID())
 				.queryParam("assetId", "assetId")
 				.queryParam("status", Status.ACTIVE)
 				.queryParam("type", "PERMIT")
 				.queryParam("issued", "2020-01-01")
 				.queryParam("validTo", "2020-01-01")
 				.queryParam("description", "description")
-				.queryParam("caseReferenceIds", UUID.randomUUID())
+				.queryParam("caseReferenceIds", randomUUID())
 				.build())
 			.exchange()
 			.expectStatus()
@@ -95,7 +95,7 @@ class AssetResourceTest {
 	@ValueSource(strings = {
 		"imNotARealUUID", "1", "1234-1234-1234-1234"
 	})
-	void getAssets_faultyPartyId(final String uuid) {
+	void getAssetsFaultyPartyId(final String uuid) {
 		// Act
 		final var test = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path(PATH)
@@ -121,12 +121,11 @@ class AssetResourceTest {
 
 	@Test
 	void getAssetsInvalidMunicipalityId() {
-		// Arrange
 
 		// Act
 		final var response = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets")
-				.queryParam("partyId", UUID.randomUUID())
+				.queryParam("partyId", randomUUID())
 				.build())
 			.exchange()
 			.expectStatus().isBadRequest()
@@ -147,9 +146,10 @@ class AssetResourceTest {
 
 	@Test
 	void createAsset() {
+
 		// Arrange
-		final var uuid = UUID.randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString()).withStatusReason(null);
+		final var uuid = randomUUID().toString();
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
 		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest)).thenReturn(uuid);
 
@@ -168,7 +168,8 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAsset_emptyRequest() {
+	void createAssetEmptyRequest() {
+
 		// Act
 		final var response = webTestClient.post()
 			.uri(PATH)
@@ -199,9 +200,10 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAsset_faultyStatusReason() {
+	void createAssetFaultyStatusReason() {
+
 		// Arrange
-		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString());
 
 		// Act
 		final var response = webTestClient.post()
@@ -227,12 +229,14 @@ class AssetResourceTest {
 
 	@Test
 	void createAssetInvalidMunicipalityId() {
+
 		// Arrange
-		final var assetRequest = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString()).withStatusReason(null);
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
+
 		// Act
 		final var response = webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets")
-				.queryParam("partyId", UUID.randomUUID())
+				.queryParam("partyId", randomUUID())
 				.build())
 			.bodyValue(assetRequest)
 			.exchange()
@@ -255,8 +259,9 @@ class AssetResourceTest {
 
 	@Test
 	void testUpdateAsset() {
+
 		// Arrange
-		final var id = UUID.randomUUID().toString();
+		final var id = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
@@ -275,9 +280,10 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void testUpdateAsset_faultyStatusReason() {
+	void testUpdateAssetFaultyStatusReason() {
+
 		// Arrange
-		final var id = UUID.randomUUID().toString();
+		final var id = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest();
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
@@ -305,7 +311,8 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void testUpdateAsset_faultyUUID() {
+	void testUpdateAssetFaultyUUID() {
+
 		// Arrange
 		final var id = "imNotARealUUID";
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
@@ -336,14 +343,15 @@ class AssetResourceTest {
 
 	@Test
 	void updateAssetInvalidMunicipalityId() {
+
 		// Arrange
-		final var uuid = UUID.randomUUID().toString();
+		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
 
 		// Act
 		final var response = webTestClient.patch()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
-				.queryParam("partyId", UUID.randomUUID())
+				.queryParam("partyId", randomUUID())
 				.build())
 			.bodyValue(assetRequest)
 			.exchange()
@@ -366,8 +374,9 @@ class AssetResourceTest {
 
 	@Test
 	void testDeleteAsset() {
+
 		// Arrange
-		final var uuid = UUID.randomUUID().toString();
+		final var uuid = randomUUID().toString();
 
 		// Act
 		webTestClient.delete()
@@ -382,7 +391,8 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void testDeleteAssert_faultyUUID() {
+	void testDeleteAssertFaultyUUID() {
+
 		// Arrange
 		final var uuid = "imNotARealUUID";
 
@@ -409,13 +419,14 @@ class AssetResourceTest {
 
 	@Test
 	void deleteAssetInvalidMunicipalityId() {
+
 		// Arrange
-		final var uuid = UUID.randomUUID().toString();
+		final var uuid = randomUUID().toString();
 
 		// Act
 		final var response = webTestClient.delete()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
-				.queryParam("partyId", UUID.randomUUID())
+				.queryParam("partyId", randomUUID())
 				.build())
 			.exchange()
 			.expectStatus().isBadRequest()
@@ -432,5 +443,4 @@ class AssetResourceTest {
 			.containsExactly(tuple("deleteAsset.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(assetServiceMock);
 	}
-
 }

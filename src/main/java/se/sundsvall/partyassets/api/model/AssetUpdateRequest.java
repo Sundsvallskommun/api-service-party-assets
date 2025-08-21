@@ -25,6 +25,9 @@ public class AssetUpdateRequest {
 	@Schema(description = "Additional parameters", example = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
 
+	@Schema(description = "JSON parameters")
+	private List<JsonParameter> jsonParameters;
+
 	public static AssetUpdateRequest create() {
 		return new AssetUpdateRequest();
 	}
@@ -94,9 +97,22 @@ public class AssetUpdateRequest {
 		return this;
 	}
 
+	public List<JsonParameter> getJsonParameters() {
+		return jsonParameters;
+	}
+
+	public void setJsonParameters(List<JsonParameter> jsonParameters) {
+		this.jsonParameters = jsonParameters;
+	}
+
+	public AssetUpdateRequest withJsonParameters(List<JsonParameter> jsonParameters) {
+		this.jsonParameters = jsonParameters;
+		return this;
+	}
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, caseReferenceIds, status, statusReason, validTo);
+		return Objects.hash(additionalParameters, caseReferenceIds, jsonParameters, status, statusReason, validTo);
 	}
 
 	@Override
@@ -104,19 +120,19 @@ public class AssetUpdateRequest {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof AssetUpdateRequest)) {
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
 		}
 		AssetUpdateRequest other = (AssetUpdateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(validTo,
-			other.validTo);
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
+			other.statusReason) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("AssetUpdateRequest [caseReferenceIds=").append(caseReferenceIds).append(", validTo=").append(validTo).append(", status=").append(status).append(", statusReason=").append(statusReason).append(", additionalParameters=").append(
-			additionalParameters).append("]");
-		return builder.toString();
+		return "AssetUpdateRequest [caseReferenceIds=" + caseReferenceIds + ", validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 }

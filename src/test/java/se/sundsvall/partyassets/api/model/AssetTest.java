@@ -42,6 +42,7 @@ class AssetTest {
 		final var description = "description";
 		final var id = "id";
 		final var issued = LocalDate.now();
+		final var jsonParameters = List.of(JsonParameter.create());
 		final var origin = "origin";
 		final var partyId = "partyId";
 		final var status = Status.ACTIVE;
@@ -55,6 +56,7 @@ class AssetTest {
 			.withCaseReferenceIds(caseReferenceIds)
 			.withDescription(description)
 			.withId(id)
+			.withJsonParameters(jsonParameters)
 			.withIssued(issued)
 			.withOrigin(origin)
 			.withPartyId(partyId)
@@ -70,6 +72,7 @@ class AssetTest {
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getIssued()).isEqualTo(issued);
+		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
 		assertThat(bean.getStatus()).isEqualTo(status);

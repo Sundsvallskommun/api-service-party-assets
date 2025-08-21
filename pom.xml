@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-party-assets</artifactId>
-	<version>3.0</version>
+	<version>3.1</version>
 	<name>party-assets</name>
 	<properties>
 		<!-- PR3 import dependency versions -->

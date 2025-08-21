@@ -38,6 +38,7 @@ class AssetUpdateRequestTest {
 	void testBuilderMethods() {
 		final var additionalParameters = Map.of("key", "value");
 		final var caseReferenceIds = List.of("entry");
+		final var jsonParameters = List.of(JsonParameter.create());
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
 		final var validTo = LocalDate.now();
@@ -45,6 +46,7 @@ class AssetUpdateRequestTest {
 		final var bean = AssetUpdateRequest.create()
 			.withAdditionalParameters(additionalParameters)
 			.withCaseReferenceIds(caseReferenceIds)
+			.withJsonParameters(jsonParameters)
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withValidTo(validTo);
@@ -52,6 +54,7 @@ class AssetUpdateRequestTest {
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
+		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getValidTo()).isEqualTo(validTo);
