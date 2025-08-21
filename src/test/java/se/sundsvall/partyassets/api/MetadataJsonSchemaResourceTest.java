@@ -12,7 +12,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import se.sundsvall.partyassets.Application;
-import se.sundsvall.partyassets.api.model.JsonParameter;
 import se.sundsvall.partyassets.api.model.JsonSchema;
 import se.sundsvall.partyassets.api.model.JsonSchemaCreateRequest;
 
@@ -67,7 +66,7 @@ class MetadataJsonSchemaResourceTest {
 			.expectStatus()
 			.isOk()
 			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody(JsonParameter.class).returnResult().getResponseBody();
+			.expectBody(JsonSchema.class).returnResult().getResponseBody();
 
 		// Assert
 		assertThat(response).isEqualTo(jsonSchema);
