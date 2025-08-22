@@ -13,6 +13,7 @@
 	<version>3.1</version>
 	<name>party-assets</name>
 	<properties>
+		<json-schema-validator.version>1.5.8</json-schema-validator.version>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.19.0</fastexcel.version>
 		<!-- Service properties -->
@@ -50,6 +51,12 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-jpamodelgen</artifactId>
 			<scope>provided</scope>
+		</dependency>
+		<!-- JSON schema functionality -->
+		<dependency>
+			<groupId>com.networknt</groupId>
+			<artifactId>json-schema-validator</artifactId>
+			<version>${json-schema-validator.version}</version>
 		</dependency>
 		<!-- PR3 import dependencies -->
 		<dependency>

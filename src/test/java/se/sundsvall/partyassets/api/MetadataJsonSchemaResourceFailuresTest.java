@@ -82,7 +82,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 		final var schemaRequest = JsonSchemaCreateRequest.create()
 			.withDescription("description")
 			.withName("name")
-			.withValue("value")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\"}")
 			.withVersion("1.0");
 
 		// Act
@@ -131,7 +131,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 			.extracting(Violation::getField, Violation::getMessage)
 			.containsExactly(
 				tuple("name", "must not be blank"),
-				tuple("value", "must not be blank"),
+				tuple("value", "must be valid JSON"),
 				tuple("version", "must not be null"));
 
 		// TODO: Add verification
@@ -145,7 +145,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 		final var schemaRequest = JsonSchemaCreateRequest.create()
 			.withDescription("description")
 			.withName("name")
-			.withValue("value")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\"}")
 			.withVersion("invalid-version");
 
 		// Act
@@ -171,6 +171,38 @@ class MetadataJsonSchemaResourceFailuresTest {
 	}
 
 	@Test
+	void createSchemaInvalidSpecificationVersion() {
+
+		// Arrange
+		final var schemaRequest = JsonSchemaCreateRequest.create()
+			.withDescription("description")
+			.withName("name")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2019-09/schema\"}") // Should be 2020-12
+			.withVersion("1.0");
+
+		// Act
+		final var response = webTestClient.post()
+			.uri("/{municipalityId}/metadata/jsonschemas", MUNICIPALITY_ID)
+			.bodyValue(schemaRequest)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(response.getViolations())
+			.extracting(Violation::getField, Violation::getMessage)
+			.containsExactly(tuple("value", "Wrong value in $schema-node. Should be 'https://json-schema.org/draft/2020-12/schema'"));
+
+		// TODO: Add verification
+		// verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void updateSchemaInvalidMunicipalityId() {
 
 		// Arrange
@@ -178,7 +210,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 		final var schemaRequest = JsonSchemaCreateRequest.create()
 			.withDescription("description")
 			.withName("name")
-			.withValue("value")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\"}")
 			.withVersion("1.0");
 
 		// Act
@@ -228,7 +260,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 			.extracting(Violation::getField, Violation::getMessage)
 			.containsExactly(
 				tuple("name", "must not be blank"),
-				tuple("value", "must not be blank"),
+				tuple("value", "must be valid JSON"),
 				tuple("version", "must not be null"));
 
 		// TODO: Add verification
@@ -243,7 +275,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 		final var schemaRequest = JsonSchemaCreateRequest.create()
 			.withDescription("description")
 			.withName("name")
-			.withValue("value")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\"}")
 			.withVersion("invalid-version");
 
 		// Act

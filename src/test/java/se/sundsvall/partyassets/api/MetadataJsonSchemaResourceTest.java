@@ -84,7 +84,7 @@ class MetadataJsonSchemaResourceTest {
 		final var body = JsonSchemaCreateRequest.create()
 			.withDescription("description")
 			.withName("name")
-			.withValue("{}")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\"}")
 			.withVersion("1.0");
 
 		// Act
@@ -108,7 +108,7 @@ class MetadataJsonSchemaResourceTest {
 		final var body = JsonSchemaCreateRequest.create()
 			.withDescription("description")
 			.withName("name")
-			.withValue("{}")
+			.withValue("{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\"}")
 			.withVersion("1.0");
 
 		// Act
