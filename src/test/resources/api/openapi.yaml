@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "3.1"
 servers:
-- url: http://localhost:60761
+- url: http://localhost:52324
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -718,12 +718,12 @@ components:
           type: object
           additionalProperties:
             type: object
+        status:
+          $ref: "#/components/schemas/StatusType"
         detail:
           type: string
         title:
           type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
     StatusType:
       type: object
       properties:
@@ -853,12 +853,12 @@ components:
           type: object
           additionalProperties:
             type: object
+        status:
+          $ref: "#/components/schemas/StatusType"
         detail:
           type: string
         title:
           type: string
-        status:
-          $ref: "#/components/schemas/StatusType"
         suppressed:
           type: array
           items:
@@ -926,7 +926,7 @@ components:
           example: "1.0"
         value:
           type: string
-          description: The JSON schema
+          description: "The JSON schema, specified by: https://json-schema.org/draft/2020-12/schema"
           example: "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\"\
             :\"https://json-schema.org/draft/2020-12/schema\",\"title\":\"Person\"\
             ,\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\"\
