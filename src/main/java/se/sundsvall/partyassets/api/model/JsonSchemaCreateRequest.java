@@ -1,24 +1,27 @@
 package se.sundsvall.partyassets.api.model;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import java.util.Objects;
+import se.sundsvall.partyassets.api.validation.ValidJsonSchema;
 
 public class JsonSchemaCreateRequest {
 
 	@NotBlank
-	@Schema(description = "Schema name", example = "person")
+	@Schema(description = "Schema name", example = "person", requiredMode = REQUIRED)
 	private String name;
 
 	@NotNull
 	@Pattern(regexp = "^(\\d+\\.)?(\\d+)$")
-	@Schema(description = "Schema version on the format [major version].[minor version]", example = "1.0")
+	@Schema(description = "Schema version on the format [major version].[minor version]", example = "1.0", requiredMode = REQUIRED)
 	private String version;
 
-	@NotBlank
-	@Schema(description = "The JSON schema", example = """
+	@ValidJsonSchema
+	@Schema(description = "The JSON schema, specified by: https://json-schema.org/draft/2020-12/schema", example = """
 		{
 		  "$id": "https://example.com/person.schema.json",
 		  "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -35,7 +38,7 @@ public class JsonSchemaCreateRequest {
 		    }
 		  }
 		}
-		""")
+		""", requiredMode = REQUIRED)
 	private String value;
 
 	@Schema(description = "Description of the schema purpose", example = "A JSON-schema that defines a person object")
