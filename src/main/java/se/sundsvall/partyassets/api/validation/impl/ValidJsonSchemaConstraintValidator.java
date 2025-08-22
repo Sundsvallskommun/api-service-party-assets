@@ -66,7 +66,7 @@ public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<V
 			final var jsonSchema = this.jsonSchemaService.toJsonSchema(inputJsonSchema);
 			final var schemaNodeValue = Optional.ofNullable(jsonSchema.getSchemaNode().get("$schema"))
 				.map(JsonNode::asText)
-				.orElse("");
+				.orElse(null);
 
 			if (!Strings.CI.equals(schemaNodeValue, SUPPORTED_SCHEMA_SPECIFICATION)) {
 				useCustomMessageForValidation("Wrong value in $schema-node. Should be '%s'".formatted(SUPPORTED_SCHEMA_SPECIFICATION), constraintContext);

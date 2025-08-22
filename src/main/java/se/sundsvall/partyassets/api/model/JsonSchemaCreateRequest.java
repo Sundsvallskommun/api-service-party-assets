@@ -21,7 +21,7 @@ public class JsonSchemaCreateRequest {
 	private String version;
 
 	@ValidJsonSchema
-	@Schema(description = "The JSON schema", example = """
+	@Schema(description = "The JSON schema, specified by: https://json-schema.org/draft/2020-12/schema", example = """
 		{
 		  "$id": "https://example.com/person.schema.json",
 		  "$schema": "https://json-schema.org/draft/2020-12/schema",
