@@ -42,7 +42,7 @@ class AssetTest {
 		final var description = "description";
 		final var id = "id";
 		final var issued = LocalDate.now();
-		final var jsonParameters = List.of(JsonParameter.create());
+		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var origin = "origin";
 		final var partyId = "partyId";
 		final var status = Status.ACTIVE;

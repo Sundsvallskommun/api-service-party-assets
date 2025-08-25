@@ -55,7 +55,7 @@ public class AssetCreateRequest {
 	private Map<String, String> additionalParameters;
 
 	@Schema(description = "JSON parameters")
-	private List<JsonParameter> jsonParameters;
+	private List<AssetJsonParameter> jsonParameters;
 
 	public static AssetCreateRequest create() {
 		return new AssetCreateRequest();
@@ -211,15 +211,15 @@ public class AssetCreateRequest {
 		return this;
 	}
 
-	public List<JsonParameter> getJsonParameters() {
+	public List<AssetJsonParameter> getJsonParameters() {
 		return jsonParameters;
 	}
 
-	public void setJsonParameters(List<JsonParameter> jsonParameters) {
+	public void setJsonParameters(List<AssetJsonParameter> jsonParameters) {
 		this.jsonParameters = jsonParameters;
 	}
 
-	public AssetCreateRequest withJsonParameters(List<JsonParameter> jsonParameters) {
+	public AssetCreateRequest withJsonParameters(List<AssetJsonParameter> jsonParameters) {
 		this.jsonParameters = jsonParameters;
 		return this;
 	}

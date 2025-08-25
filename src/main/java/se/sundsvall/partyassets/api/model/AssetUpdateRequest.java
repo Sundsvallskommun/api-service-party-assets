@@ -26,7 +26,7 @@ public class AssetUpdateRequest {
 	private Map<String, String> additionalParameters;
 
 	@Schema(description = "JSON parameters")
-	private List<JsonParameter> jsonParameters;
+	private List<AssetJsonParameter> jsonParameters;
 
 	public static AssetUpdateRequest create() {
 		return new AssetUpdateRequest();
@@ -97,15 +97,15 @@ public class AssetUpdateRequest {
 		return this;
 	}
 
-	public List<JsonParameter> getJsonParameters() {
+	public List<AssetJsonParameter> getJsonParameters() {
 		return jsonParameters;
 	}
 
-	public void setJsonParameters(List<JsonParameter> jsonParameters) {
+	public void setJsonParameters(List<AssetJsonParameter> jsonParameters) {
 		this.jsonParameters = jsonParameters;
 	}
 
-	public AssetUpdateRequest withJsonParameters(List<JsonParameter> jsonParameters) {
+	public AssetUpdateRequest withJsonParameters(List<AssetJsonParameter> jsonParameters) {
 		this.jsonParameters = jsonParameters;
 		return this;
 	}

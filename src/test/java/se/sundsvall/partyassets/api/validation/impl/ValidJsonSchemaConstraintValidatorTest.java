@@ -24,9 +24,9 @@ import se.sundsvall.partyassets.service.JsonSchemaService;
 })
 class ValidJsonSchemaConstraintValidatorTest {
 
-	private static final String VALID_SCHEMA = "files/schemas/schema.json";
-	private static final String INVALID_SCHEMA_WRONG_TYPE = "files/schemas/invalid_schema_wrong_type.json";
-	private static final String INVALID_SCHEMA_WRONG_SPECIFICATION = "files/schemas/invalid_schema_wrong_schema_specification.json";
+	private static final String VALID_SCHEMA = "files/jsonschema/schema.json";
+	private static final String INVALID_SCHEMA_WRONG_TYPE = "files/jsonschema/invalid_schema_wrong_type.json";
+	private static final String INVALID_SCHEMA_WRONG_SPECIFICATION = "files/jsonschema/invalid_schema_wrong_schema_specification.json";
 
 	@Mock
 	private ConstraintValidatorContext constraintValidatorContextMock;

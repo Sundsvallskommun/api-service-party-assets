@@ -49,6 +49,7 @@ class AssetEntityTest {
 		final var created = OffsetDateTime.now().minusDays(1);
 		final var description = "description";
 		final var id = "id";
+		final var jsonParameters = List.of(AssetJsonParameterEntity.create());
 		final var issued = LocalDate.now();
 		final var origin = "origin";
 		final var partyId = "partyId";
@@ -67,6 +68,7 @@ class AssetEntityTest {
 			.withCreated(created)
 			.withDescription(description)
 			.withId(id)
+			.withJsonParameters(jsonParameters)
 			.withIssued(issued)
 			.withOrigin(origin)
 			.withPartyId(partyId)
@@ -85,6 +87,7 @@ class AssetEntityTest {
 		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getId()).isEqualTo(id);
+		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getIssued()).isEqualTo(issued);
 		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
@@ -121,5 +124,4 @@ class AssetEntityTest {
 		assertThat(bean.getCreated()).isNull();
 		assertThat(bean.getUpdated()).isCloseTo(now(), within(2, SECONDS));
 	}
-
 }

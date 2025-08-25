@@ -2,7 +2,9 @@ package se.sundsvall.partyassets.integration.db.model;
 
 import static jakarta.persistence.FetchType.EAGER;
 import static java.time.OffsetDateTime.now;
+import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.MILLIS;
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -16,11 +18,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.TimeZoneStorageType;
 
 @Entity
 @Table(name = "status",
@@ -35,10 +35,10 @@ public class StatusEntity {
 	@Column(name = "municipality_id")
 	private String municipalityId;
 
-	@TimeZoneStorage(TimeZoneStorageType.NORMALIZE)
+	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
 
-	@TimeZoneStorage(TimeZoneStorageType.NORMALIZE)
+	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime updated;
 
 	@ElementCollection(fetch = EAGER)
@@ -54,12 +54,12 @@ public class StatusEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = now(ZoneId.systemDefault()).truncatedTo(MILLIS);
+		created = now(systemDefault()).truncatedTo(MILLIS);
 	}
 
 	@PreUpdate()
 	void preUpdate() {
-		updated = now(ZoneId.systemDefault()).truncatedTo(MILLIS);
+		updated = now(systemDefault()).truncatedTo(MILLIS);
 	}
 
 	public String getName() {
@@ -129,10 +129,12 @@ public class StatusEntity {
 
 	@Override
 	public boolean equals(final Object o) {
-		if (this == o)
+		if (this == o) {
 			return true;
-		if (o == null || getClass() != o.getClass())
+		}
+		if (o == null || getClass() != o.getClass()) {
 			return false;
+		}
 		final StatusEntity that = (StatusEntity) o;
 		return Objects.equals(name, that.name) && Objects.equals(municipalityId, that.municipalityId) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated) && Objects.equals(reasons, that.reasons);
 	}

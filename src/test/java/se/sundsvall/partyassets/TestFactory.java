@@ -13,11 +13,13 @@ import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
+import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 
 public final class TestFactory {
 
 	public static AssetEntity getAssetEntity(final String id, final String partyId) {
-		return AssetEntity.create()
+		final var assetEntity = AssetEntity.create()
 			.withAdditionalParameters(new HashMap<>(Map.of("key", "value")))
 			.withAssetId("assetId")
 			.withMunicipalityId("municipalityId")
@@ -32,6 +34,17 @@ public final class TestFactory {
 			.withType("type")
 			.withUpdated(OffsetDateTime.now())
 			.withValidTo(LocalDate.of(2010, 1, 1));
+
+		final var jsonParameters = new ArrayList<AssetJsonParameterEntity>();
+		jsonParameters.add(AssetJsonParameterEntity.create()
+			.withAsset(assetEntity)
+			.withKey("key1")
+			.withValue("{}")
+			.withSchema(JsonSchemaEntity.create().withId("2281_person_schema_1.0.0")));
+
+		assetEntity.withJsonParameters(jsonParameters);
+
+		return assetEntity;
 	}
 
 	public static Asset getAsset() {

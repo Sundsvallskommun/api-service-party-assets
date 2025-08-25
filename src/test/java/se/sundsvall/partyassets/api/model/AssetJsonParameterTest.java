@@ -11,11 +11,11 @@ import static org.hamcrest.core.AllOf.allOf;
 
 import org.junit.jupiter.api.Test;
 
-class JsonParameterTest {
+class AssetJsonParameterTest {
 
 	@Test
 	void testBean() {
-		assertThat(JsonParameter.class, allOf(
+		assertThat(AssetJsonParameter.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
 			hasValidBeanHashCode(),
@@ -30,7 +30,7 @@ class JsonParameterTest {
 		final var value = "value";
 		final var schemaId = "schemaId";
 
-		final var bean = JsonParameter.create()
+		final var bean = AssetJsonParameter.create()
 			.withKey(key)
 			.withSchemaId(schemaId)
 			.withValue(value);
@@ -43,7 +43,7 @@ class JsonParameterTest {
 
 	@Test
 	void testNoDirtOnCreatedBean() {
-		assertThat(JsonParameter.create()).hasAllNullFieldsOrProperties();
-		assertThat(new JsonParameter()).hasAllNullFieldsOrProperties();
+		assertThat(AssetJsonParameter.create()).hasAllNullFieldsOrProperties();
+		assertThat(new AssetJsonParameter()).hasAllNullFieldsOrProperties();
 	}
 }

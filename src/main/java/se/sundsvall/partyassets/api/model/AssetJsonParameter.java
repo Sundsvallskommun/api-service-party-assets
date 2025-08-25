@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
-public class JsonParameter {
+public class AssetJsonParameter {
 
 	@NotBlank
 	@Schema(description = "Parameter key", example = "personParameter")
@@ -22,8 +22,8 @@ public class JsonParameter {
 	@Schema(description = "Schema ID", example = "person_1.0")
 	private String schemaId;
 
-	public static JsonParameter create() {
-		return new JsonParameter();
+	public static AssetJsonParameter create() {
+		return new AssetJsonParameter();
 	}
 
 	public String getKey() {
@@ -34,7 +34,7 @@ public class JsonParameter {
 		this.key = key;
 	}
 
-	public JsonParameter withKey(String key) {
+	public AssetJsonParameter withKey(String key) {
 		this.key = key;
 		return this;
 	}
@@ -47,7 +47,7 @@ public class JsonParameter {
 		this.value = value;
 	}
 
-	public JsonParameter withValue(String value) {
+	public AssetJsonParameter withValue(String value) {
 		this.value = value;
 		return this;
 	}
@@ -60,7 +60,7 @@ public class JsonParameter {
 		this.schemaId = schemaId;
 	}
 
-	public JsonParameter withSchemaId(String schemaId) {
+	public AssetJsonParameter withSchemaId(String schemaId) {
 		this.schemaId = schemaId;
 		return this;
 	}
@@ -81,12 +81,12 @@ public class JsonParameter {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		JsonParameter other = (JsonParameter) obj;
+		AssetJsonParameter other = (AssetJsonParameter) obj;
 		return Objects.equals(key, other.key) && Objects.equals(schemaId, other.schemaId) && Objects.equals(value, other.value);
 	}
 
 	@Override
 	public String toString() {
-		return "JsonParameter [key=" + key + ", value=" + value + ", schemaId=" + schemaId + "]";
+		return "AssetJsonParameter [key=" + key + ", value=" + value + ", schemaId=" + schemaId + "]";
 	}
 }
