@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class JsonSchema {
 
-	@Schema(description = "Schema ID. The ID is composed by the schema name and version. I.e.: [schema name]_[schema_version]", example = "person_1.0")
+	@Schema(description = "Schema ID. The ID is composed by the municipalityId, schema name and version. I.e.: [municipality_id]_[schema_name]_[schema_version]", example = "2281_person_1.0")
 	private String id;
 
 	@Schema(description = "Schema name", example = "person")

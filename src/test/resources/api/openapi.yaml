@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "3.1"
 servers:
-- url: http://localhost:52324
+- url: http://localhost:53634
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -727,11 +727,11 @@ components:
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -1005,8 +1005,8 @@ components:
           type: array
           description: JSON parameters
           items:
-            $ref: "#/components/schemas/JsonParameter"
-    JsonParameter:
+            $ref: "#/components/schemas/AssetJsonParameter"
+    AssetJsonParameter:
       required:
       - key
       - schemaId
@@ -1063,15 +1063,15 @@ components:
           type: array
           description: JSON parameters
           items:
-            $ref: "#/components/schemas/JsonParameter"
+            $ref: "#/components/schemas/AssetJsonParameter"
     JsonSchema:
       type: object
       properties:
         id:
           type: string
-          description: "Schema ID. The ID is composed by the schema name and version.\
-            \ I.e.: [schema name]_[schema_version]"
-          example: person_1.0
+          description: "Schema ID. The ID is composed by the municipalityId, schema\
+            \ name and version. I.e.: [municipality_id]_[schema_name]_[schema_version]"
+          example: 2281_person_1.0
         name:
           type: string
           description: Schema name
@@ -1167,5 +1167,5 @@ components:
           type: array
           description: JSON parameters
           items:
-            $ref: "#/components/schemas/JsonParameter"
+            $ref: "#/components/schemas/AssetJsonParameter"
   securitySchemes: {}

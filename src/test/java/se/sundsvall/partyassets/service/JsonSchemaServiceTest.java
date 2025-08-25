@@ -20,12 +20,12 @@ import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
 @ExtendWith(ResourceLoaderExtension.class)
 class JsonSchemaServiceTest {
 
-	private static final String SCHEMA = "files/schemas/schema.json";
-	private static final String VALID_JSON = "files/schemas/valid_json.json";
-	private static final String INVALID_JSON_MISSING_ALL_PROPERTIES = "files/schemas/invalid_json_missing_all_properties.json";
-	private static final String INVALID_JSON_BAD_DATATYPE_ON_PROPERTY = "files/schemas/invalid_json_bad_datatype_on_property.json";
-	private static final String INVALID_JSON_NON_UNIQUE_TAGS = "files/schemas/invalid_json_non_unique_tags.json";
-	private static final String INVALID_JSON_MISC_ERRORS = "files/schemas/invalid_json_misc_errors.json";
+	private static final String SCHEMA = "files/jsonschema/schema.json";
+	private static final String VALID_JSON = "files/jsonschema/valid_json.json";
+	private static final String INVALID_JSON_MISSING_ALL_PROPERTIES = "files/jsonschema/invalid_json_missing_all_properties.json";
+	private static final String INVALID_JSON_BAD_DATATYPE_ON_PROPERTY = "files/jsonschema/invalid_json_bad_datatype_on_property.json";
+	private static final String INVALID_JSON_NON_UNIQUE_TAGS = "files/jsonschema/invalid_json_non_unique_tags.json";
+	private static final String INVALID_JSON_MISC_ERRORS = "files/jsonschema/invalid_json_misc_errors.json";
 
 	@Autowired
 	private JsonSchemaService jsonSchemaService;

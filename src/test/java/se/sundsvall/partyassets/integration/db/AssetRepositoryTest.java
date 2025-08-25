@@ -24,7 +24,7 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 
 /**
- * Note repository tests.
+ * Asset repository tests.
  *
  * @see src/test/resources/db/scripts/AssetRepositoryTest.sql for data setup.
  */
@@ -38,17 +38,11 @@ import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 class AssetRepositoryTest {
 
 	private static final String PRIVATE_PARTY_1 = "f2ef7992-7b01-4185-a7f8-cf97dc7f438f";
-
 	private static final String PRIVATE_PARTY_ASSET_ID_1 = "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884";
-
 	private static final String PRIVATE_PARTY_ASSET_1 = "PRH-0000000001";
-
 	private static final String PRIVATE_PARTY_ASSET_2 = "PRH-0000000002";
-
 	private static final String PRIVATE_PARTY_ASSET_3 = "CON-0000000003";
-
 	private static final String ENTERPRISE_PARTY_ASSET_ID_3 = "647e3062-62dc-499f-9faa-e54cb97aa214";
-
 	private static final String MUNICIPALITY_ID = "2281";
 
 	@Autowired
@@ -148,5 +142,4 @@ class AssetRepositoryTest {
 
 		assertThat(repository.findById(ENTERPRISE_PARTY_ASSET_ID_3)).isNotPresent();
 	}
-
 }

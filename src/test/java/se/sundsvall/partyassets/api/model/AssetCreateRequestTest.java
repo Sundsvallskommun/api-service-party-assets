@@ -41,7 +41,7 @@ class AssetCreateRequestTest {
 		final var caseReferenceIds = List.of("entry");
 		final var description = "description";
 		final var issued = LocalDate.now();
-		final var jsonParameters = List.of(JsonParameter.create());
+		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var origin = "origin";
 		final var partyId = "partyId";
 		final var status = Status.ACTIVE;

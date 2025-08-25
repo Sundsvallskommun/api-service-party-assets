@@ -3,8 +3,11 @@ package se.sundsvall.partyassets.integration.db.model;
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.EAGER;
 import static java.time.OffsetDateTime.now;
+import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.MILLIS;
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -15,18 +18,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
-import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.UuidGenerator;
 import se.sundsvall.partyassets.api.model.Status;
 
@@ -92,10 +94,13 @@ public class AssetEntity {
 	@Column(name = "parameter_value", nullable = false)
 	private Map<String, String> additionalParameters;
 
-	@TimeZoneStorage(TimeZoneStorageType.NORMALIZE)
+	@OneToMany(fetch = EAGER, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<AssetJsonParameterEntity> jsonParameters;
+
+	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
 
-	@TimeZoneStorage(TimeZoneStorageType.NORMALIZE)
+	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime updated;
 
 	public static AssetEntity create() {
@@ -104,12 +109,12 @@ public class AssetEntity {
 
 	@PrePersist
 	void prePersist() {
-		created = now(ZoneId.systemDefault()).truncatedTo(MILLIS);
+		created = now(systemDefault()).truncatedTo(MILLIS);
 	}
 
 	@PreUpdate()
 	void preUpdate() {
-		updated = now(ZoneId.systemDefault()).truncatedTo(MILLIS);
+		updated = now(systemDefault()).truncatedTo(MILLIS);
 	}
 
 	public String getId() {
@@ -294,6 +299,19 @@ public class AssetEntity {
 		return this;
 	}
 
+	public List<AssetJsonParameterEntity> getJsonParameters() {
+		return jsonParameters;
+	}
+
+	public void setJsonParameters(List<AssetJsonParameterEntity> jsonParameters) {
+		this.jsonParameters = jsonParameters;
+	}
+
+	public AssetEntity withJsonParameters(List<AssetJsonParameterEntity> jsonParameters) {
+		this.jsonParameters = jsonParameters;
+		return this;
+	}
+
 	public OffsetDateTime getCreated() {
 		return created;
 	}
@@ -321,42 +339,32 @@ public class AssetEntity {
 	}
 
 	@Override
-	public boolean equals(final Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
-		final AssetEntity that = (AssetEntity) o;
-		return Objects.equals(id, that.id) && Objects.equals(municipalityId, that.municipalityId) && Objects.equals(origin, that.origin) && Objects.equals(assetId, that.assetId) && Objects.equals(partyId, that.partyId) && partyType == that.partyType
-			&& Objects.equals(caseReferenceIds, that.caseReferenceIds) && Objects.equals(type, that.type) && Objects.equals(issued, that.issued) && Objects.equals(validTo, that.validTo) && status == that.status && Objects.equals(statusReason,
-				that.statusReason) && Objects.equals(description, that.description) && Objects.equals(additionalParameters, that.additionalParameters) && Objects.equals(created, that.created) && Objects.equals(updated, that.updated);
+	public int hashCode() {
+		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, status, statusReason, type, updated, validTo);
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(id, municipalityId, origin, assetId, partyId, partyType, caseReferenceIds, type, issued, validTo, status, statusReason, description, additionalParameters, created, updated);
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		AssetEntity other = (AssetEntity) obj;
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created, other.created) && Objects.equals(description,
+			other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(origin, other.origin)
+			&& Objects.equals(partyId, other.partyId) && partyType == other.partyType && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects
+				.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetEntity{" +
-			"id='" + id + '\'' +
-			", municipalityId='" + municipalityId + '\'' +
-			", origin='" + origin + '\'' +
-			", assetId='" + assetId + '\'' +
-			", partyId='" + partyId + '\'' +
-			", partyType=" + partyType +
-			", caseReferenceIds=" + caseReferenceIds +
-			", type='" + type + '\'' +
-			", issued=" + issued +
-			", validTo=" + validTo +
-			", status=" + status +
-			", statusReason='" + statusReason + '\'' +
-			", description='" + description + '\'' +
-			", additionalParameters=" + additionalParameters +
-			", created=" + created +
-			", updated=" + updated +
-			'}';
+		return "AssetEntity [id=" + id + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType + ", caseReferenceIds=" + caseReferenceIds + ", type=" + type + ", issued="
+			+ issued + ", validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", created=" + created
+			+ ", updated=" + updated + "]";
 	}
-
 }
