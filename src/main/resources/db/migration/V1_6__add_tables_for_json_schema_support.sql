@@ -1,4 +1,4 @@
-    create table asset_json_parameter (
+    create table if not exists asset_json_parameter (
         asset_id varchar(255) not null,
         id varchar(255) not null,
         parameter_key varchar(255),
@@ -7,7 +7,7 @@
         primary key (id)
     ) engine=InnoDB;
     
-    create table json_schema (
+    create table if not exists json_schema (
         created datetime(6),
         municipality_id varchar(8),
         version varchar(32),
