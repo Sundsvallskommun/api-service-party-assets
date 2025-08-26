@@ -11,6 +11,7 @@ import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.JsonSchemaCreateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
@@ -98,4 +99,22 @@ public final class TestFactory {
 			.withValidTo(LocalDate.of(2010, 1, 1));
 	}
 
+	public static JsonSchemaEntity getJsonSchemaEntity() {
+		return JsonSchemaEntity.create()
+			.withCreated(OffsetDateTime.now())
+			.withDescription("description")
+			.withId("2281_person_schema_1.0.0")
+			.withMunicipalityId("2281")
+			.withName("person_schema")
+			.withValue("{}")
+			.withVersion("1.0");
+	}
+
+	public static JsonSchemaCreateRequest getJsonSchemaCreateRequest() {
+		return JsonSchemaCreateRequest.create()
+			.withDescription("description")
+			.withName("person_schema")
+			.withValue("{}")
+			.withVersion("1.0");
+	}
 }

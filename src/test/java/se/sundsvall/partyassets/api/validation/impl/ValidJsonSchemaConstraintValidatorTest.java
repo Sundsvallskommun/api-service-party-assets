@@ -1,7 +1,11 @@
 package se.sundsvall.partyassets.api.validation.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Answers.CALLS_REAL_METHODS;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.validation.ConstraintValidatorContext;
@@ -11,13 +15,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import se.sundsvall.dept44.test.annotation.resource.Load;
 import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
-import se.sundsvall.partyassets.service.JsonSchemaService;
+import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 
 @ExtendWith({
 	MockitoExtension.class, ResourceLoaderExtension.class
@@ -34,27 +37,52 @@ class ValidJsonSchemaConstraintValidatorTest {
 	@Mock
 	private ConstraintViolationBuilder constraintViolationBuilderMock;
 
-	@Mock(answer = Answers.CALLS_REAL_METHODS)
-	private JsonSchemaService jsonSchemaService;
+	@Mock(answer = CALLS_REAL_METHODS)
+	private JsonSchemaValidationService jsonSchemaValidationServiceMock;
 
 	@InjectMocks
 	private ValidJsonSchemaConstraintValidator validator;
 
 	@Test
 	void validateValidJsonSchema(@Load(VALID_SCHEMA) final String schema) {
-		assertThat(validator.isValid(schema, constraintValidatorContextMock)).isTrue();
+
+		// Act
+		final var result = validator.isValid(schema, constraintValidatorContextMock);
+
+		// Assert
+		assertThat(result).isTrue();
+		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
+		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any());
 	}
 
 	@Test
 	void validateInvalidJsonSchemaWhenNotCompliant(@Load(INVALID_SCHEMA_WRONG_TYPE) final String schema) {
+
+		// Arrange
 		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
-		assertThat(validator.isValid(schema, constraintValidatorContextMock)).isFalse();
+
+		// Act
+		final var result = validator.isValid(schema, constraintValidatorContextMock);
+
+		// Assert
+		assertThat(result).isFalse();
+		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
+		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any());
 	}
 
 	@Test
 	void validateInvalidJsonSchemaWhenWrongSchemaSpecification(@Load(INVALID_SCHEMA_WRONG_SPECIFICATION) final String schema) {
+
+		// Arrange
 		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
-		assertThat(validator.isValid(schema, constraintValidatorContextMock)).isFalse();
+
+		// Act
+		final var result = validator.isValid(schema, constraintValidatorContextMock);
+
+		// Assert
+		assertThat(result).isFalse();
+		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
+		verify(jsonSchemaValidationServiceMock, never()).validate(any(), any());
 	}
 
 	@ParameterizedTest
@@ -63,7 +91,15 @@ class ValidJsonSchemaConstraintValidatorTest {
 		" ", "	", "{,}", "-"
 	})
 	void validateInvalidJsonSchemaValues(String input) {
+
+		// Arrange
 		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
-		assertThat(validator.isValid(input, constraintValidatorContextMock)).isFalse();
+
+		// Act
+		final var result = validator.isValid(input, constraintValidatorContextMock);
+
+		// Assert
+		assertThat(result).isFalse();
+		verify(jsonSchemaValidationServiceMock, never()).validate(any(), any());
 	}
 }
