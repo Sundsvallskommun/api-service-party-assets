@@ -184,7 +184,8 @@ class JsonSchemaServiceTest {
 
 		// Assert
 		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
-		verify(jsonSchemaRepositoryMock).delete(entityToDelete);
+		verify(jsonSchemaRepositoryMock).deleteById(id);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId(id);
 		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 
@@ -204,6 +205,29 @@ class JsonSchemaServiceTest {
 		assertThat(exception.getMessage()).isEqualTo("Not Found: A JsonSchema with ID 'some-id' was not found for municipalityId '2281'");
 
 		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
+	}
+
+	@Test
+	void deleteWhenReferencesExists() {
+
+		// Arrange
+		final var id = "some-id";
+		final var entityToDelete = JsonSchemaEntity.create().withId(id);
+
+		when(jsonSchemaRepositoryMock.findByMunicipalityIdAndId(any(), any())).thenReturn(Optional.of(entityToDelete));
+		when(assetRepositoryMock.countByJsonParametersSchemaId(any())).thenReturn(33L);
+
+		// Act
+		final var exception = assertThrows(ThrowableProblem.class, () -> service.delete(MUNICIPALITY_ID, id));
+
+		// Assert
+		assertThat(exception.getStatus()).isEqualTo(CONFLICT);
+		assertThat(exception.getMessage()).isEqualTo("Conflict: The JsonSchema has 33 referencing assets! Deletion of schemas with references is not possible!");
+
+		// Assert
+		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId(id);
 		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 }

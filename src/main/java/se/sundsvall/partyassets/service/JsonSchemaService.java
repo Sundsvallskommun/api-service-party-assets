@@ -22,6 +22,7 @@ public class JsonSchemaService {
 	private static final String MESSAGE_JSON_SCHEMA_NOT_FOUND = "A JsonSchema with ID '%s' was not found for municipalityId '%s'";
 	private static final String MESSAGE_JSON_SCHEMA_ALREADY_EXISTS = "A JsonSchema already exists with ID '%s'!";
 	private static final String MESSAGE_JSON_SCHEMA_WITH_GREATER_VERSION_ALREADY_EXISTS = "A JsonSchema with a greater version already exists! (see schema with ID: '%s')";
+	private static final String MESSAGE_JSON_SCHEMA_NOT_ABLE_TO_DELETE_REFERENCED_SCHEMAS = "The JsonSchema has %s referencing assets! Deletion of schemas with references is not possible!";
 
 	private final JsonSchemaRepository jsonSchemaRepository;
 	private final AssetRepository assetRepository;
@@ -54,8 +55,8 @@ public class JsonSchemaService {
 	public JsonSchema getSchema(String municipalityId, String id) {
 		return jsonSchemaRepository.findByMunicipalityIdAndId(municipalityId, id)
 			.map(JsonSchemaMapper::toJsonSchema)
-			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(id, municipalityId)))
-			.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(id));
+			.map(jsonSchema -> jsonSchema.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(jsonSchema.getId())))
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(id, municipalityId)));
 	}
 
 	/**
@@ -66,7 +67,6 @@ public class JsonSchemaService {
 	 * @return                the created schema
 	 */
 	public JsonSchema create(String municipalityId, JsonSchemaCreateRequest request) {
-
 		final var entityToCreate = toJsonSchemaEntity(municipalityId, request);
 
 		// Check if a schema with this ID already exists.
@@ -90,14 +90,17 @@ public class JsonSchemaService {
 	/**
 	 * Delete an existing schema.
 	 * 
-	 * @param municipalityId the municipality ID
-	 * @param id             the schema ID.
+	 * @param  municipalityId   the municipality ID
+	 * @param  id               the schema ID.
+	 * @throws ThrowableProblem if the JsonSchema is not found or has referencing assets.
 	 */
 	public void delete(String municipalityId, String id) {
+		final var jsonSchemaToDelete = getSchema(municipalityId, id);
 
-		final var entityToDelete = jsonSchemaRepository.findByMunicipalityIdAndId(municipalityId, id)
-			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(id, municipalityId)));
+		if (jsonSchemaToDelete.getNumberOfReferences() > 0) {
+			throw Problem.valueOf(CONFLICT, MESSAGE_JSON_SCHEMA_NOT_ABLE_TO_DELETE_REFERENCED_SCHEMAS.formatted(jsonSchemaToDelete.getNumberOfReferences()));
+		}
 
-		jsonSchemaRepository.delete(entityToDelete);
+		jsonSchemaRepository.deleteById(jsonSchemaToDelete.getId());
 	}
 }
