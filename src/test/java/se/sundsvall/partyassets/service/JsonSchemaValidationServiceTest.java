@@ -2,6 +2,7 @@ package se.sundsvall.partyassets.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.networknt.schema.ValidationMessage;
@@ -123,5 +124,13 @@ class JsonSchemaValidationServiceTest {
 				tuple("$.tags[5]", "integer found, string expected"),
 				tuple("$.tags", "must have only unique items in the array"),
 				tuple("$", "required property 'productName' not found"));
+	}
+
+	@Test
+	void validateAndThrowWithNoErrors(@Load(SCHEMA) final String schema, @Load(VALID_JSON) final String json) {
+
+		// Act
+		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
+		assertDoesNotThrow(() -> jsonSchemaValidationService.validateAndThrow(json, jsonSchema));
 	}
 }

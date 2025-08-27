@@ -31,12 +31,26 @@ public class JsonSchemaService {
 		this.assetRepository = assetRepository;
 	}
 
+	/**
+	 * Get all schemas by municipality ID.
+	 * 
+	 * @param  municipalityId the municipality ID
+	 * @param  schema         the JsonSchema to use in validation
+	 * @return                a List of JsonSchema:s
+	 */
 	public List<JsonSchema> getSchemas(String municipalityId) {
 		return toJsonSchemaList(jsonSchemaRepository.findAllByMunicipalityId(municipalityId)).stream()
 			.map(jsonSchema -> jsonSchema.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(jsonSchema.getId())))
 			.toList();
 	}
 
+	/**
+	 * Get schema by municipality ID and schema ID.
+	 * 
+	 * @param  municipalityId the municipality ID
+	 * @param  id             the schema ID.
+	 * @return                a List of JsonSchema:s
+	 */
 	public JsonSchema getSchema(String municipalityId, String id) {
 		return jsonSchemaRepository.findByMunicipalityIdAndId(municipalityId, id)
 			.map(JsonSchemaMapper::toJsonSchema)
@@ -44,6 +58,13 @@ public class JsonSchemaService {
 			.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(id));
 	}
 
+	/**
+	 * Create new schema or a new version of an existing schema.
+	 * 
+	 * @param  municipalityId the municipality ID
+	 * @param  request        the request containing the schema information
+	 * @return                the created schema
+	 */
 	public JsonSchema create(String municipalityId, JsonSchemaCreateRequest request) {
 
 		final var entityToCreate = toJsonSchemaEntity(municipalityId, request);
@@ -66,6 +87,12 @@ public class JsonSchemaService {
 		return toJsonSchema(jsonSchemaRepository.save(entityToCreate));
 	}
 
+	/**
+	 * Delete an existing schema.
+	 * 
+	 * @param municipalityId the municipality ID
+	 * @param id             the schema ID.
+	 */
 	public void delete(String municipalityId, String id) {
 
 		final var entityToDelete = jsonSchemaRepository.findByMunicipalityIdAndId(municipalityId, id)
