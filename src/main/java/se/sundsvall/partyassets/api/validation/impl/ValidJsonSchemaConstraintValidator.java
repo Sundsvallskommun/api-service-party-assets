@@ -13,18 +13,18 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.util.Optional;
 import org.apache.commons.lang3.Strings;
 import se.sundsvall.partyassets.api.validation.ValidJsonSchema;
-import se.sundsvall.partyassets.service.JsonSchemaService;
+import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 
 public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<ValidJsonSchema, String> {
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 	private static final String SUPPORTED_SCHEMA_SPECIFICATION = SchemaId.V202012;
 
-	private JsonSchemaService jsonSchemaService;
+	private JsonSchemaValidationService jsonSchemaValidationService;
 	private boolean nullable;
 
-	public ValidJsonSchemaConstraintValidator(JsonSchemaService jsonSchemaService) {
-		this.jsonSchemaService = jsonSchemaService;
+	public ValidJsonSchemaConstraintValidator(JsonSchemaValidationService jsonSchemaValidationService) {
+		this.jsonSchemaValidationService = jsonSchemaValidationService;
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<V
 
 		// Assert JSON-schema against meta schema.
 		final var schema = JsonSchemaFactory.getInstance(VersionFlag.V202012).getSchema(SchemaLocation.of(SUPPORTED_SCHEMA_SPECIFICATION));
-		final var assertions = jsonSchemaService.validate(inputJsonSchema, schema);
+		final var assertions = jsonSchemaValidationService.validate(inputJsonSchema, schema);
 		assertions.forEach(message -> useCustomMessageForValidation(message.getMessage(), context));
 
 		return assertions.isEmpty();
@@ -63,7 +63,7 @@ public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<V
 
 	private boolean isValidJsonSchemaSpecificationVersion(String inputJsonSchema, ConstraintValidatorContext constraintContext) {
 		try {
-			final var jsonSchema = this.jsonSchemaService.toJsonSchema(inputJsonSchema);
+			final var jsonSchema = this.jsonSchemaValidationService.toJsonSchema(inputJsonSchema);
 			final var schemaNodeValue = Optional.ofNullable(jsonSchema.getSchemaNode().get("$schema"))
 				.map(JsonNode::asText)
 				.orElse(null);

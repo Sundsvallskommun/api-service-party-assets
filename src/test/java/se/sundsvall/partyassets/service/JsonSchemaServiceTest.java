@@ -1,127 +1,233 @@
 package se.sundsvall.partyassets.service;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.zalando.problem.Status.CONFLICT;
+import static org.zalando.problem.Status.NOT_FOUND;
 
-import com.networknt.schema.ValidationMessage;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
-import se.sundsvall.dept44.test.annotation.resource.Load;
-import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.zalando.problem.ThrowableProblem;
+import se.sundsvall.partyassets.TestFactory;
+import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.JsonSchemaRepository;
+import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 
-@SpringBootTest(classes = JsonSchemaService.class)
-@ActiveProfiles(value = "junit")
-@ExtendWith(ResourceLoaderExtension.class)
+@ExtendWith(MockitoExtension.class)
 class JsonSchemaServiceTest {
 
-	private static final String SCHEMA = "files/jsonschema/schema.json";
-	private static final String VALID_JSON = "files/jsonschema/valid_json.json";
-	private static final String INVALID_JSON_MISSING_ALL_PROPERTIES = "files/jsonschema/invalid_json_missing_all_properties.json";
-	private static final String INVALID_JSON_BAD_DATATYPE_ON_PROPERTY = "files/jsonschema/invalid_json_bad_datatype_on_property.json";
-	private static final String INVALID_JSON_NON_UNIQUE_TAGS = "files/jsonschema/invalid_json_non_unique_tags.json";
-	private static final String INVALID_JSON_MISC_ERRORS = "files/jsonschema/invalid_json_misc_errors.json";
+	private static final String MUNICIPALITY_ID = "2281";
 
-	@Autowired
-	private JsonSchemaService jsonSchemaService;
+	@Mock
+	private AssetRepository assetRepositoryMock;
+
+	@Mock
+	private JsonSchemaRepository jsonSchemaRepositoryMock;
+
+	@Captor
+	private ArgumentCaptor<JsonSchemaEntity> entityCaptor;
+
+	@InjectMocks
+	private JsonSchemaService service;
 
 	@Test
-	void validateWithValidJson(@Load(SCHEMA) final String schema, @Load(VALID_JSON) final String json) {
+	void getSchemas() {
+
+		// Arrange
+		final var entity = TestFactory.getJsonSchemaEntity();
+		when(jsonSchemaRepositoryMock.findAllByMunicipalityId(MUNICIPALITY_ID)).thenReturn(List.of(entity));
+		when(assetRepositoryMock.countByJsonParametersSchemaId(any())).thenReturn(5L);
 
 		// Act
-		final var jsonSchema = jsonSchemaService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaService.validate(json, jsonSchema);
+		final var result = service.getSchemas(MUNICIPALITY_ID);
 
 		// Assert
-		assertThat(validationMessages).isEmpty();
+		assertThat(result)
+			.hasSize(1)
+			.first()
+			.usingRecursiveComparison()
+			.ignoringFields("numberOfReferences") // always zero in entity
+			.isEqualTo(entity);
+
+		assertThat(result.getFirst().getNumberOfReferences()).isEqualTo(5L);
+
+		verify(jsonSchemaRepositoryMock).findAllByMunicipalityId(MUNICIPALITY_ID);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId(entity.getId());
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 
 	@Test
-	void validateWithAllMissingProperties(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISSING_ALL_PROPERTIES) final String json) {
+	void getSchema() {
+
+		// Arrange
+		final var entity = TestFactory.getJsonSchemaEntity();
+		final var id = entity.getId();
+		when(jsonSchemaRepositoryMock.findByMunicipalityIdAndId(MUNICIPALITY_ID, id)).thenReturn(Optional.of(entity));
+		when(assetRepositoryMock.countByJsonParametersSchemaId(any())).thenReturn(5L);
 
 		// Act
-		final var jsonSchema = jsonSchemaService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaService.validate(json, jsonSchema);
+		final var result = service.getSchema(MUNICIPALITY_ID, id);
 
 		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
-			.containsExactly(
-				"$: required property 'productId' not found",
-				"$: required property 'productName' not found",
-				"$: required property 'price' not found");
+		assertThat(result)
+			.usingRecursiveComparison()
+			.ignoringFields("numberOfReferences") // always zero in entity
+			.isEqualTo(entity);
+
+		assertThat(result.getNumberOfReferences()).isEqualTo(5L);
+
+		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId(id);
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 
 	@Test
-	void validateWithBadDatatypeOnProperty(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_BAD_DATATYPE_ON_PROPERTY) final String json) {
+	void createSchema() {
+
+		// Arrange
+		final var jsonSchemaCreateRequest = TestFactory.getJsonSchemaCreateRequest();
+		final var entity = TestFactory.getJsonSchemaEntity();
+
+		when(jsonSchemaRepositoryMock.existsById(any())).thenReturn(false);
+		when(jsonSchemaRepositoryMock.findAllByMunicipalityIdAndName(any(), any())).thenReturn(emptyList());
+		when(jsonSchemaRepositoryMock.save(any())).thenReturn(entity);
 
 		// Act
-		final var jsonSchema = jsonSchemaService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaService.validate(json, jsonSchema);
+		final var result = service.create(MUNICIPALITY_ID, jsonSchemaCreateRequest);
 
 		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
-			.containsExactly("$.productId: string found, integer expected");
+		assertThat(result)
+			.usingRecursiveComparison()
+			.ignoringFields("numberOfReferences") // always zero in entity
+			.isEqualTo(entity);
+
+		verify(jsonSchemaRepositoryMock).findAllByMunicipalityIdAndName(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName());
+		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		verify(jsonSchemaRepositoryMock).save(entityCaptor.capture());
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
+
+		final var capturedValue = entityCaptor.getValue();
+		assertThat(capturedValue.getCreated()).isNull();
+		assertThat(capturedValue.getDescription()).isEqualTo(jsonSchemaCreateRequest.getDescription());
+		assertThat(capturedValue.getId()).isEqualTo("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		assertThat(capturedValue.getMunicipalityId()).isEqualTo(MUNICIPALITY_ID);
+		assertThat(capturedValue.getName()).isEqualTo(jsonSchemaCreateRequest.getName());
+		assertThat(capturedValue.getValue()).isEqualTo(jsonSchemaCreateRequest.getValue());
+		assertThat(capturedValue.getVersion()).isEqualTo(jsonSchemaCreateRequest.getVersion());
 	}
 
 	@Test
-	void validateWithNonUniqueTags(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_NON_UNIQUE_TAGS) final String json) {
+	void createSchemaWhenVersionAlreadyExists() {
+
+		// Arrange
+		final var jsonSchemaCreateRequest = TestFactory.getJsonSchemaCreateRequest();
+
+		when(jsonSchemaRepositoryMock.existsById(any())).thenReturn(true);
 
 		// Act
-		final var jsonSchema = jsonSchemaService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaService.validate(json, jsonSchema);
+		final var exception = assertThrows(ThrowableProblem.class, () -> service.create(MUNICIPALITY_ID, jsonSchemaCreateRequest));
 
 		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
-			.containsExactly("$.tags: must have only unique items in the array");
+		assertThat(exception.getStatus()).isEqualTo(CONFLICT);
+		assertThat(exception.getMessage()).isEqualTo("Conflict: A JsonSchema already exists with ID '2281_person_schema_1.0'!");
+
+		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 
 	@Test
-	void validateWithMiscErrors(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISC_ERRORS) final String json) {
+	void createSchemaWhenGreaterVersionAlreadyExists() {
+
+		// Arrange
+		final var jsonSchemaCreateRequest = TestFactory.getJsonSchemaCreateRequest();
+		assertThat(jsonSchemaCreateRequest.getVersion()).isEqualTo("1.0");
+
+		when(jsonSchemaRepositoryMock.existsById(any())).thenReturn(false);
+		when(jsonSchemaRepositoryMock.findAllByMunicipalityIdAndName(any(), any())).thenReturn(List.of(
+			JsonSchemaEntity.create().withId("id-1").withVersion("0.4"),
+			JsonSchemaEntity.create().withId("id-2").withVersion("1.4")));
 
 		// Act
-		final var jsonSchema = jsonSchemaService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaService.validate(json, jsonSchema);
+		final var exception = assertThrows(ThrowableProblem.class, () -> service.create(MUNICIPALITY_ID, jsonSchemaCreateRequest));
 
 		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
-			.containsExactly(
-				"$.price: must have an exclusive minimum value of 0",
-				"$.tags[5]: integer found, string expected",
-				"$.tags: must have only unique items in the array",
-				"$: required property 'productName' not found");
+		assertThat(exception.getStatus()).isEqualTo(CONFLICT);
+		assertThat(exception.getMessage()).isEqualTo("Conflict: A JsonSchema with a greater version already exists! (see schema with ID: 'id-2')");
+
+		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 
 	@Test
-	void validateAndThrowWithMiscErrors(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISC_ERRORS) final String json) {
+	void delete() {
+
+		// Arrange
+		final var id = "some-id";
+		final var entityToDelete = JsonSchemaEntity.create().withId(id);
+
+		when(jsonSchemaRepositoryMock.findByMunicipalityIdAndId(any(), any())).thenReturn(Optional.of(entityToDelete));
 
 		// Act
-		final var jsonSchema = jsonSchemaService.toJsonSchema(schema);
-		final var exception = assertThrows(ConstraintViolationProblem.class, () -> jsonSchemaService.validateAndThrow(json, jsonSchema));
+		service.delete(MUNICIPALITY_ID, id);
 
 		// Assert
-		assertThat(exception)
-			.isNotNull()
-			.hasMessage("Constraint Violation");
+		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
+		verify(jsonSchemaRepositoryMock).deleteById(id);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId(id);
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
+	}
 
-		assertThat(exception.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
-			.containsExactly(
-				tuple("$.price", "must have an exclusive minimum value of 0"),
-				tuple("$.tags[5]", "integer found, string expected"),
-				tuple("$.tags", "must have only unique items in the array"),
-				tuple("$", "required property 'productName' not found"));
+	@Test
+	void deleteWhenNotFound() {
+
+		// Arrange
+		final var id = "some-id";
+
+		when(jsonSchemaRepositoryMock.findByMunicipalityIdAndId(any(), any())).thenReturn(Optional.empty());
+
+		// Act
+		final var exception = assertThrows(ThrowableProblem.class, () -> service.delete(MUNICIPALITY_ID, id));
+
+		// Assert
+		assertThat(exception.getStatus()).isEqualTo(NOT_FOUND);
+		assertThat(exception.getMessage()).isEqualTo("Not Found: A JsonSchema with ID 'some-id' was not found for municipalityId '2281'");
+
+		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
+	}
+
+	@Test
+	void deleteWhenReferencesExists() {
+
+		// Arrange
+		final var id = "some-id";
+		final var entityToDelete = JsonSchemaEntity.create().withId(id);
+
+		when(jsonSchemaRepositoryMock.findByMunicipalityIdAndId(any(), any())).thenReturn(Optional.of(entityToDelete));
+		when(assetRepositoryMock.countByJsonParametersSchemaId(any())).thenReturn(33L);
+
+		// Act
+		final var exception = assertThrows(ThrowableProblem.class, () -> service.delete(MUNICIPALITY_ID, id));
+
+		// Assert
+		assertThat(exception.getStatus()).isEqualTo(CONFLICT);
+		assertThat(exception.getMessage()).isEqualTo("Conflict: The JsonSchema has 33 referencing assets! Deletion of schemas with references is not possible!");
+
+		// Assert
+		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId(id);
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 }

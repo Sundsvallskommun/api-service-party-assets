@@ -14,4 +14,6 @@ public interface AssetRepository extends JpaRepository<AssetEntity, String>, Jpa
 	Optional<AssetEntity> findByIdAndMunicipalityId(String id, String municipalityId);
 
 	boolean existsByAssetIdAndMunicipalityId(String assetId, String municipalityId);
+
+	long countByJsonParametersSchemaId(String schemaId);
 }

@@ -25,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,6 +35,7 @@ import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.partyassets.api.model.JsonSchema;
 import se.sundsvall.partyassets.api.model.JsonSchemaCreateRequest;
+import se.sundsvall.partyassets.service.JsonSchemaService;
 
 @RestController
 @Validated
@@ -47,6 +47,12 @@ import se.sundsvall.partyassets.api.model.JsonSchemaCreateRequest;
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 class MetadataJsonSchemaResource {
 
+	private JsonSchemaService jsonSchemaService;
+
+	MetadataJsonSchemaResource(JsonSchemaService jsonSchemaService) {
+		this.jsonSchemaService = jsonSchemaService;
+	}
+
 	@GetMapping(produces = APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get JSON schemas", responses = {
 		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
@@ -54,7 +60,7 @@ class MetadataJsonSchemaResource {
 	ResponseEntity<List<JsonSchema>> getSchemas(
 		@Parameter(name = "municipalityId", description = "Municipality id", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId) {
 
-		return ok(List.of(JsonSchema.create()));
+		return ok(jsonSchemaService.getSchemas(municipalityId));
 	}
 
 	@GetMapping(path = "{id}", produces = APPLICATION_JSON_VALUE)
@@ -63,7 +69,7 @@ class MetadataJsonSchemaResource {
 		@Parameter(name = "municipalityId", description = "MunicipalityID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "id", description = "Schema ID", example = "person_1.0") @NotBlank @PathVariable final String id) {
 
-		return ok(JsonSchema.create());
+		return ok(jsonSchemaService.getSchema(municipalityId, id));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
@@ -72,26 +78,13 @@ class MetadataJsonSchemaResource {
 	})
 	ResponseEntity<Void> createSchema(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@Valid @NotNull @RequestBody final JsonSchemaCreateRequest jsonSchema) {
+		@Valid @NotNull @RequestBody final JsonSchemaCreateRequest body) {
 
-		final var createdSchema = JsonSchema.create().withId("some-schema-id");
+		final var createdSchema = jsonSchemaService.create(municipalityId, body);
 
 		return created(fromPath("/" + municipalityId + "/metadata/jsonschemas/{id}").buildAndExpand(createdSchema.getId()).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
-	}
-
-	@PatchMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
-	@Operation(summary = "Update a JSON schema", responses = {
-		@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true),
-		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	})
-	ResponseEntity<Void> updateSchema(
-		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@Parameter(name = "id", description = "Schema ID", example = "person_1.0") @NotBlank @PathVariable final String id,
-		@Valid @RequestBody final JsonSchemaCreateRequest jsonSchema) {
-
-		return noContent().build();
 	}
 
 	@DeleteMapping(path = "{id}", produces = ALL_VALUE)
@@ -102,6 +95,8 @@ class MetadataJsonSchemaResource {
 	ResponseEntity<Void> deleteSchema(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "id", description = "Schema ID", example = "person_1.0") @PathVariable @NotBlank final String id) {
+
+		jsonSchemaService.delete(municipalityId, id);
 
 		return noContent().build();
 	}
