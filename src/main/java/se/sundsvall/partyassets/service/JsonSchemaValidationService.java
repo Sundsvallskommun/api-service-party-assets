@@ -2,60 +2,87 @@ package se.sundsvall.partyassets.service;
 
 import static com.networknt.schema.InputFormat.JSON;
 import static com.networknt.schema.SpecVersion.VersionFlag.V202012;
-import static java.util.Collections.emptySet;
 import static java.util.Locale.ENGLISH;
 import static java.util.Optional.ofNullable;
 import static org.zalando.problem.Status.BAD_REQUEST;
+import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_FOUND;
 
+import com.networknt.schema.ExecutionContext;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.ValidationMessage;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Set;
 import org.springframework.stereotype.Service;
+import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
+import se.sundsvall.partyassets.integration.db.JsonSchemaRepository;
+import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 
 @Service
 public class JsonSchemaValidationService {
 
 	private static final Locale LOCALE = ENGLISH;
 
+	private final JsonSchemaRepository jsonSchemaRepository;
+
+	public JsonSchemaValidationService(JsonSchemaRepository jsonSchemaRepository) {
+		this.jsonSchemaRepository = jsonSchemaRepository;
+	}
+
 	/**
-	 * Creates a schema that will use Draft 2020-12 as the default if $schema is not specified
-	 * in the schema data. If $schema is specified in the schema data then that schema dialect will be used instead.
-	 * 
-	 * @param  schemaAsString The JSON schema as a string.
-	 * @return                a JsonSchema
+	 * Parses a JSON schema string, defaults to Draft 2020-12 if $schema is not specified.
+	 *
+	 * @param  schemaAsString JSON schema as string
+	 * @return                parsed JsonSchema
 	 */
 	public JsonSchema toJsonSchema(String schemaAsString) {
 		return JsonSchemaFactory.getInstance(V202012).getSchema(schemaAsString);
 	}
 
 	/**
-	 * Validates input JSON against a JSON schema.
-	 * 
-	 * @param  input  the JSON to validate
-	 * @param  schema the JsonSchema to use in validation
-	 * @return        a set of ValidationMessages if input is invalid. An empty set if input is valid.
+	 * Validates input JSON against a schema by ID.
+	 *
+	 * @param  input    JSON input
+	 * @param  schemaId schema ID
+	 * @return          validation messages (empty if valid)
 	 */
-	public Set<ValidationMessage> validate(String input, JsonSchema schema) {
-		final var assertions = schema.validate(input, JSON, executionContext -> {
-			// By default since Draft 2019-09 the format keyword only generates annotations and not assertions
-			executionContext.getExecutionConfig().setFormatAssertionsEnabled(true);
-			// Set Locale to get localized error messages.
-			executionContext.getExecutionConfig().setLocale(LOCALE);
-		});
-
-		return ofNullable(assertions).orElse(emptySet());
+	public Set<ValidationMessage> validate(String input, String schemaId) {
+		return validate(input, getSchemaById(schemaId));
 	}
 
 	/**
-	 * Validates input JSON against a JSON schema.
-	 * 
-	 * @param  input                      the JSON to validate
-	 * @param  schema                     the JsonSchema to use in validation
-	 * @throws ConstraintViolationProblem with BAD_REUEST if the JSON is not valid.
+	 * Validates input JSON against a schema.
+	 *
+	 * @param  input  JSON input
+	 * @param  schema JsonSchema
+	 * @return        validation messages (empty if valid)
+	 */
+	public Set<ValidationMessage> validate(String input, JsonSchema schema) {
+		return ofNullable(schema.validate(input, JSON, JsonSchemaValidationService::configureExecutionContext))
+			.orElseGet(Collections::emptySet);
+	}
+
+	/**
+	 * Validates input JSON against a schema by ID and throws on errors.
+	 *
+	 * @param  input                      JSON input
+	 * @param  schemaId                   schema ID
+	 * @throws ConstraintViolationProblem BAD_REQUEST if input is invalid
+	 */
+	public void validateAndThrow(String input, String schemaId) {
+		validateAndThrow(input, getSchemaById(schemaId));
+	}
+
+	/**
+	 * Validates input JSON against a schema and throws on errors.
+	 *
+	 * @param  input                      JSON input
+	 * @param  schema                     JsonSchema
+	 * @throws ConstraintViolationProblem BAD_REQUEST if input is invalid
 	 */
 	public void validateAndThrow(String input, JsonSchema schema) {
 		final var violations = validate(input, schema).stream()
@@ -65,5 +92,17 @@ public class JsonSchemaValidationService {
 		if (!violations.isEmpty()) {
 			throw new ConstraintViolationProblem(BAD_REQUEST, violations);
 		}
+	}
+
+	private JsonSchema getSchemaById(String schemaId) {
+		return jsonSchemaRepository.findById(schemaId)
+			.map(JsonSchemaEntity::getValue)
+			.map(this::toJsonSchema)
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(schemaId)));
+	}
+
+	private static void configureExecutionContext(ExecutionContext executionContext) {
+		executionContext.getExecutionConfig().setFormatAssertionsEnabled(true);
+		executionContext.getExecutionConfig().setLocale(LOCALE);
 	}
 }

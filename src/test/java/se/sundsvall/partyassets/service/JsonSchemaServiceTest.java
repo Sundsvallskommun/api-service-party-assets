@@ -202,7 +202,7 @@ class JsonSchemaServiceTest {
 
 		// Assert
 		assertThat(exception.getStatus()).isEqualTo(NOT_FOUND);
-		assertThat(exception.getMessage()).isEqualTo("Not Found: A JsonSchema with ID 'some-id' was not found for municipalityId '2281'");
+		assertThat(exception.getMessage()).isEqualTo("Not Found: A JsonSchema with ID 'some-id' was not found!");
 
 		verify(jsonSchemaRepositoryMock).findByMunicipalityIdAndId(MUNICIPALITY_ID, id);
 		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);

@@ -12,24 +12,28 @@ class AssetMapperTest {
 
 	@Test
 	void toAsset() {
+
 		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 		final var asset = AssetMapper.toAsset(entity);
 
-		assertThat(asset.getAdditionalParameters()).isEqualTo(entity.getAdditionalParameters());
-		assertThat(asset.getAssetId()).isEqualTo(entity.getAssetId());
-		assertThat(asset.getCaseReferenceIds()).isEqualTo(entity.getCaseReferenceIds());
-		assertThat(asset.getDescription()).isEqualTo(entity.getDescription());
-		assertThat(asset.getId()).isEqualTo(entity.getId());
-		assertThat(asset.getIssued()).isEqualTo(entity.getIssued());
-		assertThat(asset.getPartyId()).isEqualTo(entity.getPartyId());
-		assertThat(asset.getStatus()).isEqualTo(entity.getStatus());
-		assertThat(asset.getStatusReason()).isEqualTo(entity.getStatusReason());
-		assertThat(asset.getType()).isEqualTo(entity.getType());
-		assertThat(asset.getValidTo()).isEqualTo(entity.getValidTo());
+		assertThat(asset)
+			.usingRecursiveComparison()
+			.ignoringFields("jsonParameters")
+			.isEqualTo(entity);
+
+		// Json params
+		assertThat(asset.getJsonParameters()).hasSize(1);
+		assertThat(entity.getJsonParameters()).hasSize(1);
+		final var assetParam = asset.getJsonParameters().getFirst();
+		final var entityParam = entity.getJsonParameters().getFirst();
+		assertThat(assetParam.getKey()).isEqualTo(entityParam.getKey());
+		assertThat(assetParam.getSchemaId()).isEqualTo(entityParam.getSchema().getId());
+		assertThat(assetParam.getValue()).isEqualTo(entityParam.getValue());
 	}
 
 	@Test
 	void toEntity() {
+
 		final var request = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString());
 		final var partyType = PartyType.PRIVATE;
 		final var municipalityId = "2281";
@@ -50,10 +54,20 @@ class AssetMapperTest {
 		assertThat(entity.getId()).isNull();
 		assertThat(entity.getCreated()).isNull();
 		assertThat(entity.getUpdated()).isNull();
+
+		// Json params
+		assertThat(request.getJsonParameters()).hasSize(1);
+		assertThat(entity.getJsonParameters()).hasSize(1);
+		final var requestJsonParam = request.getJsonParameters().getFirst();
+		final var entityParam = entity.getJsonParameters().getFirst();
+		assertThat(requestJsonParam.getKey()).isEqualTo(entityParam.getKey());
+		assertThat(requestJsonParam.getSchemaId()).isEqualTo(entityParam.getSchema().getId());
+		assertThat(requestJsonParam.getValue()).isEqualTo(entityParam.getValue());
 	}
 
 	@Test
 	void updateEntity() {
+
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
 		final var original = TestFactory.getAssetEntity(id, partyId);
@@ -75,10 +89,20 @@ class AssetMapperTest {
 		assertThat(entity.getType()).isEqualTo(original.getType());
 		assertThat(entity.getId()).isEqualTo(original.getId());
 		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
+
+		// Json params
+		assertThat(request.getJsonParameters()).hasSize(1);
+		assertThat(entity.getJsonParameters()).hasSize(1);
+		final var requestJsonParam = request.getJsonParameters().getFirst();
+		final var entityParam = entity.getJsonParameters().getFirst();
+		assertThat(requestJsonParam.getKey()).isEqualTo(entityParam.getKey());
+		assertThat(requestJsonParam.getSchemaId()).isEqualTo(entityParam.getSchema().getId());
+		assertThat(requestJsonParam.getValue()).isEqualTo(entityParam.getValue());
 	}
 
 	@Test
 	void updateEntityWithEmptyValues() {
+
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
 		final var original = TestFactory.getAssetEntity(id, partyId);
@@ -95,10 +119,10 @@ class AssetMapperTest {
 		assertThat(entity.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(entity.getDescription()).isEqualTo(original.getDescription());
 		assertThat(entity.getIssued()).isEqualTo(original.getIssued());
+		assertThat(entity.getJsonParameters()).isEqualTo(original.getJsonParameters());
 		assertThat(entity.getPartyId()).isEqualTo(original.getPartyId());
 		assertThat(entity.getType()).isEqualTo(original.getType());
 		assertThat(entity.getId()).isEqualTo(original.getId());
 		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 	}
-
 }
