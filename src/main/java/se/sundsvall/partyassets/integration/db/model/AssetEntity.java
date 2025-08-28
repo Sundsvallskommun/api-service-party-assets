@@ -5,6 +5,8 @@ import static jakarta.persistence.FetchType.EAGER;
 import static java.time.OffsetDateTime.now;
 import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 import jakarta.persistence.CascadeType;
@@ -25,6 +27,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -335,6 +338,19 @@ public class AssetEntity {
 
 	public AssetEntity withUpdated(final OffsetDateTime updated) {
 		this.updated = updated;
+		return this;
+	}
+
+	public AssetEntity addOrReplaceJsonParameters(List<AssetJsonParameterEntity> jsonParameters) {
+		if (this.jsonParameters == null) {
+			this.jsonParameters = new ArrayList<>();
+		}
+
+		ofNullable(jsonParameters).orElse(emptyList()).stream().forEach(p -> p.setAsset(this));
+
+		this.jsonParameters.clear();
+		this.jsonParameters.addAll(jsonParameters);
+
 		return this;
 	}
 

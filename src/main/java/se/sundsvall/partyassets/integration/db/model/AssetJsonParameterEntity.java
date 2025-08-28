@@ -121,11 +121,12 @@ public class AssetJsonParameterEntity {
 			return false;
 		}
 		AssetJsonParameterEntity other = (AssetJsonParameterEntity) obj;
-		return Objects.equals(asset, other.asset) && Objects.equals(id, other.id) && Objects.equals(key, other.key) && Objects.equals(schema, other.schema) && Objects.equals(value, other.value);
+		return Objects.equals((asset != null ? asset.getId() : 0), (other.asset != null ? other.asset.getId() : 0)) && Objects.equals(id, other.id) && Objects.equals(key, other.key) && Objects.equals(schema, other.schema) && Objects.equals(value,
+			other.value);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetJsonParameterEntity [id=" + id + ", key=" + key + ", value=" + value + ", asset=" + asset + ", schema=" + schema + "]";
+		return "AssetJsonParameterEntity [id=" + id + ", key=" + key + ", value=" + value + ", asset=" + (asset != null ? asset.getId() : 0) + ", schema=" + schema + "]";
 	}
 }

@@ -39,6 +39,4 @@ spring:
           party:
             authorization-grant-type: client_credentials
             provider: party
-logbook:
-  excluded:
-    paths: /import,**/assets/**
+

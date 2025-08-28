@@ -2,6 +2,10 @@ package se.sundsvall.partyassets.service;
 
 import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_ALREADY_EXISTS;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_ABLE_TO_DELETE_REFERENCED_SCHEMAS;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_FOUND;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_WITH_GREATER_VERSION_ALREADY_EXISTS;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchema;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchemaEntity;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchemaList;
@@ -19,11 +23,6 @@ import se.sundsvall.partyassets.service.mapper.JsonSchemaMapper;
 @Service
 public class JsonSchemaService {
 
-	private static final String MESSAGE_JSON_SCHEMA_NOT_FOUND = "A JsonSchema with ID '%s' was not found for municipalityId '%s'";
-	private static final String MESSAGE_JSON_SCHEMA_ALREADY_EXISTS = "A JsonSchema already exists with ID '%s'!";
-	private static final String MESSAGE_JSON_SCHEMA_WITH_GREATER_VERSION_ALREADY_EXISTS = "A JsonSchema with a greater version already exists! (see schema with ID: '%s')";
-	private static final String MESSAGE_JSON_SCHEMA_NOT_ABLE_TO_DELETE_REFERENCED_SCHEMAS = "The JsonSchema has %s referencing assets! Deletion of schemas with references is not possible!";
-
 	private final JsonSchemaRepository jsonSchemaRepository;
 	private final AssetRepository assetRepository;
 
@@ -33,11 +32,10 @@ public class JsonSchemaService {
 	}
 
 	/**
-	 * Get all schemas by municipality ID.
-	 * 
+	 * Get all schemas by municipality ID, enriched with number of references.
+	 *
 	 * @param  municipalityId the municipality ID
-	 * @param  schema         the JsonSchema to use in validation
-	 * @return                a List of JsonSchema:s
+	 * @return                a list of {@link JsonSchema}
 	 */
 	public List<JsonSchema> getSchemas(String municipalityId) {
 		return toJsonSchemaList(jsonSchemaRepository.findAllByMunicipalityId(municipalityId)).stream()
@@ -46,25 +44,27 @@ public class JsonSchemaService {
 	}
 
 	/**
-	 * Get schema by municipality ID and schema ID.
-	 * 
-	 * @param  municipalityId the municipality ID
-	 * @param  id             the schema ID.
-	 * @return                a List of JsonSchema:s
+	 * Get schema by municipality ID and schema ID, enriched with number of references.
+	 *
+	 * @param  municipalityId                       the municipality ID
+	 * @param  id                                   the schema ID
+	 * @return                                      a {@link JsonSchema}
+	 * @throws org.zalando.problem.ThrowableProblem if not found
 	 */
 	public JsonSchema getSchema(String municipalityId, String id) {
 		return jsonSchemaRepository.findByMunicipalityIdAndId(municipalityId, id)
 			.map(JsonSchemaMapper::toJsonSchema)
 			.map(jsonSchema -> jsonSchema.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(jsonSchema.getId())))
-			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(id, municipalityId)));
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(id)));
 	}
 
 	/**
 	 * Create new schema or a new version of an existing schema.
-	 * 
-	 * @param  municipalityId the municipality ID
-	 * @param  request        the request containing the schema information
-	 * @return                the created schema
+	 *
+	 * @param  municipalityId                       the municipality ID
+	 * @param  request                              the schema request
+	 * @return                                      the created {@link JsonSchema}
+	 * @throws org.zalando.problem.ThrowableProblem if a conflicting schema already exists
 	 */
 	public JsonSchema create(String municipalityId, JsonSchemaCreateRequest request) {
 		final var entityToCreate = toJsonSchemaEntity(municipalityId, request);
@@ -88,11 +88,11 @@ public class JsonSchemaService {
 	}
 
 	/**
-	 * Delete an existing schema.
-	 * 
-	 * @param  municipalityId   the municipality ID
-	 * @param  id               the schema ID.
-	 * @throws ThrowableProblem if the JsonSchema is not found or has referencing assets.
+	 * Delete an existing schema if it has no referencing assets.
+	 *
+	 * @param  municipalityId                       the municipality ID
+	 * @param  id                                   the schema ID
+	 * @throws org.zalando.problem.ThrowableProblem if not found or referenced
 	 */
 	public void delete(String municipalityId, String id) {
 		final var jsonSchemaToDelete = getSchema(municipalityId, id);

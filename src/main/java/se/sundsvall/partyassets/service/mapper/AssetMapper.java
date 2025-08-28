@@ -5,11 +5,15 @@ import static java.util.Optional.ofNullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
+import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
+import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 public final class AssetMapper {
@@ -24,6 +28,7 @@ public final class AssetMapper {
 			.withCaseReferenceIds(entity.getCaseReferenceIds())
 			.withId(entity.getId())
 			.withIssued(entity.getIssued())
+			.withJsonParameters(toAssetJsonParameterList(entity.getJsonParameters()))
 			.withOrigin(entity.getOrigin())
 			.withPartyId(entity.getPartyId())
 			.withStatus(entity.getStatus())
@@ -39,6 +44,7 @@ public final class AssetMapper {
 			.withCaseReferenceIds(retrieveUniqueItems(request.getCaseReferenceIds())) // Filter out distinct values to save
 			.withDescription(request.getDescription())
 			.withIssued(request.getIssued())
+			.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(request.getJsonParameters()))
 			.withOrigin(request.getOrigin())
 			.withPartyId(request.getPartyId())
 			.withPartyType(partyType)
@@ -51,7 +57,8 @@ public final class AssetMapper {
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
 		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
-		Optional.ofNullable(request.getCaseReferenceIds()).ifPresent(s -> entity.setCaseReferenceIds(retrieveUniqueItems(s)));
+		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
+		Optional.ofNullable(request.getCaseReferenceIds()).ifPresent(caseReferenceIds -> entity.setCaseReferenceIds(retrieveUniqueItems(caseReferenceIds)));
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
@@ -64,5 +71,37 @@ public final class AssetMapper {
 			.stream()
 			.distinct()
 			.toList());
+	}
+
+	private static List<AssetJsonParameter> toAssetJsonParameterList(List<AssetJsonParameterEntity> assetJsonParameterEntityList) {
+		return ofNullable(assetJsonParameterEntityList).orElse(emptyList()).stream()
+			.map(AssetMapper::toAssetJsonParameter)
+			.filter(Objects::nonNull)
+			.toList();
+	}
+
+	private static AssetJsonParameter toAssetJsonParameter(AssetJsonParameterEntity assetJsonParameterEntity) {
+		return Optional.ofNullable(assetJsonParameterEntity)
+			.map(o -> AssetJsonParameter.create()
+				.withKey(o.getKey())
+				.withSchemaId(o.getSchema().getId())
+				.withValue(o.getValue()))
+			.orElse(null);
+	}
+
+	private static List<AssetJsonParameterEntity> toAssetJsonParameterEntityList(List<AssetJsonParameter> assetJsonParameterList) {
+		return ofNullable(assetJsonParameterList).orElse(emptyList()).stream()
+			.map(AssetMapper::toAssetJsonParameterEntity)
+			.filter(Objects::nonNull)
+			.toList();
+	}
+
+	private static AssetJsonParameterEntity toAssetJsonParameterEntity(AssetJsonParameter assetJsonParameter) {
+		return Optional.ofNullable(assetJsonParameter)
+			.map(o -> AssetJsonParameterEntity.create()
+				.withKey(o.getKey())
+				.withSchema(JsonSchemaEntity.create().withId(assetJsonParameter.getSchemaId()))
+				.withValue(o.getValue()))
+			.orElse(null);
 	}
 }
