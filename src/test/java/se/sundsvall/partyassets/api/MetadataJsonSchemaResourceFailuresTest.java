@@ -134,8 +134,8 @@ class MetadataJsonSchemaResourceFailuresTest {
 			.extracting(Violation::getField, Violation::getMessage)
 			.containsExactly(
 				tuple("name", "must not be blank"),
-				tuple("value", "must be valid JSON"),
-				tuple("version", "must not be null"));
+				tuple("value", "must be valid JSON, but was blank"),
+				tuple("version", "must not be blank"));
 
 		verifyNoInteractions(jsonSchemaServiceMock);
 	}
@@ -197,7 +197,7 @@ class MetadataJsonSchemaResourceFailuresTest {
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
 			.extracting(Violation::getField, Violation::getMessage)
-			.containsExactly(tuple("value", "Wrong value in $schema-node. Should be 'https://json-schema.org/draft/2020-12/schema'"));
+			.containsExactly(tuple("value", "Wrong value in $schema-node. Expected: 'https://json-schema.org/draft/2020-12/schema' Found: 'https://json-schema.org/draft/2019-09/schema'"));
 
 		verifyNoInteractions(jsonSchemaServiceMock);
 	}

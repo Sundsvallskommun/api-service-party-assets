@@ -44,9 +44,6 @@ class AssetServiceTest {
 	private Specification<AssetEntity> specificationMock;
 
 	@Mock
-	private JsonSchemaValidationService jsonSchemaValidationServiceMock;
-
-	@Mock
 	private PartyTypeProvider partyTypeProviderMock;
 
 	@Captor
@@ -89,7 +86,6 @@ class AssetServiceTest {
 		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
 
 		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
-		verify(jsonSchemaValidationServiceMock).validateAndThrow(assetCreateRequest.getJsonParameters().getFirst().getValue(), assetCreateRequest.getJsonParameters().getFirst().getSchemaId());
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 
@@ -110,7 +106,6 @@ class AssetServiceTest {
 		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
 
 		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
-		verify(jsonSchemaValidationServiceMock).validateAndThrow(assetCreateRequest.getJsonParameters().getFirst().getValue(), assetCreateRequest.getJsonParameters().getFirst().getSchemaId());
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 
@@ -169,7 +164,6 @@ class AssetServiceTest {
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).save(any(AssetEntity.class));
-		verify(jsonSchemaValidationServiceMock).validateAndThrow(asssetUpdateRequest.getJsonParameters().getFirst().getValue(), asssetUpdateRequest.getJsonParameters().getFirst().getSchemaId());
 	}
 
 	@Test

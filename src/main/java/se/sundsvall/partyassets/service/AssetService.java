@@ -1,6 +1,5 @@
 package se.sundsvall.partyassets.service;
 
-import static java.util.Collections.emptyList;
 import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
@@ -8,12 +7,10 @@ import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.zalando.problem.Problem;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
-import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
@@ -25,12 +22,10 @@ public class AssetService {
 
 	private final AssetRepository repository;
 	private final PartyTypeProvider partyTypeProvider;
-	private final JsonSchemaValidationService jsonSchemaValidationService;
 
-	public AssetService(final AssetRepository repository, final PartyTypeProvider partyTypeProvider, final JsonSchemaValidationService jsonSchemaValidationService) {
+	public AssetService(final AssetRepository repository, final PartyTypeProvider partyTypeProvider) {
 		this.repository = repository;
 		this.partyTypeProvider = partyTypeProvider;
-		this.jsonSchemaValidationService = jsonSchemaValidationService;
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
@@ -49,8 +44,6 @@ public class AssetService {
 				.build();
 		}
 
-		validateJson(request.getJsonParameters());
-
 		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
 	}
 
@@ -62,6 +55,7 @@ public class AssetService {
 				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
 				.build();
 		}
+
 		repository.deleteById(id);
 	}
 
@@ -74,13 +68,6 @@ public class AssetService {
 				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
 				.build());
 
-		validateJson(request.getJsonParameters());
-
 		repository.save(updateEntity(old, request));
-	}
-
-	private void validateJson(List<AssetJsonParameter> jsonParameters) {
-		Optional.ofNullable(jsonParameters).orElse(emptyList())
-			.forEach(jsonParameter -> jsonSchemaValidationService.validateAndThrow(jsonParameter.getValue(), jsonParameter.getSchemaId()));
 	}
 }

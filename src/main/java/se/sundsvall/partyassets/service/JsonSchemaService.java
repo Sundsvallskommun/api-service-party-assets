@@ -2,12 +2,11 @@ package se.sundsvall.partyassets.service;
 
 import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
-import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_ALREADY_EXISTS;
-import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_ABLE_TO_DELETE_REFERENCED_SCHEMAS;
+import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_ALREADY_EXISTS;
+import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_REFERENCED_ASSETS;
+import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_WITH_GREATER_VERSION_EXISTS;
 import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_FOUND;
-import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_WITH_GREATER_VERSION_ALREADY_EXISTS;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchema;
-import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchemaEntity;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchemaList;
 
 import java.util.List;
@@ -67,24 +66,13 @@ public class JsonSchemaService {
 	 * @throws org.zalando.problem.ThrowableProblem if a conflicting schema already exists
 	 */
 	public JsonSchema create(String municipalityId, JsonSchemaCreateRequest request) {
-		final var entityToCreate = toJsonSchemaEntity(municipalityId, request);
+		final var schemaEntity = JsonSchemaMapper.toJsonSchemaEntity(municipalityId, request);
 
-		// Check if a schema with this ID already exists.
-		if (jsonSchemaRepository.existsById(entityToCreate.getId())) {
-			throw Problem.valueOf(CONFLICT, MESSAGE_JSON_SCHEMA_ALREADY_EXISTS.formatted(entityToCreate.getId()));
-		}
-
-		// Check if a schema with greater version already exists.
-		final var versionToCreate = new ComparableVersion(request.getVersion());
-		jsonSchemaRepository.findAllByMunicipalityIdAndName(municipalityId, request.getName().toLowerCase()).stream()
-			.filter(jsonSchema -> versionToCreate.compareTo(new ComparableVersion(jsonSchema.getVersion())) < 0)
-			.findAny()
-			.ifPresent(jsonSchemaWithGreaterVersion -> {
-				throw Problem.valueOf(CONFLICT, MESSAGE_JSON_SCHEMA_WITH_GREATER_VERSION_ALREADY_EXISTS.formatted(jsonSchemaWithGreaterVersion.getId()));
-			});
+		validateSchemaDoesNotAlreadyExist(schemaEntity.getId());
+		validateNoGreaterVersionExists(municipalityId, request);
 
 		// All good! Create schema.
-		return toJsonSchema(jsonSchemaRepository.save(entityToCreate));
+		return toJsonSchema(jsonSchemaRepository.save(schemaEntity));
 	}
 
 	/**
@@ -95,12 +83,31 @@ public class JsonSchemaService {
 	 * @throws org.zalando.problem.ThrowableProblem if not found or referenced
 	 */
 	public void delete(String municipalityId, String id) {
-		final var jsonSchemaToDelete = getSchema(municipalityId, id);
+		final var schemaToDelete = getSchema(municipalityId, id);
 
-		if (jsonSchemaToDelete.getNumberOfReferences() > 0) {
-			throw Problem.valueOf(CONFLICT, MESSAGE_JSON_SCHEMA_NOT_ABLE_TO_DELETE_REFERENCED_SCHEMAS.formatted(jsonSchemaToDelete.getNumberOfReferences()));
+		if (schemaToDelete.getNumberOfReferences() > 0) {
+			throw Problem.valueOf(CONFLICT, JSON_SCHEMA_REFERENCED_ASSETS.formatted(schemaToDelete.getNumberOfReferences()));
 		}
 
-		jsonSchemaRepository.deleteById(jsonSchemaToDelete.getId());
+		jsonSchemaRepository.deleteById(schemaToDelete.getId());
+	}
+
+	// ---- Private helpers ------------------------------------------------------
+
+	private void validateSchemaDoesNotAlreadyExist(String schemaId) {
+		if (jsonSchemaRepository.existsById(schemaId)) {
+			throw Problem.valueOf(CONFLICT, JSON_SCHEMA_ALREADY_EXISTS.formatted(schemaId));
+		}
+	}
+
+	private void validateNoGreaterVersionExists(String municipalityId, JsonSchemaCreateRequest request) {
+		final var newVersion = new ComparableVersion(request.getVersion());
+
+		jsonSchemaRepository.findAllByMunicipalityIdAndName(municipalityId, request.getName().toLowerCase()).stream()
+			.filter(existing -> newVersion.compareTo(new ComparableVersion(existing.getVersion())) < 0)
+			.findAny()
+			.ifPresent(existing -> {
+				throw Problem.valueOf(CONFLICT, JSON_SCHEMA_WITH_GREATER_VERSION_EXISTS.formatted(existing.getId()));
+			});
 	}
 }
