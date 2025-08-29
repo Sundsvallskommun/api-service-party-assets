@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "3.1"
 servers:
-- url: http://localhost:50955
+- url: http://localhost:55105
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -670,18 +670,18 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        detail:
-          type: string
         title:
+          type: string
+        detail:
           type: string
     StatusType:
       type: object
       properties:
-        reasonPhrase:
-          type: string
         statusCode:
           type: integer
           format: int32
+        reasonPhrase:
+          type: string
     ConstraintViolationProblem:
       type: object
       properties:
@@ -805,9 +805,9 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        detail:
-          type: string
         title:
+          type: string
+        detail:
           type: string
         suppressed:
           type: array
@@ -870,6 +870,7 @@ components:
           description: Schema name
           example: person
         version:
+          minLength: 1
           pattern: ^(\d+\.)?(\d+)$
           type: string
           description: "Schema version on the format [major version].[minor version]"
@@ -960,6 +961,7 @@ components:
       required:
       - key
       - schemaId
+      - value
       type: object
       properties:
         key:
@@ -968,6 +970,7 @@ components:
           description: Parameter key
           example: personParameter
         value:
+          minLength: 1
           type: string
           description: Parameter value with the JSON structure
           example: "{\"firstName\":\"Joe\",\"lastName\":\"Doe\"}"

@@ -6,7 +6,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.networknt.schema.JsonSchema;
@@ -55,6 +57,7 @@ class ValidJsonSchemaConstraintValidatorTest {
 		assertThat(result).isTrue();
 		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
 		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any(JsonSchema.class));
+		verifyNoInteractions(constraintValidatorContextMock, constraintViolationBuilderMock);
 	}
 
 	@Test
@@ -70,6 +73,10 @@ class ValidJsonSchemaConstraintValidatorTest {
 		assertThat(result).isFalse();
 		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
 		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any(JsonSchema.class));
+		verify(constraintValidatorContextMock, times(2)).disableDefaultConstraintViolation();
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("$.type: does not have a value in the enumeration [\"array\", \"boolean\", \"integer\", \"null\", \"number\", \"object\", \"string\"]");
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("$.type: string found, array expected");
+		verify(constraintViolationBuilderMock, times(2)).addConstraintViolation();
 	}
 
 	@Test
@@ -85,12 +92,35 @@ class ValidJsonSchemaConstraintValidatorTest {
 		assertThat(result).isFalse();
 		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
 		verify(jsonSchemaValidationServiceMock, never()).validate(any(), anyString());
+		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("Could not determine schema specification: [Failed to load meta-schema 'https://json-schema.org/draft/invalid/schema']");
+		verify(constraintViolationBuilderMock).addConstraintViolation();
 	}
 
 	@ParameterizedTest
 	@NullAndEmptySource
 	@ValueSource(strings = {
-		" ", "	", "{,}", "-"
+		" ", "	"
+	})
+	void validateBlankJsonSchemaValues(String input) {
+
+		// Arrange
+		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
+
+		// Act
+		final var result = validator.isValid(input, constraintValidatorContextMock);
+
+		// Assert
+		assertThat(result).isFalse();
+		verify(jsonSchemaValidationServiceMock, never()).validate(any(), anyString());
+		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("must be valid JSON, but was blank");
+		verify(constraintViolationBuilderMock).addConstraintViolation();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"{,}", "-"
 	})
 	void validateInvalidJsonSchemaValues(String input) {
 
@@ -103,5 +133,8 @@ class ValidJsonSchemaConstraintValidatorTest {
 		// Assert
 		assertThat(result).isFalse();
 		verify(jsonSchemaValidationServiceMock, never()).validate(any(), anyString());
+		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("must be valid JSON, but was: '%s'".formatted(input));
+		verify(constraintViolationBuilderMock).addConstraintViolation();
 	}
 }

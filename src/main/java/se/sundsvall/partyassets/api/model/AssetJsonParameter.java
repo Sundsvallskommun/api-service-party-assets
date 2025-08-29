@@ -10,6 +10,7 @@ public class AssetJsonParameter {
 	@Schema(description = "Parameter key", example = "personParameter")
 	private String key;
 
+	@NotBlank
 	@Schema(description = "Parameter value with the JSON structure", example = """
 		{
 		  "firstName": "Joe",

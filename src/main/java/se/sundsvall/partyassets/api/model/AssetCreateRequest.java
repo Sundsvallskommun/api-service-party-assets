@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
+import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 
 @ValidStatusReason
@@ -55,7 +56,7 @@ public class AssetCreateRequest {
 	private Map<String, String> additionalParameters;
 
 	@Schema(description = "JSON parameters")
-	private List<AssetJsonParameter> jsonParameters;
+	private List<@ValidJsonParameter AssetJsonParameter> jsonParameters;
 
 	public static AssetCreateRequest create() {
 		return new AssetCreateRequest();
