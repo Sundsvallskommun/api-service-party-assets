@@ -10,12 +10,10 @@ import static org.springframework.http.HttpStatus.OK;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
-
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
@@ -107,5 +105,4 @@ class MetadataStatusReasonsIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse()
 			.andVerifyThat(() -> !repository.existsById(status.name()));
 	}
-
 }

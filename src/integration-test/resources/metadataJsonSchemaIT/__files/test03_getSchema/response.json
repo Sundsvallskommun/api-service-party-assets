@@ -1,0 +1,9 @@
+{
+	"id": "2281_schema_with_references_1.0.0",
+	"name": "schema_with_references",
+	"version": "1.0.0",
+	"numberOfReferences": 1,
+	"value": "{ \"type\": \"object\", \"properties\": { \"firstName\": { \"type\": \"string\" }, \"lastName\": { \"type\": \"string\" } } }",
+	"description": "Schema 2",
+	"created": "2025-02-02T12:13:14+01:00"
+}

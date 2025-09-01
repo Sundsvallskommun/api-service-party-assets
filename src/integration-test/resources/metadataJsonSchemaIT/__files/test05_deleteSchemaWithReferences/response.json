@@ -1,0 +1,5 @@
+{
+	"title": "Conflict",
+	"status": 409,
+	"detail": "The JsonSchema has 1 referencing assets! Deletion of schemas with references is not possible!"
+}
