@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.integration.db.model;
 
 import static jakarta.persistence.FetchType.LAZY;
+import static java.util.Objects.nonNull;
 import static org.hibernate.Length.LONG32;
 
 import jakarta.persistence.Column;
@@ -9,6 +10,7 @@ import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.util.Objects;
 import org.hibernate.annotations.UuidGenerator;
@@ -102,6 +104,13 @@ public class AssetJsonParameterEntity {
 	public AssetJsonParameterEntity withSchema(JsonSchemaEntity schema) {
 		this.schema = schema;
 		return this;
+	}
+
+	@PrePersist
+	void prePersist() {
+		if (nonNull(this.asset.getCreated())) {
+			this.asset.preUpdate();
+		}
 	}
 
 	@Override
