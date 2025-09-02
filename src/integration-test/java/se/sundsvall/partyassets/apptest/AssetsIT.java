@@ -1,13 +1,16 @@
 package se.sundsvall.partyassets.apptest;
 
+import static java.time.OffsetDateTime.now;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -17,12 +20,10 @@ import static org.springframework.http.MediaType.ALL_VALUE;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
@@ -30,6 +31,7 @@ import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 /**
@@ -45,7 +47,8 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 class AssetsIT extends AbstractAppTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
-
+	private static final String REQUEST_FILE = "request.json";
+	private static final String RESPONSE_FILE = "response.json";
 	private static final String PATH = "/" + MUNICIPALITY_ID + "/assets";
 
 	@Autowired
@@ -61,9 +64,9 @@ class AssetsIT extends AbstractAppTest {
 
 		// Create asset
 		setupCall()
-			.withHttpMethod(HttpMethod.POST)
+			.withHttpMethod(POST)
 			.withServicePath(PATH)
-			.withRequest("request.json")
+			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))
 			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
@@ -75,7 +78,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000021");
 		assertThat(asset.get().getCaseReferenceIds()).containsExactly("48649f4b-ec9f-4653-8586-14d69487c4be");
-		assertThat(asset.get().getCreated()).isCloseTo(OffsetDateTime.now(), within(2, SECONDS));
+		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
 		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
 		assertThat(asset.get().getIssued()).isEqualTo(LocalDate.of(2023, 1, 1));
@@ -98,9 +101,9 @@ class AssetsIT extends AbstractAppTest {
 
 		// Create asset
 		setupCall()
-			.withHttpMethod(HttpMethod.POST)
+			.withHttpMethod(POST)
 			.withServicePath(PATH)
-			.withRequest("request.json")
+			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
 			.sendRequestAndVerifyResponse();
@@ -111,7 +114,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000055");
 		assertThat(asset.get().getCaseReferenceIds()).containsExactly("391f7118-12d6-41c8-9032-4621c252000d");
-		assertThat(asset.get().getCreated()).isCloseTo(OffsetDateTime.now(), within(2, SECONDS));
+		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
 		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
 		assertThat(asset.get().getIssued()).isEqualTo(LocalDate.of(2023, 6, 1));
@@ -131,9 +134,9 @@ class AssetsIT extends AbstractAppTest {
 
 		// Create asset
 		setupCall()
-			.withHttpMethod(HttpMethod.POST)
+			.withHttpMethod(POST)
 			.withServicePath(PATH)
-			.withRequest("request.json")
+			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(NOT_FOUND)
 			.sendRequestAndVerifyResponse();
 
@@ -147,7 +150,7 @@ class AssetsIT extends AbstractAppTest {
 			.withHttpMethod(GET)
 			.withServicePath(PATH + "?partyId=f2ef7992-7b01-4185-a7f8-cf97dc7f438f")
 			.withExpectedResponseStatus(OK)
-			.withExpectedResponse("response.json")
+			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
 
@@ -166,7 +169,7 @@ class AssetsIT extends AbstractAppTest {
 				&type=PERMIT\
 				&validTo=2023-12-31""")
 			.withExpectedResponseStatus(OK)
-			.withExpectedResponse("response.json")
+			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
 
@@ -184,7 +187,7 @@ class AssetsIT extends AbstractAppTest {
 		setupCall()
 			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + id)
-			.withRequest("request.json")
+			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
@@ -194,7 +197,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("additionalParameters", "caseReferenceIds", "updated").isEqualTo(assetPreUpdate);
 		assertThat(assetPostUpdate.getAdditionalParameters()).containsExactly(Map.entry("updated_key", "updated_value"));
 		assertThat(assetPostUpdate.getCaseReferenceIds()).containsExactly("5965e286-5e11-450e-9da0-b749122f6280");
-		assertThat(assetPostUpdate.getUpdated()).isCloseTo(OffsetDateTime.now(), within(2, SECONDS));
+		assertThat(assetPostUpdate.getUpdated()).isCloseTo(now(), within(2, SECONDS));
 	}
 
 	@Test
@@ -208,9 +211,9 @@ class AssetsIT extends AbstractAppTest {
 		setupCall()
 			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + id)
-			.withRequest("request.json")
+			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(BAD_REQUEST)
-			.withExpectedResponse("response.json")
+			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 
 		// Verify that asset is the same after update as before (i.e. no update has been executed)
@@ -238,4 +241,65 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(repository.findById(id)).isEmpty();
 	}
 
+	@Test
+	void test09_createAssetWithValidJsonParameters() {
+		setupCall()
+			.withServicePath(PATH)
+			.withHttpMethod(POST)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test10_createAssetWithInvalidJsonParameters() {
+		setupCall()
+			.withServicePath(PATH)
+			.withHttpMethod(POST)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test11_updateAssetWithValidJsonParameters() {
+		final var id = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
+
+		// Verify asset before update
+		final var assetPreUpdate = repository.findById(id).get();
+		assertThat(assetPreUpdate.getJsonParameters()).isEmpty();
+		assertThat(assetPreUpdate.getUpdated()).isNull();
+
+		// Update asset
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + id)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		// Verify asset after update
+		final var assetPostUpdate = repository.findById(id).get();
+		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("jsonParameters", "updated").isEqualTo(assetPreUpdate);
+		assertThat(assetPostUpdate.getJsonParameters())
+			.extracting(AssetJsonParameterEntity::getKey, AssetJsonParameterEntity::getValue)
+			.containsExactly(tuple("theKey", "{\"productId\":888, \"productName\":\"Updated product name\", \"price\":99}"));
+		assertThat(assetPostUpdate.getUpdated()).isCloseTo(now(), within(2, SECONDS));
+	}
+
+	@Test
+	void test12_updateAssetWithInvalidJsonParameters() {
+		final var id = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
+
+		// Update asset
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + id)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

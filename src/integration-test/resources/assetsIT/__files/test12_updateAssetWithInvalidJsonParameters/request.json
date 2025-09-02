@@ -1,0 +1,9 @@
+{
+	"jsonParameters": [
+		{
+			"key": "theKey",
+			"value": "{\"productName\":\"Updated product name\", \"price\":-1}",
+			"schemaId": "2281_schema_1.0"
+		}
+	]
+}

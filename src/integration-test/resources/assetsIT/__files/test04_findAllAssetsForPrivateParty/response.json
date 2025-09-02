@@ -17,7 +17,13 @@
 			"second_key": "second_value",
 			"first_key": "first_value"
 		},
-		"jsonParameters": []
+		"jsonParameters": [
+			{
+				"key": "theKey",
+				"value": "{\"productId\":666, \"productName\":\"A product name\", \"price\":42}",
+				"schemaId": "2281_schema_1.0"
+			}
+		]
 	},
 	{
 		"id": "945576d3-6e92-4118-ba33-53582d338ad3",

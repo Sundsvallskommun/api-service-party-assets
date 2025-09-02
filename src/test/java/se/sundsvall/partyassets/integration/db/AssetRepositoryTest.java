@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.integration.db;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -123,7 +124,7 @@ class AssetRepositoryTest {
 
 	@Test
 	void testUpdate() {
-		final var uuid = UUID.randomUUID().toString();
+		final var uuid = randomUUID().toString();
 		final var entity = TestFactory.getAssetEntity(null, uuid)
 			.withCreated(null)
 			.withUpdated(null);
@@ -133,7 +134,7 @@ class AssetRepositoryTest {
 		assertThat(persistedEntity).isEqualTo(entity);
 		assertThat(persistedEntity.getCreated()).isCloseTo(OffsetDateTime.now(), within(2, SECONDS));
 		assertThat(persistedEntity.getId()).isNotBlank();
-		assertThat(persistedEntity.getUpdated()).isNull();
+		assertThat(persistedEntity.getUpdated()).isCloseTo(OffsetDateTime.now(), within(2, SECONDS));
 
 		persistedEntity.setDescription("Updated description");
 
