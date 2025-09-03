@@ -36,7 +36,7 @@ public final class JsonSchemaMapper {
 	public static JsonSchemaEntity toJsonSchemaEntity(String municipalityId, JsonSchemaCreateRequest jsonSchemaCreateRequest) {
 		return JsonSchemaEntity.create()
 			.withDescription(jsonSchemaCreateRequest.getDescription())
-			.withId(ID_PATTERN.formatted(municipalityId, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()))
+			.withId(ID_PATTERN.formatted(municipalityId, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()).toLowerCase())
 			.withMunicipalityId(municipalityId)
 			.withName(jsonSchemaCreateRequest.getName().toLowerCase())
 			.withValue(jsonSchemaCreateRequest.getValue())

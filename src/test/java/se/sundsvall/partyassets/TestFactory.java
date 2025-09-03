@@ -126,7 +126,7 @@ public final class TestFactory {
 	public static JsonSchemaCreateRequest getJsonSchemaCreateRequest() {
 		return JsonSchemaCreateRequest.create()
 			.withDescription("description")
-			.withName("person_schema")
+			.withName("Person_Schema")
 			.withValue("{}")
 			.withVersion("1.0");
 	}
