@@ -113,17 +113,21 @@ class JsonSchemaServiceTest {
 			.ignoringFields("numberOfReferences") // always zero in entity
 			.isEqualTo(entity);
 
-		verify(jsonSchemaRepositoryMock).findAllByMunicipalityIdAndName(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName());
-		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		verify(jsonSchemaRepositoryMock).findAllByMunicipalityIdAndName(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName().toLowerCase());
+		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()).toLowerCase());
 		verify(jsonSchemaRepositoryMock).save(entityCaptor.capture());
 		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 
 		final var capturedValue = entityCaptor.getValue();
 		assertThat(capturedValue.getCreated()).isNull();
 		assertThat(capturedValue.getDescription()).isEqualTo(jsonSchemaCreateRequest.getDescription());
-		assertThat(capturedValue.getId()).isEqualTo("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		assertThat(capturedValue.getId())
+			.isEqualToIgnoringCase("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()))
+			.isLowerCase();
 		assertThat(capturedValue.getMunicipalityId()).isEqualTo(MUNICIPALITY_ID);
-		assertThat(capturedValue.getName()).isEqualTo(jsonSchemaCreateRequest.getName());
+		assertThat(capturedValue.getName())
+			.isEqualToIgnoringCase(jsonSchemaCreateRequest.getName())
+			.isLowerCase();
 		assertThat(capturedValue.getValue()).isEqualTo(jsonSchemaCreateRequest.getValue());
 		assertThat(capturedValue.getVersion()).isEqualTo(jsonSchemaCreateRequest.getVersion());
 	}
@@ -143,7 +147,7 @@ class JsonSchemaServiceTest {
 		assertThat(exception.getStatus()).isEqualTo(CONFLICT);
 		assertThat(exception.getMessage()).isEqualTo("Conflict: A JsonSchema already exists with ID '2281_person_schema_1.0'!");
 
-		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()).toLowerCase());
 		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 
@@ -166,7 +170,7 @@ class JsonSchemaServiceTest {
 		assertThat(exception.getStatus()).isEqualTo(CONFLICT);
 		assertThat(exception.getMessage()).isEqualTo("Conflict: A JsonSchema with a greater version already exists! (see schema with ID: 'id-2')");
 
-		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
+		verify(jsonSchemaRepositoryMock).existsById("%s_%s_%s".formatted(MUNICIPALITY_ID, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()).toLowerCase());
 		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
 	}
 

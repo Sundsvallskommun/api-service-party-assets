@@ -80,8 +80,12 @@ class JsonSchemaMapperTest {
 		// Assert
 		assertThat(result.getCreated()).isNull();
 		assertThat(result.getDescription()).isEqualTo(jsonSchemaCreateRequest.getDescription());
-		assertThat(result.getId()).isEqualTo("%s_%s_%s".formatted(municipalityId, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()));
-		assertThat(result.getName()).isEqualTo(jsonSchemaCreateRequest.getName());
+		assertThat(result.getId())
+			.isEqualToIgnoringCase("%s_%s_%s".formatted(municipalityId, jsonSchemaCreateRequest.getName(), jsonSchemaCreateRequest.getVersion()))
+			.isLowerCase();
+		assertThat(result.getName())
+			.isEqualToIgnoringCase(jsonSchemaCreateRequest.getName())
+			.isLowerCase();
 		assertThat(result.getValue()).isEqualTo(jsonSchemaCreateRequest.getValue());
 		assertThat(result.getVersion()).isEqualTo(jsonSchemaCreateRequest.getVersion());
 	}
