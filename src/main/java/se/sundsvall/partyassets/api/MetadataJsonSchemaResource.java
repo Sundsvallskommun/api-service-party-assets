@@ -72,6 +72,16 @@ class MetadataJsonSchemaResource {
 		return ok(jsonSchemaService.getSchema(municipalityId, id));
 	}
 
+	@GetMapping(path = "{name}/latest", produces = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Get latest JSON schema by name", responses = @ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true))
+	ResponseEntity<JsonSchema> getLatestSchemaByName(
+		@Parameter(name = "municipalityId", description = "MunicipalityID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "name", description = "Schema name", example = "person") @NotBlank @PathVariable final String name) {
+
+		// TODO: Add implementation
+		return ok(JsonSchema.create());
+	}
+
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
 	@Operation(summary = "Create JSON schema", responses = {
 		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
