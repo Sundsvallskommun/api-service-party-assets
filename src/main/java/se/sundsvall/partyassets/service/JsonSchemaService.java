@@ -5,7 +5,8 @@ import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_ALREADY_EXISTS;
 import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_REFERENCED_ASSETS;
 import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_WITH_GREATER_VERSION_EXISTS;
-import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_FOUND;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_FOUND_BY_ID;
+import static se.sundsvall.partyassets.service.Constants.MESSAGE_JSON_SCHEMA_NOT_FOUND_BY_NAME;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchema;
 import static se.sundsvall.partyassets.service.mapper.JsonSchemaMapper.toJsonSchemaList;
 
@@ -54,7 +55,27 @@ public class JsonSchemaService {
 		return jsonSchemaRepository.findByMunicipalityIdAndId(municipalityId, id)
 			.map(JsonSchemaMapper::toJsonSchema)
 			.map(jsonSchema -> jsonSchema.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(jsonSchema.getId())))
-			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND.formatted(id)));
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND_BY_ID.formatted(id)));
+	}
+
+	/**
+	 * Get latest schema by municipality ID and schema name, enriched with number of references.
+	 *
+	 * @param  municipalityId                       the municipality ID
+	 * @param  name                                 the schema name
+	 * @return                                      a {@link JsonSchema}
+	 * @throws org.zalando.problem.ThrowableProblem if not found
+	 */
+	public JsonSchema getLatestSchemaByName(String municipalityId, String name) {
+		return jsonSchemaRepository.findAllByMunicipalityIdAndName(municipalityId, name).stream()
+			.max((objA, objB) -> {
+				final var versionA = new ComparableVersion(objA.getVersion());
+				final var versionB = new ComparableVersion(objB.getVersion());
+				return versionA.compareTo(versionB);
+			})
+			.map(JsonSchemaMapper::toJsonSchema)
+			.map(jsonSchema -> jsonSchema.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(jsonSchema.getId())))
+			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND_BY_NAME.formatted(name)));
 	}
 
 	/**

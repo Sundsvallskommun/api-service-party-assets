@@ -80,6 +80,30 @@ class MetadataJsonSchemaResourceTest {
 	}
 
 	@Test
+	void getLatestSchemaByName() {
+
+		// Arrange
+		final var name = "some-schema-name";
+		final var jsonSchema = JsonSchema.create();
+		when(jsonSchemaServiceMock.getLatestSchemaByName(MUNICIPALITY_ID, name)).thenReturn(jsonSchema);
+
+		// Act
+		final var response = webTestClient.get()
+			.uri("/{municipalityId}/metadata/jsonschemas/{name}/latest", MUNICIPALITY_ID, name)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader().contentType(APPLICATION_JSON)
+			.expectBody(JsonSchema.class).returnResult().getResponseBody();
+
+		// Assert
+		assertThat(response).isEqualTo(jsonSchema);
+
+		verify(jsonSchemaServiceMock).getLatestSchemaByName(MUNICIPALITY_ID, name);
+		verifyNoMoreInteractions(jsonSchemaServiceMock);
+	}
+
+	@Test
 	void createSchema() {
 
 		// Arrange

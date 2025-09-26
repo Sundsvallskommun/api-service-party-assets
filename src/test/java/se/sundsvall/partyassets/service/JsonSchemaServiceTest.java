@@ -94,6 +94,32 @@ class JsonSchemaServiceTest {
 	}
 
 	@Test
+	void getLatestSchemaByName() {
+
+		// Arrange
+		final var name = "schemaName";
+		when(jsonSchemaRepositoryMock.findAllByMunicipalityIdAndName(MUNICIPALITY_ID, name)).thenReturn(List.of(
+			JsonSchemaEntity.create().withId("id1").withName(name).withVersion("2.0"),
+			JsonSchemaEntity.create().withId("id2").withName(name).withVersion("1.2.0"),
+			JsonSchemaEntity.create().withId("id3").withName(name).withVersion("1.1"),
+			JsonSchemaEntity.create().withId("id4").withName(name).withVersion("5.7"), // The greatest version
+			JsonSchemaEntity.create().withId("id5").withName(name).withVersion("4.1.1")));
+		when(assetRepositoryMock.countByJsonParametersSchemaId(any())).thenReturn(5L);
+
+		// Act
+		final var result = service.getLatestSchemaByName(MUNICIPALITY_ID, name);
+
+		// Assert
+		assertThat(result.getId()).isEqualTo("id4");
+		assertThat(result.getVersion()).isEqualTo("5.7");
+		assertThat(result.getNumberOfReferences()).isEqualTo(5L);
+
+		verify(jsonSchemaRepositoryMock).findAllByMunicipalityIdAndName(MUNICIPALITY_ID, name);
+		verify(assetRepositoryMock).countByJsonParametersSchemaId("id4");
+		verifyNoMoreInteractions(jsonSchemaRepositoryMock, assetRepositoryMock);
+	}
+
+	@Test
 	void createSchema() {
 
 		// Arrange
