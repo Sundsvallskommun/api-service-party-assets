@@ -94,4 +94,14 @@ class MetadataJsonSchemaIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test06_getLatestSchemaByName() {
+		setupCall()
+			.withServicePath("/%s/metadata/jsonschemas/%s/latest".formatted(MUNICIPALITY_ID, "schema"))
+			.withHttpMethod(GET)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

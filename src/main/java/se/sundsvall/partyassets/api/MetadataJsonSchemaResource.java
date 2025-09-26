@@ -78,8 +78,7 @@ class MetadataJsonSchemaResource {
 		@Parameter(name = "municipalityId", description = "MunicipalityID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "name", description = "Schema name", example = "person") @NotBlank @PathVariable final String name) {
 
-		// TODO: Add implementation
-		return ok(JsonSchema.create());
+		return ok(jsonSchemaService.getLatestSchemaByName(municipalityId, name));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
