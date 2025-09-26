@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.service;
 
+import static java.util.Comparator.comparing;
 import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.partyassets.service.Constants.JSON_SCHEMA_ALREADY_EXISTS;
@@ -68,11 +69,7 @@ public class JsonSchemaService {
 	 */
 	public JsonSchema getLatestSchemaByName(String municipalityId, String name) {
 		return jsonSchemaRepository.findAllByMunicipalityIdAndName(municipalityId, name).stream()
-			.max((objA, objB) -> {
-				final var versionA = new ComparableVersion(objA.getVersion());
-				final var versionB = new ComparableVersion(objB.getVersion());
-				return versionA.compareTo(versionB);
-			})
+			.max(comparing(obj -> new ComparableVersion(obj.getVersion())))
 			.map(JsonSchemaMapper::toJsonSchema)
 			.map(jsonSchema -> jsonSchema.withNumberOfReferences(assetRepository.countByJsonParametersSchemaId(jsonSchema.getId())))
 			.orElseThrow(() -> Problem.valueOf(NOT_FOUND, MESSAGE_JSON_SCHEMA_NOT_FOUND_BY_NAME.formatted(name)));
