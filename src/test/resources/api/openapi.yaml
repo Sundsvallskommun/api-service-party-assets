@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "3.1"
+  version: "3.2"
 servers:
-- url: http://localhost:55105
+- url: http://localhost:51850
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -550,6 +550,49 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/metadata/jsonschemas/{name}/latest:
+    get:
+      tags:
+      - Metadata - JSON-schemas
+      summary: Get latest JSON schema by name
+      operationId: getLatestSchemaByName
+      parameters:
+      - name: municipalityId
+        in: path
+        description: MunicipalityID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: name
+        in: path
+        description: Schema name
+        required: true
+        schema:
+          minLength: 1
+          type: string
+        example: person
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonSchema"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/metadata/jsonschemas/{id}:
     get:
       tags:
@@ -670,9 +713,9 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
     StatusType:
       type: object
@@ -805,9 +848,9 @@ components:
             type: object
         status:
           $ref: "#/components/schemas/StatusType"
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
         suppressed:
           type: array

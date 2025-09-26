@@ -80,6 +80,32 @@ class MetadataJsonSchemaResourceFailuresTest {
 	}
 
 	@Test
+	void getLatestSchemaByNameInvalidMunicipalityId() {
+
+		// Arrange
+		final var name = "schemaName";
+
+		// Act
+		final var response = webTestClient.get()
+			.uri("/invalid-municipality/metadata/jsonschemas/{name}/latest", name)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(response.getViolations())
+			.extracting(Violation::getField, Violation::getMessage)
+			.containsExactly(tuple("getLatestSchemaByName.municipalityId", "not a valid municipality ID"));
+
+		verifyNoInteractions(jsonSchemaServiceMock);
+	}
+
+	@Test
 	void createSchemaInvalidMunicipalityId() {
 
 		// Arrange

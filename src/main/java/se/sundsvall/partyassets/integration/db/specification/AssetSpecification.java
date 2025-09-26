@@ -3,16 +3,6 @@ package se.sundsvall.partyassets.integration.db.specification;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.ADDITIONAL_PARAMETERS;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.ASSET_ID;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.DESCRIPTION;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.ISSUED;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.MUNICIPALITY_ID;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.PARTY_ID;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.STATUS;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.STATUS_REASON;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.TYPE;
-import static se.sundsvall.partyassets.integration.db.model.AssetEntity_.VALID_TO;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.MapJoin;
@@ -24,6 +14,7 @@ import java.util.stream.Stream;
 import org.springframework.data.jpa.domain.Specification;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity_;
 
 public final class AssetSpecification {
 
@@ -34,18 +25,18 @@ public final class AssetSpecification {
 
 			final List<Predicate> predicates = new ArrayList<>();
 
-			addEqualCriteria(MUNICIPALITY_ID, municipalityId, predicates, criteriaBuilder, root);
-			addEqualCriteria(PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
-			addEqualCriteria(ASSET_ID, request.getAssetId(), predicates, criteriaBuilder, root);
-			addEqualCriteria(TYPE, request.getType(), predicates, criteriaBuilder, root);
-			addEqualCriteria(ISSUED, request.getIssued(), predicates, criteriaBuilder, root);
-			addEqualCriteria(VALID_TO, request.getValidTo(), predicates, criteriaBuilder, root);
-			addEqualCriteria(STATUS, request.getStatus(), predicates, criteriaBuilder, root);
-			addEqualCriteria(STATUS_REASON, request.getStatusReason(), predicates, criteriaBuilder, root);
-			addEqualCriteria(DESCRIPTION, request.getDescription(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.MUNICIPALITY_ID, municipalityId, predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.ASSET_ID, request.getAssetId(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.TYPE, request.getType(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.ISSUED, request.getIssued(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.VALID_TO, request.getValidTo(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.STATUS, request.getStatus(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.STATUS_REASON, request.getStatusReason(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.DESCRIPTION, request.getDescription(), predicates, criteriaBuilder, root);
 
 			if (isNotEmpty(request.getAdditionalParameters())) {
-				final List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(ADDITIONAL_PARAMETERS));
+				final List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(AssetEntity_.ADDITIONAL_PARAMETERS));
 				predicates.add(criteriaBuilder.or(parameterPredicates.toArray(new Predicate[0])));
 			}
 
