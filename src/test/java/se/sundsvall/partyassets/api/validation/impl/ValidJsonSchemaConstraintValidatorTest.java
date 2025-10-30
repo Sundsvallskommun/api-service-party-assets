@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.networknt.schema.JsonSchema;
+import com.networknt.schema.Schema;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ class ValidJsonSchemaConstraintValidatorTest {
 		// Assert
 		assertThat(result).isTrue();
 		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
-		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any(JsonSchema.class));
+		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any(Schema.class));
 		verifyNoInteractions(constraintValidatorContextMock, constraintViolationBuilderMock);
 	}
 
@@ -72,10 +72,10 @@ class ValidJsonSchemaConstraintValidatorTest {
 		// Assert
 		assertThat(result).isFalse();
 		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
-		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any(JsonSchema.class));
+		verify(jsonSchemaValidationServiceMock).validate(eq(schema), any(Schema.class));
 		verify(constraintValidatorContextMock, times(2)).disableDefaultConstraintViolation();
-		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("$.type: does not have a value in the enumeration [\"array\", \"boolean\", \"integer\", \"null\", \"number\", \"object\", \"string\"]");
-		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("$.type: string found, array expected");
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("/type: does not have a value in the enumeration [\"array\", \"boolean\", \"integer\", \"null\", \"number\", \"object\", \"string\"]");
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("/type: string found, array expected");
 		verify(constraintViolationBuilderMock, times(2)).addConstraintViolation();
 	}
 
@@ -93,7 +93,7 @@ class ValidJsonSchemaConstraintValidatorTest {
 		verify(jsonSchemaValidationServiceMock).toJsonSchema(schema);
 		verify(jsonSchemaValidationServiceMock, never()).validate(any(), anyString());
 		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
-		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("Could not determine schema specification: [Failed to load meta-schema 'https://json-schema.org/draft/invalid/schema']");
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("Could not determine schema specification: [Failed to load dialect 'https://json-schema.org/draft/invalid/schema']");
 		verify(constraintViolationBuilderMock).addConstraintViolation();
 	}
 

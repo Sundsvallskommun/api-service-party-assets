@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,11 +61,14 @@ class JsonSchemaValidationServiceTest {
 		// Assert
 		assertThat(validationMessages)
 			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
+			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
+				.map(Object::toString)
+				.orElse(null),
+				Error::getMessage)
 			.containsExactly(
-				"$: required property 'productId' not found",
-				"$: required property 'productName' not found",
-				"$: required property 'price' not found");
+				tuple("", "required property 'productId' not found"),
+				tuple("", "required property 'productName' not found"),
+				tuple("", "required property 'price' not found"));
 	}
 
 	@Test
@@ -78,8 +81,12 @@ class JsonSchemaValidationServiceTest {
 		// Assert
 		assertThat(validationMessages)
 			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
-			.containsExactly("$.productId: string found, integer expected");
+			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
+				.map(Object::toString)
+				.orElse(null),
+				Error::getMessage)
+			.containsExactly(
+				tuple("/productId", "string found, integer expected"));
 	}
 
 	@Test
@@ -92,8 +99,11 @@ class JsonSchemaValidationServiceTest {
 		// Assert
 		assertThat(validationMessages)
 			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
-			.containsExactly("$.tags: must have only unique items in the array");
+			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
+				.map(Object::toString)
+				.orElse(null),
+				Error::getMessage)
+			.containsExactly(tuple("/tags", "must have only unique items in the array"));
 	}
 
 	@Test
@@ -106,12 +116,15 @@ class JsonSchemaValidationServiceTest {
 		// Assert
 		assertThat(validationMessages)
 			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
+			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
+				.map(Object::toString)
+				.orElse(null),
+				Error::getMessage)
 			.containsExactly(
-				"$.price: must have an exclusive minimum value of 0",
-				"$.tags[5]: integer found, string expected",
-				"$.tags: must have only unique items in the array",
-				"$: required property 'productName' not found");
+				tuple("/price", "must have an exclusive minimum value of 0"),
+				tuple("/tags/5", "integer found, string expected"),
+				tuple("/tags", "must have only unique items in the array"),
+				tuple("", "required property 'productName' not found"));
 	}
 
 	@Test
@@ -126,13 +139,14 @@ class JsonSchemaValidationServiceTest {
 			.isNotNull()
 			.hasMessage("Constraint Violation");
 
+		// Assert
 		assertThat(exception.getViolations())
 			.extracting(Violation::getField, Violation::getMessage)
 			.containsExactly(
-				tuple("$.price", "must have an exclusive minimum value of 0"),
-				tuple("$.tags[5]", "integer found, string expected"),
-				tuple("$.tags", "must have only unique items in the array"),
-				tuple("$", "required property 'productName' not found"));
+				tuple("/price", "must have an exclusive minimum value of 0"),
+				tuple("/tags/5", "integer found, string expected"),
+				tuple("/tags", "must have only unique items in the array"),
+				tuple("", "required property 'productName' not found"));
 	}
 
 	@Test
@@ -175,12 +189,15 @@ class JsonSchemaValidationServiceTest {
 		// Assert
 		assertThat(validationMessages)
 			.isNotEmpty()
-			.extracting(ValidationMessage::getMessage)
+			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
+				.map(Object::toString)
+				.orElse(null),
+				Error::getMessage)
 			.containsExactly(
-				"$.price: must have an exclusive minimum value of 0",
-				"$.tags[5]: integer found, string expected",
-				"$.tags: must have only unique items in the array",
-				"$: required property 'productName' not found");
+				tuple("/price", "must have an exclusive minimum value of 0"),
+				tuple("/tags/5", "integer found, string expected"),
+				tuple("/tags", "must have only unique items in the array"),
+				tuple("", "required property 'productName' not found"));
 
 		verify(jsonSchemaRepositoryMock).findById(schemaId);
 	}
@@ -221,9 +238,9 @@ class JsonSchemaValidationServiceTest {
 		assertThat(exception.getViolations())
 			.extracting(Violation::getField, Violation::getMessage)
 			.containsExactly(
-				tuple("$.price", "must have an exclusive minimum value of 0"),
-				tuple("$.tags[5]", "integer found, string expected"),
-				tuple("$.tags", "must have only unique items in the array"),
-				tuple("$", "required property 'productName' not found"));
+				tuple("/price", "must have an exclusive minimum value of 0"),
+				tuple("/tags/5", "integer found, string expected"),
+				tuple("/tags", "must have only unique items in the array"),
+				tuple("", "required property 'productName' not found"));
 	}
 }
