@@ -1,6 +1,6 @@
 package se.sundsvall.partyassets.api.validation.impl;
 
-import static java.util.Collections.emptySet;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -9,10 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
-import java.util.Set;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -52,7 +52,7 @@ class ValidJsonParameterConstraintValidatorTest {
 			.withSchemaId(schemaId)
 			.withValue(json);
 
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptySet());
+		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptyList());
 
 		// Act
 		final var result = validator.isValid(assetJsonParameter, constraintValidatorContextMock);
@@ -76,7 +76,7 @@ class ValidJsonParameterConstraintValidatorTest {
 			.withValue(json);
 
 		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(Set.of(ValidationMessage.builder().message("some error message").build()));
+		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(List.of(Error.builder().message("some error message").build()));
 
 		// Act
 		final var result = validator.isValid(assetJsonParameter, constraintValidatorContextMock);

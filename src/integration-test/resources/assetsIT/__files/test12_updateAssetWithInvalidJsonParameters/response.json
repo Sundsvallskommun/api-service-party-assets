@@ -4,11 +4,11 @@
 	"violations": [
 		{
 			"field": "jsonParameters[0]",
-			"message": "$.price: must have an exclusive minimum value of 0"
+			"message": "/price: must have an exclusive minimum value of 0"
 		},
 		{
 			"field": "jsonParameters[0]",
-			"message": "$: required property 'productId' not found"
+			"message": ": required property 'productId' not found"
 		}
 	],
 	"title": "Constraint Violation"

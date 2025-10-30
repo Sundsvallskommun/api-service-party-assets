@@ -1,14 +1,14 @@
 package se.sundsvall.partyassets.api.validation.impl;
 
+import static com.networknt.schema.SpecificationVersion.DRAFT_2020_12;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SchemaId;
 import com.networknt.schema.SchemaLocation;
-import com.networknt.schema.SpecVersion.VersionFlag;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.DialectId;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Optional;
@@ -19,7 +19,7 @@ import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<ValidJsonSchema, String> {
 
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-	private static final String SUPPORTED_SCHEMA_SPECIFICATION = SchemaId.V202012;
+	private static final String SUPPORTED_SCHEMA_SPECIFICATION = DialectId.DRAFT_2020_12;
 
 	private final JsonSchemaValidationService jsonSchemaValidationService;
 	private boolean nullable;
@@ -50,12 +50,13 @@ public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<V
 		}
 
 		// Assert JSON-schema against meta schema.
-		final var metaSchema = JsonSchemaFactory
-			.getInstance(VersionFlag.V202012)
+		final var metaSchema = SchemaRegistry
+			.withDefaultDialect(DRAFT_2020_12)
 			.getSchema(SchemaLocation.of(SUPPORTED_SCHEMA_SPECIFICATION));
 
 		final var validationMessages = jsonSchemaValidationService.validate(inputJsonSchema, metaSchema);
-		validationMessages.forEach(message -> addViolation(message.getMessage(), context));
+
+		validationMessages.forEach(message -> addViolation(Optional.ofNullable(message.getInstanceLocation()).map(value -> value + ": ").orElse("") + message.getMessage(), context));
 
 		return validationMessages.isEmpty();
 	}
