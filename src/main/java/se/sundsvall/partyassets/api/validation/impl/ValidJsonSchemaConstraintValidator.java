@@ -13,6 +13,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Optional;
 import org.apache.commons.lang3.Strings;
+import org.springframework.util.StringUtils;
 import se.sundsvall.partyassets.api.validation.ValidJsonSchema;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 
@@ -56,7 +57,7 @@ public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<V
 
 		final var validationMessages = jsonSchemaValidationService.validate(inputJsonSchema, metaSchema);
 
-		validationMessages.forEach(message -> addViolation(Optional.ofNullable(message.getInstanceLocation()).map(value -> value + ": ").orElse("") + message.getMessage(), context));
+		validationMessages.forEach(message -> addViolation(Optional.ofNullable(message.getInstanceLocation()).map(Object::toString).filter(StringUtils::hasText).map(value -> value + ": ").orElse("") + message.getMessage(), context));
 
 		return validationMessages.isEmpty();
 	}

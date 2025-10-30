@@ -5,6 +5,7 @@ import static java.util.Objects.isNull;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Optional;
+import org.springframework.util.StringUtils;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
@@ -34,7 +35,7 @@ public class ValidJsonParameterConstraintValidator implements ConstraintValidato
 				assetJsonParameter.getValue(),
 				assetJsonParameter.getSchemaId());
 
-			validationMessages.forEach(message -> addViolation(context, Optional.ofNullable(message.getInstanceLocation()).map(value -> value + ": ").orElse("") + message.getMessage()));
+			validationMessages.forEach(message -> addViolation(context, Optional.ofNullable(message.getInstanceLocation()).map(Object::toString).filter(StringUtils::hasText).map(value -> value + ": ").orElse("") + message.getMessage()));
 
 			return validationMessages.isEmpty();
 		} catch (Exception e) {
