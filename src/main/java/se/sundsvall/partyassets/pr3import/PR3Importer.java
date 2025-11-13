@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.dhatim.fastexcel.Color;
@@ -226,7 +227,7 @@ class PR3Importer {
 							assetCreateRequest.setAdditionalParameter(PARAM_PERMIT_FULL_NUMBER, permitFullNumber);
 						}
 					} catch (final Exception e) {
-						throw Problem.valueOf(BAD_REQUEST, "Something went wrong for assetId: " + assetCreateRequest.getAssetId());
+						throw Problem.valueOf(BAD_REQUEST, "Something went wrong for assetId: " + assetCreateRequest.getAssetId() + " " + Arrays.toString(e.getStackTrace()));
 					}
 				});
 
