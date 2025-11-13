@@ -6,6 +6,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import generated.se.sundsvall.messaging.EmailAttachment;
 import generated.se.sundsvall.messaging.EmailRequest;
+import generated.se.sundsvall.messaging.EmailSender;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,6 +39,8 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 class PR3ImportResource {
 
 	static final String CONTENT_TYPE_EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	static final String ANGE_MUNICIPALITY_ID = "2260";
+	static final String ANGE_SENDER_EMAIL = "ange@ange.se";
 
 	private final PR3Importer importer;
 
@@ -69,6 +72,11 @@ class PR3ImportResource {
 				.contentType(CONTENT_TYPE_EXCEL)
 				.content(Base64.getEncoder().encodeToString(result.getFailedExcelData()))));
 		}
+
+		if (ANGE_MUNICIPALITY_ID.equals(municipalityId)) {
+			emailRequest.setSender(new EmailSender().address(ANGE_SENDER_EMAIL).name("Ånge PR3 Import"));
+		}
+
 		messagingClient.sendEmail(municipalityId, emailRequest);
 
 		return result;
