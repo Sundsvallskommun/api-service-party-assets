@@ -6,7 +6,6 @@ import static java.util.Comparator.comparing;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Predicate.not;
-import static org.zalando.problem.Status.BAD_REQUEST;
 import static org.zalando.problem.Status.CONFLICT;
 import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
@@ -20,7 +19,6 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.dhatim.fastexcel.Color;
@@ -211,23 +209,26 @@ class PR3Importer {
 				// Create the full permit number as {municipality id}-{asset id}-{birth year}{sex}-{applied as}
 				extractSex(row).ifPresent(sex -> {
 					// Sanity check...
-					try {
-						final var assetId = assetCreateRequest.getAssetId();
-						final var appliedAs = switch (Optional.ofNullable(assetCreateRequest.getAdditionalParameters()).orElse(emptyMap()).get(PARAM_APPLIED_AS)) {
+					final var assetId = assetCreateRequest.getAssetId();
+
+					final var appliedAsRaw = Optional.ofNullable(assetCreateRequest.getAdditionalParameters())
+						.orElse(emptyMap())
+						.get(PARAM_APPLIED_AS);
+
+					final var appliedAs =  appliedAsRaw == null ? null :
+						switch (appliedAsRaw) {
 							case DRIVER -> DRIVER_SHORT;
 							case PASSENGER -> PASSENGER_SHORT;
 							default -> null;
 						};
-						final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
 
-						if (isNotBlank(assetId) && isNotBlank(birthYear) && isNotBlank(appliedAs)) {
-							final var permitFullNumber = String.format("%s-%s-%s%s-%s",
-								properties.staticAssetInfo().municipalityId(), assetId, birthYear, sex, appliedAs);
+					final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
 
-							assetCreateRequest.setAdditionalParameter(PARAM_PERMIT_FULL_NUMBER, permitFullNumber);
-						}
-					} catch (final Exception e) {
-						throw Problem.valueOf(BAD_REQUEST, "Something went wrong for assetId: " + assetCreateRequest.getAssetId() + " " + Arrays.toString(e.getStackTrace()));
+					if (isNotBlank(assetId) && isNotBlank(birthYear) && isNotBlank(appliedAs)) {
+						final var permitFullNumber = String.format("%s-%s-%s%s-%s",
+							properties.staticAssetInfo().municipalityId(), assetId, birthYear, sex, appliedAs);
+
+						assetCreateRequest.setAdditionalParameter(PARAM_PERMIT_FULL_NUMBER, permitFullNumber);
 					}
 				});
 
