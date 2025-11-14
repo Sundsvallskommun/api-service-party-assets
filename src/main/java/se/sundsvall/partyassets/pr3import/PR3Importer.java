@@ -215,12 +215,11 @@ class PR3Importer {
 						.orElse(emptyMap())
 						.get(PARAM_APPLIED_AS);
 
-					final var appliedAs =  appliedAsRaw == null ? null :
-						switch (appliedAsRaw) {
-							case DRIVER -> DRIVER_SHORT;
-							case PASSENGER -> PASSENGER_SHORT;
-							default -> null;
-						};
+					final var appliedAs = appliedAsRaw == null ? null : switch (appliedAsRaw) {
+						case DRIVER -> DRIVER_SHORT;
+						case PASSENGER -> PASSENGER_SHORT;
+						default -> null;
+					};
 
 					final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
 
