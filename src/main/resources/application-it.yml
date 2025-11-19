@@ -38,6 +38,7 @@ pr3import:
       client-id: client-id
       client-secret: client-secret
       grant-type: client_credentials
-  sender-ange:
-    name: someName
-    email: someEmail
+  senders:
+    2260:
+      name: someName
+      email: someEmail

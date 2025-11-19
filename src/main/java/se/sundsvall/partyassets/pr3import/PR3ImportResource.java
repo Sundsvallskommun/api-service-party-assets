@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.pr3import;
 
+import static java.util.Optional.ofNullable;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
+import se.sundsvall.partyassets.pr3import.PR3ImportProperties.Sender;
 
 @RestController
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)
@@ -39,7 +41,6 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 class PR3ImportResource {
 
 	static final String CONTENT_TYPE_EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-	static final String ANGE_MUNICIPALITY_ID = "2260";
 
 	private final PR3Importer importer;
 
@@ -75,13 +76,15 @@ class PR3ImportResource {
 				.content(Base64.getEncoder().encodeToString(result.getFailedExcelData()))));
 		}
 
-		if (ANGE_MUNICIPALITY_ID.equals(municipalityId)) {
-			emailRequest.setSender(new EmailSender().address(properties.senderAnge().email()).name(properties.senderAnge().name()));
-		}
+		ofNullable(properties.senders().get(municipalityId)).ifPresent(sender -> emailRequest.setSender(toEmailSender(sender)));
 
 		messagingClient.sendEmail(municipalityId, emailRequest);
 
 		return result;
+	}
+
+	private EmailSender toEmailSender(final Sender sender) {
+		return sender == null ? null : new EmailSender().address(sender.email()).name(sender.name());
 	}
 
 }

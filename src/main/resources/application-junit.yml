@@ -41,6 +41,7 @@ pr3import:
     origin: someOrigin
     type: someType
     description: someDescription
+    municipality-id: someMunicipalityId
   messaging-integration:
     url: api-messaging-url
     oauth2:
@@ -48,6 +49,7 @@ pr3import:
       client-id: client-id
       client-secret: client-secret
       grant-type: client_credentials
-  sender-ange:
-    name: someName
-    email: someEmail
+  senders:
+    2260:
+      name: someName
+      email: someEmail
