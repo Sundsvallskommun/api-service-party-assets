@@ -215,7 +215,8 @@ class PR3Importer {
 						.orElse(emptyMap())
 						.get(PARAM_APPLIED_AS);
 
-					final var appliedAs = appliedAsRaw == null ? null : switch (appliedAsRaw) {
+					final var appliedAs = switch (appliedAsRaw) {
+						case null -> null;
 						case DRIVER -> DRIVER_SHORT;
 						case PASSENGER -> PASSENGER_SHORT;
 						default -> null;

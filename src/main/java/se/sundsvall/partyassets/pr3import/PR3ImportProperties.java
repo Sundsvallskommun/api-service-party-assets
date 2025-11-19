@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties(prefix = "pr3import")
-record PR3ImportProperties(StaticAssetInfo staticAssetInfo, MessagingIntegration messagingIntegration) {
+record PR3ImportProperties(StaticAssetInfo staticAssetInfo, MessagingIntegration messagingIntegration, SenderAnge senderAnge) {
 
 	record StaticAssetInfo(
 		@DefaultValue("PR3") String origin,
@@ -29,4 +29,9 @@ record PR3ImportProperties(StaticAssetInfo staticAssetInfo, MessagingIntegration
 
 			@DefaultValue("client_credentials") String grantType) {}
 	}
+
+	record SenderAnge(
+		@DefaultValue("name") String name,
+
+		@DefaultValue("email") String email) {}
 }

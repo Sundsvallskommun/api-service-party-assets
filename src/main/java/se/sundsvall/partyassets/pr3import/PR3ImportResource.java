@@ -40,15 +40,17 @@ class PR3ImportResource {
 
 	static final String CONTENT_TYPE_EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 	static final String ANGE_MUNICIPALITY_ID = "2260";
-	static final String ANGE_SENDER_EMAIL = "ange@ange.se";
 
 	private final PR3Importer importer;
 
 	private final PR3ImportMessagingClient messagingClient;
 
-	PR3ImportResource(final PR3Importer importer, final PR3ImportMessagingClient messagingClient) {
+	private final PR3ImportProperties properties;
+
+	PR3ImportResource(final PR3Importer importer, final PR3ImportMessagingClient messagingClient, final PR3ImportProperties properties) {
 		this.importer = importer;
 		this.messagingClient = messagingClient;
+		this.properties = properties;
 	}
 
 	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE, produces = {
@@ -74,7 +76,7 @@ class PR3ImportResource {
 		}
 
 		if (ANGE_MUNICIPALITY_ID.equals(municipalityId)) {
-			emailRequest.setSender(new EmailSender().address(ANGE_SENDER_EMAIL).name("Ånge PR3 Import"));
+			emailRequest.setSender(new EmailSender().address(properties.senderAnge().email()).name(properties.senderAnge().name()));
 		}
 
 		messagingClient.sendEmail(municipalityId, emailRequest);

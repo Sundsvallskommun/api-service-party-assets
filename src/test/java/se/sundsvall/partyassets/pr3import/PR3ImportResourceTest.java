@@ -128,6 +128,7 @@ class PR3ImportResourceTest {
 			.withFailed(2)
 			.withFailedExcelData(importFile.getContentAsByteArray());
 		final var email = "someone@something.com";
+
 		when(mockImporter.importFromExcel(any(InputStream.class), any(String.class))).thenReturn(importResult);
 
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
@@ -158,8 +159,8 @@ class PR3ImportResourceTest {
 		final var capturedEmail = emailCaptor.getValue();
 		assertThat(capturedEmail.getEmailAddress()).isEqualTo(email);
 		assertThat(capturedEmail.getSender()).isNotNull();
-		assertThat(capturedEmail.getSender().getAddress()).isEqualTo(PR3ImportResource.ANGE_SENDER_EMAIL);
-		assertThat(capturedEmail.getSender().getName()).isEqualTo("Ånge PR3 Import");
+		assertThat(capturedEmail.getSender().getAddress()).isEqualTo("someEmail");
+		assertThat(capturedEmail.getSender().getName()).isEqualTo("someName");
 		assertThat(capturedEmail.getSubject()).isEqualTo("PR3 Import");
 		assertThat(capturedEmail.getMessage()).isEqualTo("Totalt 12 post(er) varav 10 lyckad(e) och 2 misslyckade");
 		assertThat(capturedEmail.getAttachments()).hasSize(1);
