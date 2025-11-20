@@ -55,14 +55,14 @@ class PR3ImporterTest {
 		final var result = importer.importFromExcel(importFileResource.getInputStream(), "2281");
 
 		assertThat(result).isNotNull();
-		assertThat(result.getTotal()).isEqualTo(3);
-		assertThat(result.getSuccessful()).isEqualTo(2);
+		assertThat(result.getTotal()).isEqualTo(4);
+		assertThat(result.getSuccessful()).isEqualTo(3);
 		assertThat(result.getFailed()).isOne();
 
-		verify(mockPartyClient, times(2)).getPartyId(eq("2281"), eq(PRIVATE), any(String.class));
+		verify(mockPartyClient, times(3)).getPartyId(eq("2281"), eq(PRIVATE), any(String.class));
 		verifyNoMoreInteractions(mockPartyClient);
-		verify(mockAssetRepository, times(2)).existsByAssetIdAndMunicipalityId(any(String.class), any(String.class));
-		verify(mockAssetRepository, times(2)).save(any(AssetEntity.class));
+		verify(mockAssetRepository, times(3)).existsByAssetIdAndMunicipalityId(any(String.class), any(String.class));
+		verify(mockAssetRepository, times(3)).save(any(AssetEntity.class));
 		verifyNoMoreInteractions(mockAssetRepository);
 	}
 

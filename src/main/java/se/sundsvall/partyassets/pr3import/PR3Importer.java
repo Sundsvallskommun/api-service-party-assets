@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.pr3import;
 
 import static com.nimbusds.oauth2.sdk.util.StringUtils.isNotBlank;
+import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparing;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -209,11 +210,18 @@ class PR3Importer {
 				extractSex(row).ifPresent(sex -> {
 					// Sanity check...
 					final var assetId = assetCreateRequest.getAssetId();
-					final var appliedAs = switch (assetCreateRequest.getAdditionalParameters().get(PARAM_APPLIED_AS)) {
+
+					final var appliedAsRaw = Optional.ofNullable(assetCreateRequest.getAdditionalParameters())
+						.orElse(emptyMap())
+						.get(PARAM_APPLIED_AS);
+
+					final var appliedAs = switch (appliedAsRaw) {
+						case null -> null;
 						case DRIVER -> DRIVER_SHORT;
 						case PASSENGER -> PASSENGER_SHORT;
 						default -> null;
 					};
+
 					final var birthYear = legalId.map(value -> value.substring(0, 2)).orElse(null);
 
 					if (isNotBlank(assetId) && isNotBlank(birthYear) && isNotBlank(appliedAs)) {

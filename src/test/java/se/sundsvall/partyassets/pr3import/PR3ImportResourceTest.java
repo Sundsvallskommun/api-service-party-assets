@@ -15,6 +15,8 @@ import generated.se.sundsvall.messaging.EmailRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -30,8 +32,10 @@ import se.sundsvall.partyassets.Application;
 class PR3ImportResourceTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
+	private static final String ANGE_MUNICIPALITY_ID = "2260";
 
 	private static final String PATH = "/" + MUNICIPALITY_ID + "/pr3import";
+	private static final String PATH_ANGE = "/" + ANGE_MUNICIPALITY_ID + "/pr3import";
 
 	@MockitoBean
 	private PR3Importer mockImporter;
@@ -39,12 +43,16 @@ class PR3ImportResourceTest {
 	@MockitoBean
 	private PR3ImportMessagingClient mockMessagingClient;
 
+	@Captor
+	private ArgumentCaptor<EmailRequest> emailCaptor;
+
 	@Autowired
 	private WebTestClient webTestClient;
 
 	@Test
 	void handleImport() throws IOException {
 		final var importFile = new ClassPathResource("/test.xlsx");
+		final var email = "someone@something.com";
 		final var importResult = new PR3Importer.Result()
 			.withTotal(12)
 			.withFailed(2)
@@ -53,7 +61,7 @@ class PR3ImportResourceTest {
 
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
 		multipartBodyBuilder.part("file", importFile);
-		multipartBodyBuilder.part("email", "someone@something.com");
+		multipartBodyBuilder.part("email", email);
 
 		final var result = webTestClient.post()
 			.uri(PATH)
@@ -74,9 +82,21 @@ class PR3ImportResourceTest {
 		assertThat(result.getFailedExcelData()).isNull();
 
 		verify(mockImporter).importFromExcel(any(InputStream.class), any(String.class));
-		verify(mockMessagingClient).sendEmail(any(String.class), any(EmailRequest.class));
-		verifyNoMoreInteractions(mockImporter);
-		verifyNoMoreInteractions(mockMessagingClient);
+		verify(mockMessagingClient).sendEmail(any(String.class), emailCaptor.capture());
+
+		final var capturedEmail = emailCaptor.getValue();
+		assertThat(capturedEmail.getEmailAddress()).isEqualTo(email);
+		assertThat(capturedEmail.getSender()).isNull();
+		assertThat(capturedEmail.getSubject()).isEqualTo("PR3 Import");
+		assertThat(capturedEmail.getMessage()).isEqualTo("Totalt 12 post(er) varav 10 lyckad(e) och 2 misslyckade");
+		assertThat(capturedEmail.getAttachments()).hasSize(1);
+
+		final var attachment = capturedEmail.getAttachments().getFirst();
+		assertThat(attachment.getName()).isEqualTo("FAILED-test.xlsx");
+		assertThat(attachment.getContentType()).isEqualTo(PR3ImportResource.CONTENT_TYPE_EXCEL);
+		assertThat(attachment.getContent()).isNotBlank();
+
+		verifyNoMoreInteractions(mockImporter, mockMessagingClient);
 	}
 
 	@Test
@@ -97,8 +117,60 @@ class PR3ImportResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Bad Request");
 		assertThat(response.getDetail()).isEqualTo("Failed to parse multipart servlet request");
 
-		verifyNoInteractions(mockImporter);
-		verifyNoInteractions(mockMessagingClient);
+		verifyNoInteractions(mockImporter, mockMessagingClient);
+	}
+
+	@Test
+	void handleImportAnge() throws IOException {
+		final var importFile = new ClassPathResource("/test.xlsx");
+		final var importResult = new PR3Importer.Result()
+			.withTotal(12)
+			.withFailed(2)
+			.withFailedExcelData(importFile.getContentAsByteArray());
+		final var email = "someone@something.com";
+
+		when(mockImporter.importFromExcel(any(InputStream.class), any(String.class))).thenReturn(importResult);
+
+		final var multipartBodyBuilder = new MultipartBodyBuilder();
+		multipartBodyBuilder.part("file", importFile);
+		multipartBodyBuilder.part("email", email);
+
+		final var result = webTestClient.post()
+			.uri(PATH_ANGE)
+			.contentType(MULTIPART_FORM_DATA)
+			.body(fromMultipartData(multipartBodyBuilder.build()))
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(APPLICATION_JSON)
+			.expectBody(PR3Importer.Result.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(result).isNotNull();
+		assertThat(result.getTotal()).isEqualTo(importResult.getTotal());
+		assertThat(result.getFailed()).isEqualTo(importResult.getFailed());
+		assertThat(result.getFailedExcelData()).isNull();
+
+		verify(mockImporter).importFromExcel(any(InputStream.class), any(String.class));
+		verify(mockMessagingClient).sendEmail(any(String.class), emailCaptor.capture());
+
+		final var capturedEmail = emailCaptor.getValue();
+		assertThat(capturedEmail.getEmailAddress()).isEqualTo(email);
+		assertThat(capturedEmail.getSender()).isNotNull();
+		assertThat(capturedEmail.getSender().getAddress()).isEqualTo("someEmail");
+		assertThat(capturedEmail.getSender().getName()).isEqualTo("someName");
+		assertThat(capturedEmail.getSubject()).isEqualTo("PR3 Import");
+		assertThat(capturedEmail.getMessage()).isEqualTo("Totalt 12 post(er) varav 10 lyckad(e) och 2 misslyckade");
+		assertThat(capturedEmail.getAttachments()).hasSize(1);
+
+		final var attachment = capturedEmail.getAttachments().getFirst();
+		assertThat(attachment.getName()).isEqualTo("FAILED-test.xlsx");
+		assertThat(attachment.getContentType()).isEqualTo(PR3ImportResource.CONTENT_TYPE_EXCEL);
+		assertThat(attachment.getContent()).isNotBlank();
+
+		verifyNoMoreInteractions(mockImporter, mockMessagingClient);
 	}
 
 }

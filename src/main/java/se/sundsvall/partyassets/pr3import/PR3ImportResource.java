@@ -1,11 +1,13 @@
 package se.sundsvall.partyassets.pr3import;
 
+import static java.util.Optional.ofNullable;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 import generated.se.sundsvall.messaging.EmailAttachment;
 import generated.se.sundsvall.messaging.EmailRequest;
+import generated.se.sundsvall.messaging.EmailSender;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
+import se.sundsvall.partyassets.pr3import.PR3ImportProperties.Sender;
 
 @RestController
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)
@@ -43,9 +46,12 @@ class PR3ImportResource {
 
 	private final PR3ImportMessagingClient messagingClient;
 
-	PR3ImportResource(final PR3Importer importer, final PR3ImportMessagingClient messagingClient) {
+	private final PR3ImportProperties properties;
+
+	PR3ImportResource(final PR3Importer importer, final PR3ImportMessagingClient messagingClient, final PR3ImportProperties properties) {
 		this.importer = importer;
 		this.messagingClient = messagingClient;
+		this.properties = properties;
 	}
 
 	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE, produces = {
@@ -69,9 +75,16 @@ class PR3ImportResource {
 				.contentType(CONTENT_TYPE_EXCEL)
 				.content(Base64.getEncoder().encodeToString(result.getFailedExcelData()))));
 		}
+
+		ofNullable(properties.senders().get(municipalityId)).ifPresent(sender -> emailRequest.setSender(toEmailSender(sender)));
+
 		messagingClient.sendEmail(municipalityId, emailRequest);
 
 		return result;
+	}
+
+	private EmailSender toEmailSender(final Sender sender) {
+		return sender == null ? null : new EmailSender().address(sender.email()).name(sender.name());
 	}
 
 }
