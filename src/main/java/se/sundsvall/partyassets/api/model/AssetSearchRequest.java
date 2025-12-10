@@ -10,35 +10,35 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 
 public class AssetSearchRequest {
 
-	@Schema(description = "Asset id", example = "PRH-123456789")
+	@Schema(description = "Asset id", examples = "PRH-123456789")
 	private String assetId;
 
-	@Schema(description = "Source of origin for the asset", example = "CASEDATA")
+	@Schema(description = "Source of origin for the asset", examples = "CASEDATA")
 	private String origin;
 
 	@ValidUuid
-	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000", requiredMode = REQUIRED)
+	@Schema(description = "PartyId", examples = "123e4567-e89b-12d3-a456-426614174000", requiredMode = REQUIRED)
 	private String partyId;
 
-	@Schema(description = "Asset type", example = "PERMIT")
+	@Schema(description = "Asset type", examples = "PERMIT")
 	private String type;
 
-	@Schema(description = "Issued date", example = "2021-01-01")
+	@Schema(description = "Issued date", examples = "2021-01-01")
 	private LocalDate issued;
 
-	@Schema(description = "Valid to date", example = "2021-12-31")
+	@Schema(description = "Valid to date", examples = "2021-12-31")
 	private LocalDate validTo;
 
-	@Schema(description = "Asset status", example = "ACTIVE")
+	@Schema(description = "Asset status", examples = "ACTIVE")
 	private Status status;
 
-	@Schema(description = "Status reason", example = "Status reason")
+	@Schema(description = "Status reason", examples = "Status reason")
 	private String statusReason;
 
-	@Schema(description = "Asset description", example = "Asset description")
+	@Schema(description = "Asset description", examples = "Asset description")
 	private String description;
 
-	@Schema(description = "Additional parameters", example = "{\"foo\":\"bar\"}")
+	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
 
 	public static AssetSearchRequest create() {

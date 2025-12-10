@@ -11,19 +11,19 @@ import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 @ValidStatusReason
 public class AssetUpdateRequest {
 
-	@Schema(description = "Case reference ids", example = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
+	@Schema(description = "Case reference ids", examples = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
 	private List<String> caseReferenceIds;
 
-	@Schema(description = "Valid to date", example = "2021-12-31")
+	@Schema(description = "Valid to date", examples = "2021-12-31")
 	private LocalDate validTo;
 
-	@Schema(description = "Asset status", example = "ACTIVE")
+	@Schema(description = "Asset status", examples = "ACTIVE")
 	private Status status;
 
-	@Schema(description = "Status reason", example = "Status reason")
+	@Schema(description = "Status reason", examples = "Status reason")
 	private String statusReason;
 
-	@Schema(description = "Additional parameters", example = "{\"foo\":\"bar\"}")
+	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
 
 	@Schema(description = "JSON parameters")

@@ -1,47 +1,47 @@
-openapi: 3.0.1
+openapi: 3.1.0
 info:
   title: api-partyassets
-  contact: {}
+  contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
   version: "3.2"
 servers:
-- url: http://localhost:51850
-  description: Generated server url
+  - url: http://localhost:53606
+    description: Generated server url
 tags:
-- name: Metadata - Statusreasons
-  description: Statusreasons operations
+  - name: Metadata - Statusreasons
+    description: Statusreasons operations
 paths:
   /{municipalityId}/pr3import:
     post:
       tags:
-      - PR3 Import
+        - PR3 Import
       operationId: handleImport
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality id
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: email
-        in: query
-        required: true
-        schema:
-          type: string
+        - name: municipalityId
+          in: path
+          description: Municipality id
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           multipart/form-data:
             schema:
-              required:
-              - file
               type: object
               properties:
                 file:
                   type: string
                   format: binary
+              required:
+                - file
       responses:
         "400":
           description: Bad Request
@@ -49,8 +49,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -60,22 +60,22 @@ paths:
   /{municipalityId}/metadata/statusreasons/{status}:
     get:
       tags:
-      - Metadata - Statusreasons
+        - Metadata - Statusreasons
       summary: Get status reasons
       operationId: readReasons
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: status
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/Status"
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Status"
       responses:
         "200":
           description: OK
@@ -91,8 +91,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -101,22 +101,22 @@ paths:
                 $ref: "#/components/schemas/Problem"
     post:
       tags:
-      - Metadata - Statusreasons
+        - Metadata - Statusreasons
       summary: Create status reasons
       operationId: createReasons
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: status
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/Status"
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Status"
       requestBody:
         content:
           application/json:
@@ -140,8 +140,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -150,22 +150,22 @@ paths:
                 $ref: "#/components/schemas/Problem"
     delete:
       tags:
-      - Metadata - Statusreasons
+        - Metadata - Statusreasons
       summary: Delete status reasons
       operationId: deleteReasons
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: status
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/Status"
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/Status"
       responses:
         "204":
           description: No content - Successful operation
@@ -175,8 +175,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -186,17 +186,17 @@ paths:
   /{municipalityId}/metadata/jsonschemas:
     get:
       tags:
-      - Metadata - JSON-schemas
+        - Metadata - JSON-schemas
       summary: Get JSON schemas
       operationId: getSchemas
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality id
-        required: true
-        schema:
-          type: string
-        example: 2281
+        - name: municipalityId
+          in: path
+          description: Municipality id
+          required: true
+          schema:
+            type: string
+          example: 2281
       responses:
         "200":
           description: OK
@@ -212,8 +212,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -222,17 +222,17 @@ paths:
                 $ref: "#/components/schemas/Problem"
     post:
       tags:
-      - Metadata - JSON-schemas
+        - Metadata - JSON-schemas
       summary: Create JSON schema
       operationId: createSchema
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
       requestBody:
         content:
           application/json:
@@ -254,8 +254,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -265,98 +265,97 @@ paths:
   /{municipalityId}/assets:
     get:
       tags:
-      - Assets
+        - Assets
       summary: Get assets
       operationId: getAssets
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: assetId
-        in: query
-        description: Asset id
-        required: false
-        schema:
-          type: string
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: assetId
+          in: query
           description: Asset id
-          example: PRH-123456789
-        example: PRH-123456789
-      - name: origin
-        in: query
-        description: Source of origin for the asset
-        required: false
-        schema:
-          type: string
+          required: false
+          schema:
+            type: string
+            description: Asset id
+            examples:
+              - PRH-123456789
+        - name: origin
+          in: query
           description: Source of origin for the asset
-          example: CASEDATA
-        example: CASEDATA
-      - name: partyId
-        in: query
-        description: PartyId
-        required: true
-        schema:
-          type: string
+          required: false
+          schema:
+            type: string
+            description: Source of origin for the asset
+            examples:
+              - CASEDATA
+        - name: partyId
+          in: query
           description: PartyId
-          example: 123e4567-e89b-12d3-a456-426614174000
-        example: 123e4567-e89b-12d3-a456-426614174000
-      - name: type
-        in: query
-        description: Asset type
-        required: false
-        schema:
-          type: string
+          required: true
+          schema:
+            type: string
+            description: PartyId
+            examples:
+              - 123e4567-e89b-12d3-a456-426614174000
+        - name: type
+          in: query
           description: Asset type
-          example: PERMIT
-        example: PERMIT
-      - name: issued
-        in: query
-        description: Issued date
-        required: false
-        schema:
-          type: string
+          required: false
+          schema:
+            type: string
+            description: Asset type
+            examples:
+              - PERMIT
+        - name: issued
+          in: query
           description: Issued date
-          format: date
-          example: 2021-01-01
-        example: 2021-01-01
-      - name: validTo
-        in: query
-        description: Valid to date
-        required: false
-        schema:
-          type: string
+          required: false
+          schema:
+            type: string
+            format: date
+            description: Issued date
+            examples:
+              - 2021-01-01
+        - name: validTo
+          in: query
           description: Valid to date
-          format: date
-          example: 2021-12-31
-        example: 2021-12-31
-      - name: status
-        in: query
-        description: Asset status
-        required: false
-        schema:
-          $ref: "#/components/schemas/Status"
-        example: ACTIVE
-      - name: statusReason
-        in: query
-        description: Status reason
-        required: false
-        schema:
-          type: string
+          required: false
+          schema:
+            type: string
+            format: date
+            description: Valid to date
+            examples:
+              - 2021-12-31
+        - name: status
+          in: query
+          description: Asset status
+          required: false
+          schema:
+            $ref: "#/components/schemas/Status"
+        - name: statusReason
+          in: query
           description: Status reason
-          example: Status reason
-        example: Status reason
-      - name: description
-        in: query
-        description: Asset description
-        required: false
-        schema:
-          type: string
+          required: false
+          schema:
+            type: string
+            description: Status reason
+            examples:
+              - Status reason
+        - name: description
+          in: query
           description: Asset description
-          example: Asset description
-        example: Asset description
+          required: false
+          schema:
+            type: string
+            description: Asset description
+            examples:
+              - Asset description
       responses:
         "200":
           description: OK
@@ -372,8 +371,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -382,17 +381,17 @@ paths:
                 $ref: "#/components/schemas/Problem"
     post:
       tags:
-      - Assets
+        - Assets
       summary: Create an asset
       operationId: createAsset
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
       requestBody:
         content:
           application/json:
@@ -414,8 +413,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -425,22 +424,22 @@ paths:
   /{municipalityId}/assets/{id}:
     delete:
       tags:
-      - Assets
+        - Assets
       summary: Delete an asset
       operationId: deleteAsset
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         "204":
           description: No content - Successful operation
@@ -456,8 +455,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -466,22 +465,22 @@ paths:
                 $ref: "#/components/schemas/Problem"
     patch:
       tags:
-      - Assets
+        - Assets
       summary: Update an asset
       operationId: updateAsset
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -503,8 +502,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -514,17 +513,17 @@ paths:
   /{municipalityId}/metadata/statusreasons:
     get:
       tags:
-      - Metadata - Statusreasons
+        - Metadata - Statusreasons
       summary: Get all status reasons
       operationId: readAllReasons
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
       responses:
         "200":
           description: OK
@@ -542,8 +541,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -553,25 +552,25 @@ paths:
   /{municipalityId}/metadata/jsonschemas/{name}/latest:
     get:
       tags:
-      - Metadata - JSON-schemas
+        - Metadata - JSON-schemas
       summary: Get latest JSON schema by name
       operationId: getLatestSchemaByName
       parameters:
-      - name: municipalityId
-        in: path
-        description: MunicipalityID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: name
-        in: path
-        description: Schema name
-        required: true
-        schema:
-          minLength: 1
-          type: string
-        example: person
+        - name: municipalityId
+          in: path
+          description: MunicipalityID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: name
+          in: path
+          description: Schema name
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: person
       responses:
         "200":
           description: OK
@@ -585,8 +584,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -596,25 +595,25 @@ paths:
   /{municipalityId}/metadata/jsonschemas/{id}:
     get:
       tags:
-      - Metadata - JSON-schemas
+        - Metadata - JSON-schemas
       summary: Get JSON schema
       operationId: getSchemaById
       parameters:
-      - name: municipalityId
-        in: path
-        description: MunicipalityID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: id
-        in: path
-        description: Schema ID
-        required: true
-        schema:
-          minLength: 1
-          type: string
-        example: person_1.0
+        - name: municipalityId
+          in: path
+          description: MunicipalityID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: id
+          in: path
+          description: Schema ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: person_1.0
       responses:
         "200":
           description: OK
@@ -628,8 +627,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -638,25 +637,25 @@ paths:
                 $ref: "#/components/schemas/Problem"
     delete:
       tags:
-      - Metadata - JSON-schemas
+        - Metadata - JSON-schemas
       summary: Delete an asset
       operationId: deleteSchema
       parameters:
-      - name: municipalityId
-        in: path
-        description: Municipality ID
-        required: true
-        schema:
-          type: string
-        example: 2281
-      - name: id
-        in: path
-        description: Schema ID
-        required: true
-        schema:
-          minLength: 1
-          type: string
-        example: person_1.0
+        - name: municipalityId
+          in: path
+          description: Municipality ID
+          required: true
+          schema:
+            type: string
+          example: 2281
+        - name: id
+          in: path
+          description: Schema ID
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          example: person_1.0
       responses:
         "204":
           description: No content - Successful operation
@@ -672,8 +671,8 @@ paths:
             application/problem+json:
               schema:
                 oneOf:
-                - $ref: "#/components/schemas/Problem"
-                - $ref: "#/components/schemas/ConstraintViolationProblem"
+                  - $ref: "#/components/schemas/Problem"
+                  - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
@@ -683,7 +682,7 @@ paths:
   /api-docs:
     get:
       tags:
-      - API
+        - API
       summary: OpenAPI
       operationId: getApiDocs
       responses:
@@ -701,6 +700,12 @@ components:
     Problem:
       type: object
       properties:
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -709,14 +714,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        status:
-          $ref: "#/components/schemas/StatusType"
-        detail:
-          type: string
-        title:
-          type: string
+          additionalProperties: { }
     StatusType:
       type: object
       properties:
@@ -765,15 +763,14 @@ components:
           type: string
         message:
           type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        detail:
-          type: string
+          additionalProperties: { }
         suppressed:
           type: array
           items:
@@ -810,8 +807,7 @@ components:
     ThrowableProblem:
       type: object
       properties:
-        cause:
-          $ref: "#/components/schemas/ThrowableProblem"
+        cause: { }
         stackTrace:
           type: array
           items:
@@ -836,6 +832,12 @@ components:
                 type: boolean
         message:
           type: string
+        status:
+          $ref: "#/components/schemas/StatusType"
+        title:
+          type: string
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -844,14 +846,7 @@ components:
           format: uri
         parameters:
           type: object
-          additionalProperties:
-            type: object
-        status:
-          $ref: "#/components/schemas/StatusType"
-        detail:
-          type: string
-        title:
-          type: string
+          additionalProperties: { }
         suppressed:
           type: array
           items:
@@ -896,165 +891,195 @@ components:
       type: string
       description: Status model
       enum:
-      - ACTIVE
-      - EXPIRED
-      - BLOCKED
-      - TEMPORARY
+        - ACTIVE
+        - EXPIRED
+        - BLOCKED
+        - TEMPORARY
     JsonSchemaCreateRequest:
-      required:
-      - name
-      - value
-      - version
       type: object
       properties:
         name:
-          minLength: 1
           type: string
           description: Schema name
-          example: person
-        version:
+          examples:
+            - person
           minLength: 1
-          pattern: ^(\d+\.)?(\d+)$
+        version:
           type: string
           description: "Schema version on the format [major version].[minor version]"
-          example: "1.0"
+          examples:
+            - "1.0"
+          minLength: 1
+          pattern: ^(\d+\.)?(\d+)$
         value:
           type: string
           description: "The JSON schema, specified by: https://json-schema.org/draft/2020-12/schema"
-          example: "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\"\
-            :\"https://json-schema.org/draft/2020-12/schema\",\"title\":\"Person\"\
-            ,\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\"\
-            ,\"description\":\"The person's first name.\"},\"lastName\":{\"type\"\
-            :\"string\",\"description\":\"The person's last name.\"}}}"
+          examples:
+            - |
+              {
+                "$id": "https://example.com/person.schema.json",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "title": "Person",
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "description": "The person's first name."
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "The person's last name."
+                  }
+                }
+              }
         description:
           type: string
           description: Description of the schema purpose
-          example: A JSON-schema that defines a person object
-    AssetCreateRequest:
+          examples:
+            - A JSON-schema that defines a person object
       required:
-      - assetId
-      - issued
-      - partyId
-      - status
-      - type
+        - name
+        - value
+        - version
+    AssetCreateRequest:
       type: object
       properties:
         assetId:
-          minLength: 1
           type: string
           description: Asset id
-          example: PRH-123456789
+          examples:
+            - PRH-123456789
+          minLength: 1
         origin:
           type: string
           description: Source of origin for the asset
-          example: CASEDATA
+          examples:
+            - CASEDATA
         partyId:
           type: string
           description: PartyId
-          example: 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            - 123e4567-e89b-12d3-a456-426614174000
         caseReferenceIds:
           type: array
           description: Case reference ids
-          example:
-          - 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            - "[\"123e4567-e89b-12d3-a456-426614174000\"]"
           items:
             type: string
-            description: Case reference ids
-            example: "[\"123e4567-e89b-12d3-a456-426614174000\"]"
         type:
-          minLength: 1
           type: string
           description: Asset type
-          example: PERMIT
+          examples:
+            - PERMIT
+          minLength: 1
         issued:
           type: string
-          description: Issued date
           format: date
-          example: 2021-01-01
+          description: Issued date
+          examples:
+            - 2021-01-01
         validTo:
           type: string
-          description: Valid to date
           format: date
-          example: 2021-12-31
+          description: Valid to date
+          examples:
+            - 2021-12-31
         status:
           $ref: "#/components/schemas/Status"
+          description: Asset status
+          examples:
+            - ACTIVE
         statusReason:
           type: string
           description: Status reason
-          example: Status reason
+          examples:
+            - Status reason
         description:
           type: string
           description: Asset description
-          example: Asset description
+          examples:
+            - Asset description
         additionalParameters:
           type: object
           additionalProperties:
             type: string
-            description: Additional parameters
-            example: "{\"foo\":\"bar\"}"
           description: Additional parameters
-          example:
-            foo: bar
+          examples:
+            - "{\"foo\":\"bar\"}"
         jsonParameters:
           type: array
           description: JSON parameters
           items:
             $ref: "#/components/schemas/AssetJsonParameter"
-    AssetJsonParameter:
       required:
-      - key
-      - schemaId
-      - value
+        - assetId
+        - issued
+        - partyId
+        - status
+        - type
+    AssetJsonParameter:
       type: object
       properties:
         key:
-          minLength: 1
           type: string
           description: Parameter key
-          example: personParameter
-        value:
+          examples:
+            - personParameter
           minLength: 1
+        value:
           type: string
           description: Parameter value with the JSON structure
-          example: "{\"firstName\":\"Joe\",\"lastName\":\"Doe\"}"
-        schemaId:
+          examples:
+            - |
+              {
+                "firstName": "Joe",
+                "lastName": "Doe"
+              }
           minLength: 1
+        schemaId:
           type: string
           description: Schema ID
-          example: person_1.0
-      description: JSON parameters
+          examples:
+            - person_1.0
+          minLength: 1
+      required:
+        - key
+        - schemaId
+        - value
     AssetUpdateRequest:
       type: object
       properties:
         caseReferenceIds:
           type: array
           description: Case reference ids
-          example:
-          - 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            - "[\"123e4567-e89b-12d3-a456-426614174000\"]"
           items:
             type: string
-            description: Case reference ids
-            example: "[\"123e4567-e89b-12d3-a456-426614174000\"]"
         validTo:
           type: string
-          description: Valid to date
           format: date
-          example: 2021-12-31
+          description: Valid to date
+          examples:
+            - 2021-12-31
         status:
           $ref: "#/components/schemas/Status"
+          description: Asset status
+          examples:
+            - ACTIVE
         statusReason:
           type: string
           description: Status reason
-          example: Status reason
+          examples:
+            - Status reason
         additionalParameters:
           type: object
           additionalProperties:
             type: string
-            description: Additional parameters
-            example: "{\"foo\":\"bar\"}"
           description: Additional parameters
-          example:
-            foo: bar
+          examples:
+            - "{\"foo\":\"bar\"}"
         jsonParameters:
           type: array
           description: JSON parameters
@@ -1067,101 +1092,127 @@ components:
           type: string
           description: "Schema ID. The ID is composed by the municipalityId, schema\
             \ name and version. I.e.: [municipality_id]_[schema_name]_[schema_version]"
-          example: 2281_person_1.0
+          examples:
+            - 2281_person_1.0
         name:
           type: string
           description: Schema name
-          example: person
+          examples:
+            - person
         version:
           type: string
           description: "Schema version on the format [major version].[minor version]"
-          example: "1.0"
+          examples:
+            - "1.0"
         numberOfReferences:
           type: integer
+          format: int64
           description: The number of schema references. I.e. number of json-objects
             that references the schema.
-          format: int64
-          example: 42
+          examples:
+            - "42"
         value:
           type: string
           description: The JSON schema
-          example: "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\"\
-            :\"https://json-schema.org/draft/2020-12/schema\",\"title\":\"Person\"\
-            ,\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\"\
-            ,\"description\":\"The person's first name.\"},\"lastName\":{\"type\"\
-            :\"string\",\"description\":\"The person's last name.\"}}}"
+          examples:
+            - |
+              {
+                "$id": "https://example.com/person.schema.json",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "title": "Person",
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "description": "The person's first name."
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "The person's last name."
+                  }
+                }
+              }
         description:
           type: string
           description: Description of the schema purpose
-          example: A JSON-schema that defines a person object
+          examples:
+            - A JSON-schema that defines a person object
         created:
           type: string
-          description: Created timestamp
           format: date-time
+          description: Created timestamp
     Asset:
       type: object
       properties:
         id:
           type: string
           description: Unique id of asset
-          example: 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+          examples:
+            - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
         assetId:
           type: string
           description: External asset id
-          example: PRH-123456789
+          examples:
+            - PRH-123456789
         origin:
           type: string
           description: Source of origin for the asset
-          example: CASEDATA
+          examples:
+            - CASEDATA
         partyId:
           type: string
           description: PartyId
-          example: 123e4567-e89b-12d3-a456-426614174000
+          examples:
+            - 123e4567-e89b-12d3-a456-426614174000
         caseReferenceIds:
           type: array
           description: Case reference ids
-          example:
-          - 945576d3-6e92-4118-ba33-53582d338ad3
+          examples:
+            - "[\"945576d3-6e92-4118-ba33-53582d338ad3\"]"
           items:
             type: string
-            description: Case reference ids
-            example: "[\"945576d3-6e92-4118-ba33-53582d338ad3\"]"
         type:
           type: string
           description: Asset type
-          example: PERMIT
+          examples:
+            - PERMIT
         issued:
           type: string
-          description: Issued date
           format: date
-          example: 2021-01-01
+          description: Issued date
+          examples:
+            - 2021-01-01
         validTo:
           type: string
-          description: Valid to date
           format: date
-          example: 2021-12-31
+          description: Valid to date
+          examples:
+            - 2021-12-31
         status:
           $ref: "#/components/schemas/Status"
+          description: Asset status
+          examples:
+            - ACTIVE
         statusReason:
           type: string
           description: Status reason
-          example: Status reason
+          examples:
+            - Status reason
         description:
           type: string
           description: Asset description
-          example: Asset description
+          examples:
+            - Asset description
         additionalParameters:
           type: object
           additionalProperties:
             type: string
-            description: Additional parameters
-            example: "{\"foo\":\"bar\"}"
           description: Additional parameters
-          example:
-            foo: bar
+          examples:
+            - "{\"foo\":\"bar\"}"
         jsonParameters:
           type: array
           description: JSON parameters
           items:
             $ref: "#/components/schemas/AssetJsonParameter"
-  securitySchemes: {}
+  securitySchemes: { }

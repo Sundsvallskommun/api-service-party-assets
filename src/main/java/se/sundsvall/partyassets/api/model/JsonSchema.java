@@ -6,19 +6,19 @@ import java.util.Objects;
 
 public class JsonSchema {
 
-	@Schema(description = "Schema ID. The ID is composed by the municipalityId, schema name and version. I.e.: [municipality_id]_[schema_name]_[schema_version]", example = "2281_person_1.0")
+	@Schema(description = "Schema ID. The ID is composed by the municipalityId, schema name and version. I.e.: [municipality_id]_[schema_name]_[schema_version]", examples = "2281_person_1.0")
 	private String id;
 
-	@Schema(description = "Schema name", example = "person")
+	@Schema(description = "Schema name", examples = "person")
 	private String name;
 
-	@Schema(description = "Schema version on the format [major version].[minor version]", example = "1.0")
+	@Schema(description = "Schema version on the format [major version].[minor version]", examples = "1.0")
 	private String version;
 
-	@Schema(description = "The number of schema references. I.e. number of json-objects that references the schema.", example = "42")
+	@Schema(description = "The number of schema references. I.e. number of json-objects that references the schema.", examples = "42")
 	private long numberOfReferences;
 
-	@Schema(description = "The JSON schema", example = """
+	@Schema(description = "The JSON schema", examples = """
 		{
 		  "$id": "https://example.com/person.schema.json",
 		  "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -38,7 +38,7 @@ public class JsonSchema {
 		""")
 	private String value;
 
-	@Schema(description = "Description of the schema purpose", example = "A JSON-schema that defines a person object")
+	@Schema(description = "Description of the schema purpose", examples = "A JSON-schema that defines a person object")
 	private String description;
 
 	@Schema(description = "Created timestamp")

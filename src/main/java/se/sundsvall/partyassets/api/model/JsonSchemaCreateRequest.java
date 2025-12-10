@@ -11,16 +11,16 @@ import se.sundsvall.partyassets.api.validation.ValidJsonSchema;
 public class JsonSchemaCreateRequest {
 
 	@NotBlank
-	@Schema(description = "Schema name", example = "person", requiredMode = REQUIRED)
+	@Schema(description = "Schema name", examples = "person", requiredMode = REQUIRED)
 	private String name;
 
 	@NotBlank
 	@Pattern(regexp = "^(\\d+\\.)?(\\d+)$")
-	@Schema(description = "Schema version on the format [major version].[minor version]", example = "1.0", requiredMode = REQUIRED)
+	@Schema(description = "Schema version on the format [major version].[minor version]", examples = "1.0", requiredMode = REQUIRED)
 	private String version;
 
 	@ValidJsonSchema
-	@Schema(description = "The JSON schema, specified by: https://json-schema.org/draft/2020-12/schema", example = """
+	@Schema(description = "The JSON schema, specified by: https://json-schema.org/draft/2020-12/schema", examples = """
 		{
 		  "$id": "https://example.com/person.schema.json",
 		  "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -40,7 +40,7 @@ public class JsonSchemaCreateRequest {
 		""", requiredMode = REQUIRED)
 	private String value;
 
-	@Schema(description = "Description of the schema purpose", example = "A JSON-schema that defines a person object")
+	@Schema(description = "Description of the schema purpose", examples = "A JSON-schema that defines a person object")
 	private String description;
 
 	public static JsonSchemaCreateRequest create() {

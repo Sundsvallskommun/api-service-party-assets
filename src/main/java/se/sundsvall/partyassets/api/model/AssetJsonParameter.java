@@ -7,11 +7,11 @@ import java.util.Objects;
 public class AssetJsonParameter {
 
 	@NotBlank
-	@Schema(description = "Parameter key", example = "personParameter")
+	@Schema(description = "Parameter key", examples = "personParameter")
 	private String key;
 
 	@NotBlank
-	@Schema(description = "Parameter value with the JSON structure", example = """
+	@Schema(description = "Parameter value with the JSON structure", examples = """
 		{
 		  "firstName": "Joe",
 		  "lastName": "Doe"
@@ -20,7 +20,7 @@ public class AssetJsonParameter {
 	private String value;
 
 	@NotBlank
-	@Schema(description = "Schema ID", example = "person_1.0")
+	@Schema(description = "Schema ID", examples = "person_1.0")
 	private String schemaId;
 
 	public static AssetJsonParameter create() {
