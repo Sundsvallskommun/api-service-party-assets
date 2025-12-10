@@ -8,40 +8,40 @@ import java.util.Objects;
 
 public class Asset {
 
-	@Schema(description = "Unique id of asset", example = "1c8f38a6-b492-4037-b7dc-de5bc6c629f0")
+	@Schema(description = "Unique id of asset", examples = "1c8f38a6-b492-4037-b7dc-de5bc6c629f0")
 	private String id;
 
-	@Schema(description = "External asset id", example = "PRH-123456789")
+	@Schema(description = "External asset id", examples = "PRH-123456789")
 	private String assetId;
 
-	@Schema(description = "Source of origin for the asset", example = "CASEDATA")
+	@Schema(description = "Source of origin for the asset", examples = "CASEDATA")
 	private String origin;
 
-	@Schema(description = "PartyId", example = "123e4567-e89b-12d3-a456-426614174000")
+	@Schema(description = "PartyId", examples = "123e4567-e89b-12d3-a456-426614174000")
 	private String partyId;
 
-	@Schema(description = "Case reference ids", example = "[\"945576d3-6e92-4118-ba33-53582d338ad3\"]")
+	@Schema(description = "Case reference ids", examples = "[\"945576d3-6e92-4118-ba33-53582d338ad3\"]")
 	private List<String> caseReferenceIds;
 
-	@Schema(description = "Asset type", example = "PERMIT")
+	@Schema(description = "Asset type", examples = "PERMIT")
 	private String type;
 
-	@Schema(description = "Issued date", example = "2021-01-01")
+	@Schema(description = "Issued date", examples = "2021-01-01")
 	private LocalDate issued;
 
-	@Schema(description = "Valid to date", example = "2021-12-31")
+	@Schema(description = "Valid to date", examples = "2021-12-31")
 	private LocalDate validTo;
 
-	@Schema(description = "Asset status", example = "ACTIVE")
+	@Schema(description = "Asset status", examples = "ACTIVE")
 	private Status status;
 
-	@Schema(description = "Status reason", example = "Status reason")
+	@Schema(description = "Status reason", examples = "Status reason")
 	private String statusReason;
 
-	@Schema(description = "Asset description", example = "Asset description")
+	@Schema(description = "Asset description", examples = "Asset description")
 	private String description;
 
-	@Schema(description = "Additional parameters", example = "{\"foo\":\"bar\"}")
+	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
 
 	@Schema(description = "JSON parameters")
