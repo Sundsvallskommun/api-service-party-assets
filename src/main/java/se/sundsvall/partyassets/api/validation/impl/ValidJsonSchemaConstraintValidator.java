@@ -4,7 +4,6 @@ import static com.networknt.schema.SpecificationVersion.DRAFT_2020_12;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.SchemaLocation;
 import com.networknt.schema.SchemaRegistry;
@@ -16,6 +15,7 @@ import org.apache.commons.lang3.Strings;
 import org.springframework.util.StringUtils;
 import se.sundsvall.partyassets.api.validation.ValidJsonSchema;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
+import tools.jackson.databind.JsonNode;
 
 public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<ValidJsonSchema, String> {
 
@@ -73,7 +73,7 @@ public class ValidJsonSchemaConstraintValidator implements ConstraintValidator<V
 		try {
 			final var jsonSchema = this.jsonSchemaValidationService.toJsonSchema(inputJsonSchema);
 			final var schemaNodeValue = Optional.ofNullable(jsonSchema.getSchemaNode().get("$schema"))
-				.map(JsonNode::asText)
+				.map(JsonNode::asString)
 				.orElse(null);
 
 			if (!Strings.CI.equals(schemaNodeValue, SUPPORTED_SCHEMA_SPECIFICATION)) {
