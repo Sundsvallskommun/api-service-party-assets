@@ -14,7 +14,7 @@
 	<name>party-assets</name>
 	<properties>
 		<json-schema-validator.version>3.0.0</json-schema-validator.version>
-		<maven-artifact.version>3.9.11</maven-artifact.version>
+		<maven-artifact.version>3.9.12</maven-artifact.version>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.19.0</fastexcel.version>
 		<!-- Service properties -->
