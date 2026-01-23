@@ -52,3 +52,6 @@ target/
 # Spring
 application-default.properties
 /.factorypath
+
+# Claude
+CLAUDE.md

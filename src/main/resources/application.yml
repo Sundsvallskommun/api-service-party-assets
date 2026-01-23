@@ -1,4 +1,7 @@
 integration:
+  json-schema:
+    connectTimeout: 5
+    readTimeout: 30
   party:
     connectTimeout: 5
     readTimeout: 30
@@ -12,6 +15,8 @@ openapi:
 resilience4j:
   circuitbreaker:
     instances:
+      json-schema:
+        ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       party:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
 spring:
@@ -36,6 +41,9 @@ spring:
     oauth2:
       client:
         registration:
+          json-schema:
+            authorization-grant-type: client_credentials
+            provider: json-schema
           party:
             authorization-grant-type: client_credentials
             provider: party
