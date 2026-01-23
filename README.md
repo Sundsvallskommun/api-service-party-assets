@@ -59,6 +59,11 @@ This microservice depends on the following services:
   - **Repository:
     ** [https://github.com/Sundsvallskommun/api-service-messaging](https://github.com/Sundsvallskommun/api-service-messaging)
   - **Setup Instructions:** See documentation in repository above for installation and configuration steps.
+- **JSON Schema**
+  - **Purpose:** Service is used for validating JSON structures against schemas
+  - **Repository:
+    ** [https://github.com/Sundsvallskommun/api-service-json-schema](https://github.com/Sundsvallskommun/api-service-json-schema)
+  - **Setup Instructions:** See documentation in repository above for installation and configuration steps.
 
 Ensure that these services are running and properly configured before starting this microservice.
 
@@ -110,6 +115,8 @@ spring:
 
 ```yaml
 integration:
+  json-schema:
+    url: http://dependency_service_url
   party:
     url: http://dependency_service_url
 
@@ -118,9 +125,14 @@ spring:
     oauth2:
       client:
         provider:
+          json-schema:
+            token-uri: http://token_url
           party:
             token-uri: http://token_url
         registration:
+          json-schema:
+            client-id: some-client-id
+            client-secret: some-client-secret
           party:
             client-id: some-client-id
             client-secret: some-client-secret

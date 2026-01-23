@@ -1,4 +1,8 @@
 integration:
+  json-schema:
+    connectTimeout: 10
+    readTimeout: 20
+    url: api-json-schema-url
   party:
     connectTimeout: 10
     readTimeout: 20
@@ -30,9 +34,14 @@ spring:
     oauth2:
       client:
         provider:
+          json-schema:
+            token-uri: api-gateway-url
           party:
             token-uri: api-gateway-url
         registration:
+          json-schema:
+            client-id: client-id
+            client-secret: client-secret
           party:
             client-id: client-id
             client-secret: client-secret

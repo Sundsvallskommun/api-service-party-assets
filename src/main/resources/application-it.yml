@@ -1,4 +1,6 @@
 integration:
+  json-schema:
+    url: http://localhost:${wiremock.server.port:}/api-json-schema
   party:
     url: http://localhost:${wiremock.server.port:}/api-party
 spring:
@@ -20,9 +22,14 @@ spring:
     oauth2:
       client:
         provider:
+          json-schema:
+            token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
           party:
             token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
         registration:
+          json-schema:
+            client-id: the-client-id
+            client-secret: the-client-secret
           party:
             client-id: the-client-id
             client-secret: the-client-secret
