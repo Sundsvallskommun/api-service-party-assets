@@ -1,246 +1,143 @@
 package se.sundsvall.partyassets.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.zalando.problem.Status.BAD_GATEWAY;
+import static org.zalando.problem.Status.BAD_REQUEST;
 
-import com.networknt.schema.Error;
-import java.util.Optional;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
-import se.sundsvall.dept44.test.annotation.resource.Load;
-import se.sundsvall.dept44.test.extension.ResourceLoaderExtension;
-import se.sundsvall.partyassets.integration.db.JsonSchemaRepository;
-import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.zalando.problem.ThrowableProblem;
+import se.sundsvall.dept44.exception.ClientProblem;
+import se.sundsvall.dept44.exception.ServerProblem;
+import se.sundsvall.partyassets.integration.jsonschema.JsonSchemaClient;
 
-@SpringBootTest(classes = JsonSchemaValidationService.class)
-@ActiveProfiles(value = "junit")
-@ExtendWith(ResourceLoaderExtension.class)
+@ExtendWith(MockitoExtension.class)
 class JsonSchemaValidationServiceTest {
 
-	private static final String SCHEMA = "files/jsonschema/schema.json";
-	private static final String VALID_JSON = "files/jsonschema/valid_json.json";
-	private static final String INVALID_JSON_MISSING_ALL_PROPERTIES = "files/jsonschema/invalid_json_missing_all_properties.json";
-	private static final String INVALID_JSON_BAD_DATATYPE_ON_PROPERTY = "files/jsonschema/invalid_json_bad_datatype_on_property.json";
-	private static final String INVALID_JSON_NON_UNIQUE_TAGS = "files/jsonschema/invalid_json_non_unique_tags.json";
-	private static final String INVALID_JSON_MISC_ERRORS = "files/jsonschema/invalid_json_misc_errors.json";
+	@Mock
+	private JsonSchemaClient jsonSchemaClientMock;
 
-	@MockitoBean
-	private JsonSchemaRepository jsonSchemaRepositoryMock;
+	@Mock
+	private ObjectMapper objectMapperMock;
 
-	@Autowired
+	@Mock
+	private JsonNode jsonNodeMock;
+
+	@InjectMocks
 	private JsonSchemaValidationService jsonSchemaValidationService;
 
 	@Test
-	void validateWithValidJson(@Load(SCHEMA) final String schema, @Load(VALID_JSON) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaValidationService.validate(json, jsonSchema);
-
-		// Assert
-		assertThat(validationMessages).isEmpty();
-	}
-
-	@Test
-	void validateWithAllMissingProperties(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISSING_ALL_PROPERTIES) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaValidationService.validate(json, jsonSchema);
-
-		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
-				.map(Object::toString)
-				.orElse(null),
-				Error::getMessage)
-			.containsExactly(
-				tuple("", "required property 'productId' not found"),
-				tuple("", "required property 'productName' not found"),
-				tuple("", "required property 'price' not found"));
-	}
-
-	@Test
-	void validateWithBadDatatypeOnProperty(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_BAD_DATATYPE_ON_PROPERTY) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaValidationService.validate(json, jsonSchema);
-
-		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
-				.map(Object::toString)
-				.orElse(null),
-				Error::getMessage)
-			.containsExactly(
-				tuple("/productId", "string found, integer expected"));
-	}
-
-	@Test
-	void validateWithNonUniqueTags(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_NON_UNIQUE_TAGS) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaValidationService.validate(json, jsonSchema);
-
-		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
-				.map(Object::toString)
-				.orElse(null),
-				Error::getMessage)
-			.containsExactly(tuple("/tags", "must have only unique items in the array"));
-	}
-
-	@Test
-	void validateWithMiscErrors(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISC_ERRORS) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		final var validationMessages = jsonSchemaValidationService.validate(json, jsonSchema);
-
-		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
-				.map(Object::toString)
-				.orElse(null),
-				Error::getMessage)
-			.containsExactly(
-				tuple("/price", "must have an exclusive minimum value of 0"),
-				tuple("/tags/5", "integer found, string expected"),
-				tuple("/tags", "must have only unique items in the array"),
-				tuple("", "required property 'productName' not found"));
-	}
-
-	@Test
-	void validateAndThrowWithMiscErrors(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISC_ERRORS) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		final var exception = assertThrows(ConstraintViolationProblem.class, () -> jsonSchemaValidationService.validateAndThrow(json, jsonSchema));
-
-		// Assert
-		assertThat(exception)
-			.isNotNull()
-			.hasMessage("Constraint Violation");
-
-		// Assert
-		assertThat(exception.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
-			.containsExactly(
-				tuple("/price", "must have an exclusive minimum value of 0"),
-				tuple("/tags/5", "integer found, string expected"),
-				tuple("/tags", "must have only unique items in the array"),
-				tuple("", "required property 'productName' not found"));
-	}
-
-	@Test
-	void validateAndThrowWithValidJson(@Load(SCHEMA) final String schema, @Load(VALID_JSON) final String json) {
-
-		// Act
-		final var jsonSchema = jsonSchemaValidationService.toJsonSchema(schema);
-		assertDoesNotThrow(() -> jsonSchemaValidationService.validateAndThrow(json, jsonSchema));
-	}
-
-	@Test
-	void validateBySchemaIdWithValidJson(@Load(SCHEMA) final String schema, @Load(VALID_JSON) final String json) {
-
+	void validateSuccessfully() throws JsonProcessingException {
 		// Arrange
-		final var schemaId = "schemaId";
-		when(jsonSchemaRepositoryMock.findById(schemaId)).thenReturn(Optional.of(JsonSchemaEntity.create()
-			.withId(schemaId)
-			.withValue(schema)));
+		final var municipalityId = "2281";
+		final var schemaId = "2281_schema_1.0";
+		final var jsonValue = "{\"productId\": 1}";
 
-		// Act
-		final var validationMessages = jsonSchemaValidationService.validate(json, schemaId);
+		when(objectMapperMock.readTree(jsonValue)).thenReturn(jsonNodeMock);
+		doNothing().when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 
-		// Assert
-		assertThat(validationMessages).isEmpty();
-		verify(jsonSchemaRepositoryMock).findById(schemaId);
+		// Act & Assert
+		assertDoesNotThrow(() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
+
+		verify(objectMapperMock).readTree(jsonValue);
+		verify(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 	}
 
 	@Test
-	void validateBySchemaIdWithMiscErrors(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISC_ERRORS) final String json) {
-
+	void validateWithValidationFailure() throws JsonProcessingException {
 		// Arrange
-		final var schemaId = "schemaId";
-		when(jsonSchemaRepositoryMock.findById(schemaId)).thenReturn(Optional.of(JsonSchemaEntity.create()
-			.withId(schemaId)
-			.withValue(schema)));
+		final var municipalityId = "2281";
+		final var schemaId = "2281_schema_1.0";
+		final var jsonValue = "{\"invalid\": true}";
+		final var validationError = new ClientProblem(BAD_GATEWAY, "json-schema error: {detail=Validation failed: required property 'productId' not found, status=400 Bad Request, title=Bad Request}");
+
+		when(objectMapperMock.readTree(jsonValue)).thenReturn(jsonNodeMock);
+		doThrow(validationError).when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 
 		// Act
-		final var validationMessages = jsonSchemaValidationService.validate(json, schemaId);
+		final var exception = assertThrows(ClientProblem.class,
+			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
 
 		// Assert
-		assertThat(validationMessages)
-			.isNotEmpty()
-			.extracting(e -> Optional.ofNullable(e.getInstanceLocation())
-				.map(Object::toString)
-				.orElse(null),
-				Error::getMessage)
-			.containsExactly(
-				tuple("/price", "must have an exclusive minimum value of 0"),
-				tuple("/tags/5", "integer found, string expected"),
-				tuple("/tags", "must have only unique items in the array"),
-				tuple("", "required property 'productName' not found"));
+		assertThat(exception).isSameAs(validationError);
 
-		verify(jsonSchemaRepositoryMock).findById(schemaId);
+		verify(objectMapperMock).readTree(jsonValue);
+		verify(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 	}
 
 	@Test
-	void validateAndThrowBySchemaIdWithValidJson(@Load(SCHEMA) final String schema, @Load(VALID_JSON) final String json) {
-
+	void validateWithSchemaNotFound() throws JsonProcessingException {
 		// Arrange
-		final var schemaId = "schemaId";
-		when(jsonSchemaRepositoryMock.findById(schemaId)).thenReturn(Optional.of(JsonSchemaEntity.create()
-			.withId(schemaId)
-			.withValue(schema)));
+		final var municipalityId = "2281";
+		final var schemaId = "2281_nonexistent_1.0";
+		final var jsonValue = "{\"productId\": 1}";
+		final var notFoundError = new ClientProblem(BAD_GATEWAY, "json-schema error: {detail=Schema not found: 2281_nonexistent_1.0, status=404 Not Found, title=Not Found}");
+
+		when(objectMapperMock.readTree(jsonValue)).thenReturn(jsonNodeMock);
+		doThrow(notFoundError).when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 
 		// Act
-		assertDoesNotThrow(() -> jsonSchemaValidationService.validateAndThrow(json, schemaId));
+		final var exception = assertThrows(ClientProblem.class,
+			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
 
 		// Assert
-		verify(jsonSchemaRepositoryMock).findById(schemaId);
+		assertThat(exception).isSameAs(notFoundError);
+
+		verify(objectMapperMock).readTree(jsonValue);
+		verify(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 	}
 
 	@Test
-	void validateAndThrowBySchemaIdWithMiscErrors(@Load(SCHEMA) final String schema, @Load(INVALID_JSON_MISC_ERRORS) final String json) {
-
+	void validateWithServerError() throws JsonProcessingException {
 		// Arrange
-		final var schemaId = "schemaId";
-		when(jsonSchemaRepositoryMock.findById(schemaId)).thenReturn(Optional.of(JsonSchemaEntity.create()
-			.withId(schemaId)
-			.withValue(schema)));
+		final var municipalityId = "2281";
+		final var schemaId = "2281_schema_1.0";
+		final var jsonValue = "{\"productId\": 1}";
+		final var serverError = new ServerProblem(BAD_GATEWAY, "json-schema error: {detail=Internal Server Error, status=500 Internal Server Error, title=Internal Server Error}");
+
+		when(objectMapperMock.readTree(jsonValue)).thenReturn(jsonNodeMock);
+		doThrow(serverError).when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
 
 		// Act
-		final var exception = assertThrows(ConstraintViolationProblem.class, () -> jsonSchemaValidationService.validateAndThrow(json, schemaId));
+		final var exception = assertThrows(ServerProblem.class,
+			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
 
 		// Assert
-		assertThat(exception)
-			.isNotNull()
-			.hasMessage("Constraint Violation");
+		assertThat(exception).isSameAs(serverError);
 
-		assertThat(exception.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
-			.containsExactly(
-				tuple("/price", "must have an exclusive minimum value of 0"),
-				tuple("/tags/5", "integer found, string expected"),
-				tuple("/tags", "must have only unique items in the array"),
-				tuple("", "required property 'productName' not found"));
+		verify(objectMapperMock).readTree(jsonValue);
+		verify(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonNodeMock);
+	}
+
+	@Test
+	void validateWithInvalidJson() throws JsonProcessingException {
+		// Arrange
+		final var municipalityId = "2281";
+		final var schemaId = "2281_schema_1.0";
+		final var invalidJson = "not valid json";
+
+		when(objectMapperMock.readTree(invalidJson)).thenThrow(new JsonProcessingException("Unexpected character") {});
+
+		// Act
+		final var exception = assertThrows(ThrowableProblem.class,
+			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, invalidJson));
+
+		// Assert
+		assertThat(exception.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(exception.getMessage()).contains("Invalid JSON");
+
+		verify(objectMapperMock).readTree(invalidJson);
 	}
 }

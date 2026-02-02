@@ -12,11 +12,9 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
-import se.sundsvall.partyassets.api.model.JsonSchemaCreateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
-import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 
 public final class TestFactory {
 
@@ -42,7 +40,7 @@ public final class TestFactory {
 			.withAsset(assetEntity)
 			.withKey("key1")
 			.withValue("{}")
-			.withSchema(JsonSchemaEntity.create().withId("2281_person_schema_1.0.0")));
+			.withSchemaId("2281_person_schema_1.0.0"));
 
 		assetEntity.withJsonParameters(jsonParameters);
 
@@ -110,24 +108,5 @@ public final class TestFactory {
 			.withStatusReason("statusReason")
 			.withType("type")
 			.withValidTo(LocalDate.of(2010, 1, 1));
-	}
-
-	public static JsonSchemaEntity getJsonSchemaEntity() {
-		return JsonSchemaEntity.create()
-			.withCreated(OffsetDateTime.now())
-			.withDescription("description")
-			.withId("2281_person_schema_1.0.0")
-			.withMunicipalityId("2281")
-			.withName("person_schema")
-			.withValue("{}")
-			.withVersion("1.0");
-	}
-
-	public static JsonSchemaCreateRequest getJsonSchemaCreateRequest() {
-		return JsonSchemaCreateRequest.create()
-			.withDescription("description")
-			.withName("Person_Schema")
-			.withValue("{}")
-			.withVersion("1.0");
 	}
 }

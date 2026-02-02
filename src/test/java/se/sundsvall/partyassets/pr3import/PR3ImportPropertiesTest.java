@@ -21,10 +21,6 @@ class PR3ImportPropertiesTest {
 		assertThat(pr3ImportProperties.staticAssetInfo().type()).isEqualTo("someType");
 		assertThat(pr3ImportProperties.staticAssetInfo().description()).isEqualTo("someDescription");
 		assertThat(pr3ImportProperties.staticAssetInfo().municipalityId()).isEqualTo("someMunicipalityId");
-		assertThat(pr3ImportProperties.messagingIntegration().oauth2().clientId()).isEqualTo("client-id");
-		assertThat(pr3ImportProperties.messagingIntegration().oauth2().clientSecret()).isEqualTo("client-secret");
-		assertThat(pr3ImportProperties.messagingIntegration().oauth2().tokenUri()).isEqualTo("api-gateway-url");
-		assertThat(pr3ImportProperties.messagingIntegration().oauth2().grantType()).isEqualTo("client_credentials");
 		assertThat(pr3ImportProperties.messagingIntegration().url()).isEqualTo("api-messaging-url");
 		assertThat(pr3ImportProperties.senders().get("2260").name()).isEqualTo("someName");
 		assertThat(pr3ImportProperties.senders().get("2260").email()).isEqualTo("someEmail");

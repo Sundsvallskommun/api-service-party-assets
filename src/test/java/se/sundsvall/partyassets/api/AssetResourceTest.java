@@ -1,13 +1,13 @@
 package se.sundsvall.partyassets.api;
 
-import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
-import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -16,7 +16,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.zalando.problem.Status.BAD_REQUEST;
 
-import com.networknt.schema.Error;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -27,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import org.zalando.problem.violations.Violation;
 import se.sundsvall.partyassets.Application;
@@ -54,7 +54,7 @@ class AssetResourceTest {
 	@MockitoBean
 	private AssetService assetServiceMock;
 
-	@MockitoBean(answers = RETURNS_DEEP_STUBS)
+	@MockitoBean
 	private JsonSchemaValidationService jsonSchemaValidationServiceMock; // Used by Json validation
 
 	@MockitoBean
@@ -157,7 +157,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
 		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest)).thenReturn(uuid);
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptyList());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		webTestClient.post()
@@ -211,7 +211,7 @@ class AssetResourceTest {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(List.of(Error.builder().message("some-error").build()));
+		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		final var response = webTestClient.post()
@@ -230,7 +230,7 @@ class AssetResourceTest {
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
 			.extracting(Violation::getField, Violation::getMessage)
-			.containsExactly(tuple("jsonParameters[0]", "some-error"));
+			.containsExactly(tuple("jsonParameters[0]", "Bad Request: some-error"));
 		verifyNoInteractions(assetServiceMock);
 	}
 
@@ -268,7 +268,7 @@ class AssetResourceTest {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptyList());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		final var response = webTestClient.post()
@@ -301,7 +301,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptyList());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		webTestClient.patch()
@@ -356,7 +356,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptyList());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		final var response = webTestClient.patch()
@@ -388,7 +388,7 @@ class AssetResourceTest {
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
 
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(emptyList());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		final var response = webTestClient.patch()
@@ -420,7 +420,7 @@ class AssetResourceTest {
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
 
-		when(jsonSchemaValidationServiceMock.validate(anyString(), anyString())).thenReturn(List.of(Error.builder().message("some-error").build()));
+		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
 
 		// Act
 		final var response = webTestClient.patch()
@@ -440,7 +440,7 @@ class AssetResourceTest {
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
 			.extracting(Violation::getField, Violation::getMessage)
-			.containsExactly(tuple("jsonParameters[0]", "some-error"));
+			.containsExactly(tuple("jsonParameters[0]", "Bad Request: some-error"));
 
 		verifyNoInteractions(assetServiceMock);
 	}

@@ -13,7 +13,6 @@ import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
-import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 public final class AssetMapper {
@@ -84,7 +83,7 @@ public final class AssetMapper {
 		return Optional.ofNullable(assetJsonParameterEntity)
 			.map(o -> AssetJsonParameter.create()
 				.withKey(o.getKey())
-				.withSchemaId(o.getSchema().getId())
+				.withSchemaId(o.getSchemaId())
 				.withValue(o.getValue()))
 			.orElse(null);
 	}
@@ -100,7 +99,7 @@ public final class AssetMapper {
 		return Optional.ofNullable(assetJsonParameter)
 			.map(o -> AssetJsonParameterEntity.create()
 				.withKey(o.getKey())
-				.withSchema(JsonSchemaEntity.create().withId(assetJsonParameter.getSchemaId()))
+				.withSchemaId(assetJsonParameter.getSchemaId())
 				.withValue(o.getValue()))
 			.orElse(null);
 	}

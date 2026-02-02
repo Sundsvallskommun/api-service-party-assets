@@ -47,4 +47,7 @@ spring:
           party:
             authorization-grant-type: client_credentials
             provider: party
+          pr3import-messaging:
+            authorization-grant-type: client_credentials
+            provider: pr3import-messaging
 

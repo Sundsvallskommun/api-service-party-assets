@@ -1,0 +1,29 @@
+{
+	"name": "json-schema-validate-server-error",
+	"request": {
+		"method": "POST",
+		"urlPattern": "/api-json-schema/2281/schemas/2281_schema_1.0/validation",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": "{\"productId\":12345, \"productName\":\"The product\", \"price\":23}"
+			}
+		]
+	},
+	"response": {
+		"status": 500,
+		"headers": {
+			"Content-Type": "application/problem+json"
+		},
+		"jsonBody": {
+			"type": "about:blank",
+			"title": "Internal Server Error",
+			"status": 500,
+			"detail": "An unexpected error occurred"
+		}
+	}
+}

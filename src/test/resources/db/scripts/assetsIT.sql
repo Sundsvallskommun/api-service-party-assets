@@ -38,13 +38,7 @@ values ('BLOCKED', now(), '2281');
 insert into status_reason (status_name, reason)
 values ('BLOCKED', 'IRREGULARITY'),
        ('BLOCKED', 'LOST');
-       
-insert into json_schema 
-     (id, created, municipality_id, version, name, description, value) 
-values 
-     ('2281_schema_1.0', '2025-01-01 12:13:14.000', '2281', '1.0', 'schema', 'Schema 1', '{\"$schema\":\"https:\/\/json-schema.org\/draft\/2020-12\/schema\",\"$id\":\"https:\/\/example.com\/product.schema.json\",\"title\":\"Product\",\"description\":\"A product from Acmes catalog\",\"type\":\"object\",\"properties\":{\"productId\":{\"description\":\"The unique identifier for a product\",\"type\":\"integer\"},\"productName\":{\"description\":\"Name of the product\",\"type\":\"string\"},\"price\":{\"description\":\"The price of the product\",\"type\":\"number\",\"exclusiveMinimum\":0},\"tags\":{\"description\":\"Tags for the product\",\"type\":\"array\",\"items\":{\"type\":\"string\"},\"minItems\":1,\"uniqueItems\":true}},\"required\":[\"productId\",\"productName\",\"price\"]}');
-     
-     
+
 insert into asset_json_parameter 
     (id, asset_id, parameter_key, parameter_value, schema_id)
 values
