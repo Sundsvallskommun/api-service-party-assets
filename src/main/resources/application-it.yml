@@ -1,9 +1,13 @@
 integration:
   json-schema:
-    url: http://localhost:${wiremock.server.port:}/api-json-schema
+    url: http://localhost:${wiremock.server.port}/api-json-schema
   party:
-    url: http://localhost:${wiremock.server.port:}/api-party
+    url: http://localhost:${wiremock.server.port}/api-party
 spring:
+  cloud:
+    openfeign:
+      cache:
+        enabled: false
   cache:
     type: none
   datasource:
@@ -23,9 +27,11 @@ spring:
       client:
         provider:
           json-schema:
-            token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
+            token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
           party:
-            token-uri: http://localhost:${wiremock.server.port:}/api-gateway/token
+            token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
+          pr3import-messaging:
+            token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
         registration:
           json-schema:
             client-id: the-client-id
@@ -33,18 +39,17 @@ spring:
           party:
             client-id: the-client-id
             client-secret: the-client-secret
+          pr3import-messaging:
+            client-id: the-client-id
+            client-secret: the-client-secret
 pr3import:
+  enable: false
   static-asset-info:
     origin: someOrigin
     type: someType
     description: someDescription
   messaging-integration:
     url: api-messaging-url
-    oauth2:
-      token-uri: api-gateway-url
-      client-id: client-id
-      client-secret: client-secret
-      grant-type: client_credentials
   senders:
     2260:
       name: someName

@@ -38,17 +38,6 @@
         case_reference_id varchar(255) not null
     ) engine=InnoDB;
 
-    create table json_schema (
-        created datetime(6),
-        municipality_id varchar(8),
-        version varchar(32),
-        name varchar(64),
-        id varchar(255) not null,
-        description longtext,
-        value longtext,
-        primary key (id)
-    ) engine=InnoDB;
-
     create table status (
         created datetime(6),
         updated datetime(6),
@@ -62,48 +51,40 @@
         status_name varchar(255) not null
     ) engine=InnoDB;
 
-    create index idx_additional_parameter_asset_id 
+    create index idx_additional_parameter_asset_id
        on additional_parameter (asset_id);
 
-    create index idx_asset_municipality_id 
+    create index idx_asset_municipality_id
        on asset (municipality_id);
 
-    alter table if exists asset 
+    alter table if exists asset
        add constraint uc_asset_asset_id unique (asset_id);
 
-    create index idx_case_reference_id_asset_id 
+    create index idx_case_reference_id_asset_id
        on case_reference_id (asset_id);
 
-    alter table if exists json_schema 
-       add constraint uc_json_schema_municipality_id_name_version unique (municipality_id, name, version);
-
-    create index idx_status_municipality_id 
+    create index idx_status_municipality_id
        on status (municipality_id);
 
-    create index idx_status_reason_status_name 
+    create index idx_status_reason_status_name
        on status_reason (status_name);
 
-    alter table if exists additional_parameter 
-       add constraint fk_additional_parameter_asset_id 
-       foreign key (asset_id) 
+    alter table if exists additional_parameter
+       add constraint fk_additional_parameter_asset_id
+       foreign key (asset_id)
        references asset (id);
 
-    alter table if exists asset_json_parameter 
-       add constraint fk_asset_json_parameter_asset_id 
-       foreign key (asset_id) 
+    alter table if exists asset_json_parameter
+       add constraint fk_asset_json_parameter_asset_id
+       foreign key (asset_id)
        references asset (id);
 
-    alter table if exists asset_json_parameter 
-       add constraint fk_asset_json_parameter_schema_id 
-       foreign key (schema_id) 
-       references json_schema (id);
-
-    alter table if exists case_reference_id 
-       add constraint fk_case_reference_id_asset_id 
-       foreign key (asset_id) 
+    alter table if exists case_reference_id
+       add constraint fk_case_reference_id_asset_id
+       foreign key (asset_id)
        references asset (id);
 
-    alter table if exists status_reason 
-       add constraint fk_status_reason_status_name 
-       foreign key (status_name) 
+    alter table if exists status_reason
+       add constraint fk_status_reason_status_name
+       foreign key (status_name)
        references status (name);

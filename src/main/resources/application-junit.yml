@@ -38,11 +38,16 @@ spring:
             token-uri: api-gateway-url
           party:
             token-uri: api-gateway-url
+          pr3import-messaging:
+            token-uri: api-gateway-url
         registration:
           json-schema:
             client-id: client-id
             client-secret: client-secret
           party:
+            client-id: client-id
+            client-secret: client-secret
+          pr3import-messaging:
             client-id: client-id
             client-secret: client-secret
 pr3import:
@@ -53,11 +58,6 @@ pr3import:
     municipality-id: someMunicipalityId
   messaging-integration:
     url: api-messaging-url
-    oauth2:
-      token-uri: api-gateway-url
-      client-id: client-id
-      client-secret: client-secret
-      grant-type: client_credentials
   senders:
     2260:
       name: someName

@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 class AssetJsonParameterTest {
@@ -27,7 +28,7 @@ class AssetJsonParameterTest {
 	void testBuilderMethods() {
 
 		final var key = "key";
-		final var value = "value";
+		final var value = new ObjectMapper().createObjectNode().put("test", "value");
 		final var schemaId = "schemaId";
 
 		final var bean = AssetJsonParameter.create()

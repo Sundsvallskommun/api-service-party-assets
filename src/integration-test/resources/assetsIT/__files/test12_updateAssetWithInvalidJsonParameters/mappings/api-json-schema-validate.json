@@ -1,0 +1,32 @@
+{
+	"name": "json-schema-validate-invalid",
+	"request": {
+		"method": "POST",
+		"urlPattern": "/api-json-schema/2281/schemas/2281_schema_1.0/validation",
+		"headers": {
+			"Authorization": {
+				"equalTo": "Bearer MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3"
+			}
+		},
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"productName": "Updated product name",
+					"price": -1
+				}
+			}
+		]
+	},
+	"response": {
+		"status": 400,
+		"headers": {
+			"Content-Type": "application/problem+json"
+		},
+		"jsonBody": {
+			"type": "about:blank",
+			"title": "Bad Request",
+			"status": 400,
+			"detail": "/price: must have an exclusive minimum value of 0, required property 'productId' not found"
+		}
+	}
+}

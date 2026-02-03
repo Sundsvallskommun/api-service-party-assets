@@ -12,7 +12,9 @@
 	"jsonParameters": [
 		{
 			"key": "theKey",
-			"value": "{\"someRandomAttribute\": \"someRandomValue\"}",
+			"value": {
+				"someRandomAttribute": "someRandomValue"
+			},
 			"schemaId": "2281_schema_1.0"
 		}
 	]

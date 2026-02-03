@@ -43,17 +43,6 @@ values
     ('945576d3-6e92-4118-ba33-53582d338ad3', 'case_reference_3'),
     -- Enterprise party, PRH-11
     ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'case_reference_4');
-    
-insert into json_schema (created, municipality_id, version, name, id, description, value) 
-values (
-    NOW(6), 
-    '2281', 
-    '1.0.0', 
-    'person_schema', 
-    '2281_person_schema_1.0.0', 
-    'Schema för personinformation', 
-    '{ "type": "object", "properties": { "firstName": { "type": "string" }, "lastName": { "type": "string" } } }'
-);
 
 insert into asset_json_parameter (id, asset_id, parameter_key, parameter_value, schema_id)
 values

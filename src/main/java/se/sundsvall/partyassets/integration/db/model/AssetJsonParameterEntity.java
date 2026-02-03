@@ -33,9 +33,8 @@ public class AssetJsonParameterEntity {
 	@JoinColumn(name = "asset_id", nullable = false, foreignKey = @ForeignKey(name = "fk_asset_json_parameter_asset_id"))
 	private AssetEntity asset;
 
-	@ManyToOne(fetch = LAZY)
-	@JoinColumn(name = "schema_id", nullable = false, foreignKey = @ForeignKey(name = "fk_asset_json_parameter_schema_id"))
-	private JsonSchemaEntity schema;
+	@Column(name = "schema_id", nullable = false)
+	private String schemaId;
 
 	public static AssetJsonParameterEntity create() {
 		return new AssetJsonParameterEntity();
@@ -93,16 +92,16 @@ public class AssetJsonParameterEntity {
 		return this;
 	}
 
-	public JsonSchemaEntity getSchema() {
-		return schema;
+	public String getSchemaId() {
+		return schemaId;
 	}
 
-	public void setSchema(JsonSchemaEntity schema) {
-		this.schema = schema;
+	public void setSchemaId(String schemaId) {
+		this.schemaId = schemaId;
 	}
 
-	public AssetJsonParameterEntity withSchema(JsonSchemaEntity schema) {
-		this.schema = schema;
+	public AssetJsonParameterEntity withSchemaId(String schemaId) {
+		this.schemaId = schemaId;
 		return this;
 	}
 
@@ -115,7 +114,7 @@ public class AssetJsonParameterEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(asset, id, key, schema, value);
+		return Objects.hash(asset, id, key, schemaId, value);
 	}
 
 	@Override
@@ -130,12 +129,12 @@ public class AssetJsonParameterEntity {
 			return false;
 		}
 		AssetJsonParameterEntity other = (AssetJsonParameterEntity) obj;
-		return Objects.equals((asset != null ? asset.getId() : 0), (other.asset != null ? other.asset.getId() : 0)) && Objects.equals(id, other.id) && Objects.equals(key, other.key) && Objects.equals(schema, other.schema) && Objects.equals(value,
+		return Objects.equals((asset != null ? asset.getId() : 0), (other.asset != null ? other.asset.getId() : 0)) && Objects.equals(id, other.id) && Objects.equals(key, other.key) && Objects.equals(schemaId, other.schemaId) && Objects.equals(value,
 			other.value);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetJsonParameterEntity [id=" + id + ", key=" + key + ", value=" + value + ", asset=" + (asset != null ? asset.getId() : 0) + ", schema=" + schema + "]";
+		return "AssetJsonParameterEntity [id=" + id + ", key=" + key + ", value=" + value + ", asset=" + (asset != null ? asset.getId() : 0) + ", schemaId=" + schemaId + "]";
 	}
 }

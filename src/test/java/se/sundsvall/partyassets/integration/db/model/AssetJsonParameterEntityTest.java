@@ -39,21 +39,21 @@ class AssetJsonParameterEntityTest {
 		final var asset = AssetEntity.create();
 		final var id = "id";
 		final var key = "key";
-		final var schema = JsonSchemaEntity.create();
+		final var schemaId = "schemaId";
 		final var value = "value";
 
 		final var bean = AssetJsonParameterEntity.create()
 			.withAsset(asset)
 			.withId(id)
 			.withKey(key)
-			.withSchema(schema)
+			.withSchemaId(schemaId)
 			.withValue(value);
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAsset()).isEqualTo(asset);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getKey()).isEqualTo(key);
-		assertThat(bean.getSchema()).isEqualTo(schema);
+		assertThat(bean.getSchemaId()).isEqualTo(schemaId);
 		assertThat(bean.getValue()).isEqualTo(value);
 	}
 

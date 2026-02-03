@@ -3,6 +3,9 @@ package se.sundsvall.partyassets.service.mapper;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -13,10 +16,11 @@ import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
-import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 public final class AssetMapper {
+
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	private AssetMapper() {}
 
@@ -84,9 +88,17 @@ public final class AssetMapper {
 		return Optional.ofNullable(assetJsonParameterEntity)
 			.map(o -> AssetJsonParameter.create()
 				.withKey(o.getKey())
-				.withSchemaId(o.getSchema().getId())
-				.withValue(o.getValue()))
+				.withSchemaId(o.getSchemaId())
+				.withValue(toJsonNode(o.getValue())))
 			.orElse(null);
+	}
+
+	private static JsonNode toJsonNode(String value) {
+		try {
+			return value != null ? OBJECT_MAPPER.readTree(value) : null;
+		} catch (JsonProcessingException e) {
+			throw new IllegalStateException("Failed to parse JSON value from database", e);
+		}
 	}
 
 	private static List<AssetJsonParameterEntity> toAssetJsonParameterEntityList(List<AssetJsonParameter> assetJsonParameterList) {
@@ -100,8 +112,8 @@ public final class AssetMapper {
 		return Optional.ofNullable(assetJsonParameter)
 			.map(o -> AssetJsonParameterEntity.create()
 				.withKey(o.getKey())
-				.withSchema(JsonSchemaEntity.create().withId(assetJsonParameter.getSchemaId()))
-				.withValue(o.getValue()))
+				.withSchemaId(assetJsonParameter.getSchemaId())
+				.withValue(o.getValue() != null ? o.getValue().toString() : null))
 			.orElse(null);
 	}
 }

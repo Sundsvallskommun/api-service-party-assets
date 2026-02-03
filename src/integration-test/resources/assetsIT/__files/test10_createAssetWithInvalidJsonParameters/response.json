@@ -4,15 +4,7 @@
 	"violations": [
 		{
 			"field": "jsonParameters[0]",
-			"message": "$: required property 'price' not found"
-		},
-		{
-			"field": "jsonParameters[0]",
-			"message": "$: required property 'productId' not found"
-		},
-		{
-			"field": "jsonParameters[0]",
-			"message": "$: required property 'productName' not found"
+			"message": "Bad Request: JSON validation failed: required property 'productId' not found"
 		}
 	],
 	"title": "Constraint Violation"

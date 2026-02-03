@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -12,13 +13,13 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
-import se.sundsvall.partyassets.api.model.JsonSchemaCreateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
-import se.sundsvall.partyassets.integration.db.model.JsonSchemaEntity;
 
 public final class TestFactory {
+
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	public static AssetEntity getAssetEntity(final String id, final String partyId) {
 		final var assetEntity = AssetEntity.create()
@@ -42,7 +43,7 @@ public final class TestFactory {
 			.withAsset(assetEntity)
 			.withKey("key1")
 			.withValue("{}")
-			.withSchema(JsonSchemaEntity.create().withId("2281_person_schema_1.0.0")));
+			.withSchemaId("2281_person_schema_1.0.0"));
 
 		assetEntity.withJsonParameters(jsonParameters);
 
@@ -60,7 +61,7 @@ public final class TestFactory {
 			.withJsonParameters(List.of(AssetJsonParameter.create()
 				.withKey("key1")
 				.withSchemaId("2281_person_schema_1.0.0")
-				.withValue("{}")))
+				.withValue(OBJECT_MAPPER.createObjectNode())))
 			.withPartyId(UUID.randomUUID().toString())
 			.withStatus(Status.ACTIVE)
 			.withStatusReason("statusReason")
@@ -78,7 +79,7 @@ public final class TestFactory {
 			.withJsonParameters(List.of(AssetJsonParameter.create()
 				.withKey("key1")
 				.withSchemaId("2281_person_schema_1.0.0")
-				.withValue("{}")))
+				.withValue(OBJECT_MAPPER.createObjectNode())))
 			.withPartyId(partyId)
 			.withStatus(Status.ACTIVE)
 			.withStatusReason("statusReason")
@@ -93,7 +94,7 @@ public final class TestFactory {
 			.withJsonParameters(List.of(AssetJsonParameter.create()
 				.withKey("key2")
 				.withSchemaId("2281_person_schema_2.0.0")
-				.withValue("{\"newAttribute\" : \"value\"}")))
+				.withValue(OBJECT_MAPPER.createObjectNode().put("newAttribute", "value"))))
 			.withStatus(Status.BLOCKED)
 			.withStatusReason("statusReasonUpdated")
 			.withValidTo(LocalDate.of(2011, 2, 2));
@@ -110,24 +111,5 @@ public final class TestFactory {
 			.withStatusReason("statusReason")
 			.withType("type")
 			.withValidTo(LocalDate.of(2010, 1, 1));
-	}
-
-	public static JsonSchemaEntity getJsonSchemaEntity() {
-		return JsonSchemaEntity.create()
-			.withCreated(OffsetDateTime.now())
-			.withDescription("description")
-			.withId("2281_person_schema_1.0.0")
-			.withMunicipalityId("2281")
-			.withName("person_schema")
-			.withValue("{}")
-			.withVersion("1.0");
-	}
-
-	public static JsonSchemaCreateRequest getJsonSchemaCreateRequest() {
-		return JsonSchemaCreateRequest.create()
-			.withDescription("description")
-			.withName("Person_Schema")
-			.withValue("{}")
-			.withVersion("1.0");
 	}
 }

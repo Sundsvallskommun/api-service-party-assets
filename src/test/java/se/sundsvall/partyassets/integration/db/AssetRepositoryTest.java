@@ -113,16 +113,6 @@ class AssetRepositoryTest {
 	}
 
 	@Test
-	void countByJsonParametersSchemaId() {
-		assertThat(repository.countByJsonParametersSchemaId("2281_person_schema_1.0.0")).isEqualTo(2);
-	}
-
-	@Test
-	void countByJsonParametersSchemaIdWhenNothingIsFound() {
-		assertThat(repository.countByJsonParametersSchemaId("non-existing-schema")).isZero();
-	}
-
-	@Test
 	void testUpdate() {
 		final var uuid = randomUUID().toString();
 		final var entity = TestFactory.getAssetEntity(null, uuid)
