@@ -10,7 +10,9 @@
 		},
 		"bodyPatterns": [
 			{
-				"equalToJson": "{\"someRandomAttribute\": \"someRandomValue\"}"
+				"equalToJson": {
+					"someRandomAttribute": "someRandomValue"
+				}
 			}
 		]
 	},

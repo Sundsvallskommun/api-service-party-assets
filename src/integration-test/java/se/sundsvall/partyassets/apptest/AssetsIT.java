@@ -286,7 +286,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("jsonParameters", "updated").isEqualTo(assetPreUpdate);
 		assertThat(assetPostUpdate.getJsonParameters())
 			.extracting(AssetJsonParameterEntity::getKey, AssetJsonParameterEntity::getValue)
-			.containsExactly(tuple("theKey", "{\"productId\":888, \"productName\":\"Updated product name\", \"price\":99}"));
+			.containsExactly(tuple("theKey", "{\"productId\":888,\"productName\":\"Updated product name\",\"price\":99}"));
 		assertThat(assetPostUpdate.getUpdated()).isCloseTo(now(), within(2, SECONDS));
 	}
 

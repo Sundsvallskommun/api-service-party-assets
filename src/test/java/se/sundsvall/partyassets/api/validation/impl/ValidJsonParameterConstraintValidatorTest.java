@@ -14,6 +14,8 @@ import static org.springframework.web.context.request.RequestAttributes.SCOPE_RE
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 import static org.zalando.problem.Status.BAD_GATEWAY;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 import java.util.Map;
@@ -36,6 +38,7 @@ import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 class ValidJsonParameterConstraintValidatorTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
+	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	@Mock
 	private ConstraintValidatorContext constraintValidatorContextMock;
@@ -73,7 +76,7 @@ class ValidJsonParameterConstraintValidatorTest {
 		setupMunicipalityId();
 		final var key = "key";
 		final var schemaId = "schemaId";
-		final var json = "{}";
+		final var json = OBJECT_MAPPER.createObjectNode();
 		final var assetJsonParameter = AssetJsonParameter.create()
 			.withKey(key)
 			.withSchemaId(schemaId)
@@ -96,7 +99,7 @@ class ValidJsonParameterConstraintValidatorTest {
 		setupMunicipalityId();
 		final var key = "key";
 		final var schemaId = "schemaId";
-		final var json = "{hello world}";
+		final var json = OBJECT_MAPPER.createObjectNode().put("invalid", true);
 		final var assetJsonParameter = AssetJsonParameter.create()
 			.withKey(key)
 			.withSchemaId(schemaId)
@@ -123,7 +126,7 @@ class ValidJsonParameterConstraintValidatorTest {
 		setupMunicipalityId();
 		final var key = "key";
 		final var schemaId = "schemaId";
-		final var json = "{}";
+		final var json = OBJECT_MAPPER.createObjectNode();
 		final var assetJsonParameter = AssetJsonParameter.create()
 			.withKey(key)
 			.withSchemaId(schemaId)
@@ -153,7 +156,7 @@ class ValidJsonParameterConstraintValidatorTest {
 
 		// Assert
 		assertThat(result).isFalse();
-		verify(jsonSchemaValidationServiceMock, never()).validate(anyString(), anyString(), anyString());
+		verify(jsonSchemaValidationServiceMock, never()).validate(anyString(), anyString(), any(JsonNode.class));
 		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
 		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("Value is null");
 		verify(constraintViolationBuilderMock).addConstraintViolation();
@@ -170,7 +173,7 @@ class ValidJsonParameterConstraintValidatorTest {
 
 		// Assert
 		assertThat(result).isTrue();
-		verify(jsonSchemaValidationServiceMock, never()).validate(anyString(), anyString(), anyString());
+		verify(jsonSchemaValidationServiceMock, never()).validate(anyString(), anyString(), any(JsonNode.class));
 		verifyNoInteractions(constraintViolationBuilderMock);
 	}
 
@@ -180,7 +183,7 @@ class ValidJsonParameterConstraintValidatorTest {
 		setupMunicipalityId();
 		final var key = "key";
 		final var schemaId = "schemaId";
-		final var json = "{hello world}";
+		final var json = OBJECT_MAPPER.createObjectNode();
 		final var assetJsonParameter = AssetJsonParameter.create()
 			.withKey(key)
 			.withSchemaId(schemaId)
@@ -208,7 +211,7 @@ class ValidJsonParameterConstraintValidatorTest {
 
 		final var key = "key";
 		final var schemaId = "schemaId";
-		final var json = "{}";
+		final var json = OBJECT_MAPPER.createObjectNode();
 		final var assetJsonParameter = AssetJsonParameter.create()
 			.withKey(key)
 			.withSchemaId(schemaId)

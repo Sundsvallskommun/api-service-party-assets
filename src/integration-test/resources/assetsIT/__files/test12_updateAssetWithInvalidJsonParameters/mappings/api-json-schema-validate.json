@@ -10,7 +10,10 @@
 		},
 		"bodyPatterns": [
 			{
-				"equalToJson": "{\"productName\":\"Updated product name\", \"price\":-1}"
+				"equalToJson": {
+					"productName": "Updated product name",
+					"price": -1
+				}
 			}
 		]
 	},

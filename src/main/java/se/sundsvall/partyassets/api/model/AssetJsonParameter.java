@@ -1,7 +1,9 @@
 package se.sundsvall.partyassets.api.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 public class AssetJsonParameter {
@@ -10,14 +12,14 @@ public class AssetJsonParameter {
 	@Schema(description = "Parameter key", examples = "personParameter")
 	private String key;
 
-	@NotBlank
-	@Schema(description = "Parameter value with the JSON structure", examples = """
+	@NotNull
+	@Schema(description = "Parameter value with the JSON structure", example = """
 		{
 		  "firstName": "Joe",
 		  "lastName": "Doe"
 		}
 		""")
-	private String value;
+	private JsonNode value;
 
 	@NotBlank
 	@Schema(description = "Schema ID", examples = "person_1.0")
@@ -40,15 +42,15 @@ public class AssetJsonParameter {
 		return this;
 	}
 
-	public String getValue() {
+	public JsonNode getValue() {
 		return value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(JsonNode value) {
 		this.value = value;
 	}
 
-	public AssetJsonParameter withValue(String value) {
+	public AssetJsonParameter withValue(JsonNode value) {
 		this.value = value;
 		return this;
 	}

@@ -28,7 +28,7 @@ class AssetMapperTest {
 		final var entityParam = entity.getJsonParameters().getFirst();
 		assertThat(assetParam.getKey()).isEqualTo(entityParam.getKey());
 		assertThat(assetParam.getSchemaId()).isEqualTo(entityParam.getSchemaId());
-		assertThat(assetParam.getValue()).isEqualTo(entityParam.getValue());
+		assertThat(assetParam.getValue()).hasToString(entityParam.getValue());
 	}
 
 	@Test
@@ -62,7 +62,7 @@ class AssetMapperTest {
 		final var entityParam = entity.getJsonParameters().getFirst();
 		assertThat(requestJsonParam.getKey()).isEqualTo(entityParam.getKey());
 		assertThat(requestJsonParam.getSchemaId()).isEqualTo(entityParam.getSchemaId());
-		assertThat(requestJsonParam.getValue()).isEqualTo(entityParam.getValue());
+		assertThat(requestJsonParam.getValue()).hasToString(entityParam.getValue());
 	}
 
 	@Test
@@ -97,7 +97,7 @@ class AssetMapperTest {
 		final var entityParam = entity.getJsonParameters().getFirst();
 		assertThat(requestJsonParam.getKey()).isEqualTo(entityParam.getKey());
 		assertThat(requestJsonParam.getSchemaId()).isEqualTo(entityParam.getSchemaId());
-		assertThat(requestJsonParam.getValue()).isEqualTo(entityParam.getValue());
+		assertThat(requestJsonParam.getValue()).hasToString(entityParam.getValue());
 	}
 
 	@Test

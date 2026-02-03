@@ -20,7 +20,11 @@
 		"jsonParameters": [
 			{
 				"key": "theKey",
-				"value": "{\"productId\":666, \"productName\":\"A product name\", \"price\":42}",
+				"value": {
+					"productId": 666,
+					"productName": "A product name",
+					"price": 42
+				},
 				"schemaId": "2281_schema_1.0"
 			}
 		]

@@ -488,6 +488,7 @@ paths:
       x-wso2-mutual-ssl: Optional
 components:
   schemas:
+    JsonNode: { }
     Problem:
       type: object
       properties:
@@ -773,15 +774,11 @@ components:
             - personParameter
           minLength: 1
         value:
-          type: string
+          $ref: "#/components/schemas/JsonNode"
           description: Parameter value with the JSON structure
-          examples:
-            - |
-              {
-                "firstName": "Joe",
-                "lastName": "Doe"
-              }
-          minLength: 1
+          example:
+            firstName: Joe
+            lastName: Doe
         schemaId:
           type: string
           description: Schema ID

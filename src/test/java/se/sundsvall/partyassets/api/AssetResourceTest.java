@@ -16,6 +16,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.zalando.problem.Status.BAD_REQUEST;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -157,7 +158,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
 		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest)).thenReturn(uuid);
-		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		webTestClient.post()
@@ -211,7 +212,7 @@ class AssetResourceTest {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
-		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		final var response = webTestClient.post()
@@ -268,7 +269,7 @@ class AssetResourceTest {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
-		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		final var response = webTestClient.post()
@@ -301,7 +302,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
-		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		webTestClient.patch()
@@ -356,7 +357,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
-		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		final var response = webTestClient.patch()
@@ -388,7 +389,7 @@ class AssetResourceTest {
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
 
-		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		final var response = webTestClient.patch()
@@ -420,7 +421,7 @@ class AssetResourceTest {
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
 
-		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), anyString());
+		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		final var response = webTestClient.patch()

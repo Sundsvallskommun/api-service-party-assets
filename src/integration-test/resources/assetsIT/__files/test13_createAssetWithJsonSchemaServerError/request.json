@@ -12,7 +12,11 @@
 	"jsonParameters": [
 		{
 			"key": "theKey",
-			"value": "{\"productId\":12345, \"productName\":\"The product\", \"price\":23}",
+			"value": {
+				"productId": 12345,
+				"productName": "The product",
+				"price": 23
+			},
 			"schemaId": "2281_schema_1.0"
 		}
 	]
