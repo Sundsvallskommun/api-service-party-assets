@@ -1,8 +1,5 @@
 package se.sundsvall.partyassets.service.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -13,6 +10,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
 class StatusMapperTest {
 

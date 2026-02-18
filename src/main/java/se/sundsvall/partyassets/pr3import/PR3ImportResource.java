@@ -1,10 +1,5 @@
 package se.sundsvall.partyassets.pr3import;
 
-import static java.util.Optional.ofNullable;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
-import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
-
 import generated.se.sundsvall.messaging.EmailAttachment;
 import generated.se.sundsvall.messaging.EmailRequest;
 import generated.se.sundsvall.messaging.EmailSender;
@@ -28,6 +23,11 @@ import org.zalando.problem.Problem;
 import org.zalando.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.partyassets.pr3import.PR3ImportProperties.Sender;
+
+import static java.util.Optional.ofNullable;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)

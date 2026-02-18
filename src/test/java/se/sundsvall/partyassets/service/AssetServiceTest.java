@@ -1,16 +1,5 @@
 package se.sundsvall.partyassets.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
-import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
-import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +20,17 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
+import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
+import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {

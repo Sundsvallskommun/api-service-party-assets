@@ -1,15 +1,5 @@
 package se.sundsvall.partyassets.pr3import;
 
-import static com.nimbusds.oauth2.sdk.util.StringUtils.isNotBlank;
-import static java.util.Collections.emptyMap;
-import static java.util.Comparator.comparing;
-import static java.util.Optional.of;
-import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
-import static org.zalando.problem.Status.CONFLICT;
-import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
-import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import generated.se.sundsvall.party.PartyType;
 import jakarta.validation.Validator;
@@ -34,6 +24,16 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.party.PartyClient;
+
+import static com.nimbusds.oauth2.sdk.util.StringUtils.isNotBlank;
+import static java.util.Collections.emptyMap;
+import static java.util.Comparator.comparing;
+import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
+import static java.util.function.Predicate.not;
+import static org.zalando.problem.Status.CONFLICT;
+import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
+import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 
 @Component
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)
