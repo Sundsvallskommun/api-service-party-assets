@@ -1,8 +1,5 @@
 package se.sundsvall.partyassets.service.mapper;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +14,9 @@ import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 public final class AssetMapper {
 

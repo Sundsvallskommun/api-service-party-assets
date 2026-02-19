@@ -1,9 +1,5 @@
 package se.sundsvall.partyassets.integration.db.specification;
 
-import static java.util.Objects.nonNull;
-import static org.apache.commons.collections4.MapUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Predicate;
@@ -15,6 +11,10 @@ import org.springframework.data.jpa.domain.Specification;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity_;
+
+import static java.util.Objects.nonNull;
+import static org.apache.commons.collections4.MapUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public final class AssetSpecification {
 

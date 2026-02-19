@@ -1,11 +1,5 @@
 package se.sundsvall.partyassets.service;
 
-import static java.util.Collections.emptyList;
-import static org.zalando.problem.Status.CONFLICT;
-import static org.zalando.problem.Status.NOT_FOUND;
-import static se.sundsvall.partyassets.service.mapper.StatusMapper.toEntity;
-import static se.sundsvall.partyassets.service.mapper.StatusMapper.toReasons;
-
 import java.util.List;
 import java.util.Map;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,6 +10,12 @@ import org.zalando.problem.Problem;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.StatusRepository;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
+
+import static java.util.Collections.emptyList;
+import static org.zalando.problem.Status.CONFLICT;
+import static org.zalando.problem.Status.NOT_FOUND;
+import static se.sundsvall.partyassets.service.mapper.StatusMapper.toEntity;
+import static se.sundsvall.partyassets.service.mapper.StatusMapper.toReasons;
 
 @Service
 public class StatusService {

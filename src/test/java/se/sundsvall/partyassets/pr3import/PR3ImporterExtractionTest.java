@@ -1,5 +1,13 @@
 package se.sundsvall.partyassets.pr3import;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.dhatim.fastexcel.reader.Row;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -8,14 +16,6 @@ import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.EXPIRED;
 import static se.sundsvall.partyassets.pr3import.PR3Importer.DRIVER;
 import static se.sundsvall.partyassets.pr3import.PR3Importer.PASSENGER;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import org.dhatim.fastexcel.reader.Row;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PR3ImporterExtractionTest {

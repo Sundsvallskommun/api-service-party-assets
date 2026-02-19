@@ -1,12 +1,5 @@
 package se.sundsvall.partyassets.integration.db;
 
-import static java.time.temporal.ChronoUnit.SECONDS;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
-import static org.assertj.core.groups.Tuple.tuple;
-import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
-
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -23,6 +16,13 @@ import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
+
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+import static org.assertj.core.groups.Tuple.tuple;
+import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
 /**
  * Asset repository tests.

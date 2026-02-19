@@ -1,11 +1,5 @@
 package se.sundsvall.partyassets.integration.db.model;
 
-import static jakarta.persistence.FetchType.EAGER;
-import static java.time.OffsetDateTime.now;
-import static java.time.ZoneId.systemDefault;
-import static java.time.temporal.ChronoUnit.MILLIS;
-import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
-
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -21,6 +15,12 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
+
+import static jakarta.persistence.FetchType.EAGER;
+import static java.time.OffsetDateTime.now;
+import static java.time.ZoneId.systemDefault;
+import static java.time.temporal.ChronoUnit.MILLIS;
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 @Entity
 @Table(name = "status",

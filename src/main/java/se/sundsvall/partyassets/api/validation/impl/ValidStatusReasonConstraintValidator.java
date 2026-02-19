@@ -1,12 +1,5 @@
 package se.sundsvall.partyassets.api.validation.impl;
 
-import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.ObjectUtils.allNull;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
-import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
-
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Map;
 import java.util.Objects;
@@ -15,6 +8,13 @@ import org.hibernate.validator.internal.engine.messageinterpolation.util.Interpo
 import org.springframework.web.context.request.RequestContextHolder;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.StatusService;
+
+import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.ObjectUtils.allNull;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
+import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
 abstract class ValidStatusReasonConstraintValidator {
 
