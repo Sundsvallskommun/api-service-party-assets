@@ -23,6 +23,9 @@ import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 @Transactional
 public class AssetService {
 
+	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
+	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
+
 	private final AssetRepository repository;
 	private final PartyTypeProvider partyTypeProvider;
 
@@ -43,8 +46,8 @@ public class AssetService {
 			.map(AssetMapper::toAsset)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
-				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
+				.withTitle(ASSET_NOT_FOUND_TITLE)
+				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
 	}
 
@@ -64,8 +67,8 @@ public class AssetService {
 		if (!repository.existsByIdAndMunicipalityId(id, municipalityId)) {
 			throw Problem.builder()
 				.withStatus(NOT_FOUND)
-				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
+				.withTitle(ASSET_NOT_FOUND_TITLE)
+				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build();
 		}
 
@@ -77,8 +80,8 @@ public class AssetService {
 		final var old = repository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
-				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
+				.withTitle(ASSET_NOT_FOUND_TITLE)
+				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
 
 		repository.save(updateEntity(old, request));
