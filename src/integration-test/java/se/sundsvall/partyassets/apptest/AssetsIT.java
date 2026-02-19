@@ -314,4 +314,48 @@ class AssetsIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test14_getAssetById() {
+		final var id = "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884";
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + id)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test15_getAssetByIdNotFound() {
+		final var id = "00000000-0000-0000-0000-000000000000";
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + id)
+			.withExpectedResponseStatus(NOT_FOUND)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test16_createAssetWithoutAssetId() {
+		final var partyId = "a6c380f3-6d26-496d-93fe-10b1e0160354";
+		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
+
+		// Create asset without assetId
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
+			.sendRequestAndVerifyResponse();
+
+		// Verify that asset has been created for customer
+		final var assets = repository.findAll(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId));
+		assertThat(assets).isNotEmpty();
+		assertThat(assets.stream().anyMatch(a -> a.getAssetId() == null)).isTrue();
+	}
 }

@@ -1,14 +1,5 @@
 package se.sundsvall.partyassets.integration.db.model;
 
-import static jakarta.persistence.EnumType.STRING;
-import static jakarta.persistence.FetchType.EAGER;
-import static java.time.OffsetDateTime.now;
-import static java.time.ZoneId.systemDefault;
-import static java.time.temporal.ChronoUnit.MILLIS;
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -24,7 +15,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -35,13 +25,17 @@ import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.UuidGenerator;
 import se.sundsvall.partyassets.api.model.Status;
 
+import static jakarta.persistence.EnumType.STRING;
+import static jakarta.persistence.FetchType.EAGER;
+import static java.time.OffsetDateTime.now;
+import static java.time.ZoneId.systemDefault;
+import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
+
 @Entity
 @Table(name = "asset",
-	uniqueConstraints = {
-		@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {
-			"asset_id"
-		})
-	},
 	indexes = {
 		@Index(name = "idx_asset_municipality_id", columnList = "municipality_id")
 	})
@@ -56,7 +50,7 @@ public class AssetEntity {
 
 	private String origin;
 
-	@Column(name = "asset_id", nullable = false)
+	@Column(name = "asset_id")
 	private String assetId;
 
 	@Column(name = "party_id", nullable = false)
@@ -346,10 +340,11 @@ public class AssetEntity {
 			this.jsonParameters = new ArrayList<>();
 		}
 
-		ofNullable(jsonParameters).orElse(emptyList()).stream().forEach(p -> p.setAsset(this));
+		final var safeList = ofNullable(jsonParameters).orElse(emptyList());
+		safeList.forEach(p -> p.setAsset(this));
 
 		this.jsonParameters.clear();
-		this.jsonParameters.addAll(jsonParameters);
+		this.jsonParameters.addAll(safeList);
 
 		return this;
 	}

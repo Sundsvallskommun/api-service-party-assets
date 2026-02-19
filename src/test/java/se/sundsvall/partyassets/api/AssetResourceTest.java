@@ -1,21 +1,5 @@
 package se.sundsvall.partyassets.api;
 
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.groups.Tuple.tuple;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.zalando.problem.Status.BAD_REQUEST;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +23,22 @@ import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.AssetService;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 import se.sundsvall.partyassets.service.StatusService;
+
+import static java.util.UUID.randomUUID;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.zalando.problem.Status.BAD_REQUEST;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -151,6 +151,87 @@ class AssetResourceTest {
 	}
 
 	@Test
+	void getAsset() {
+		// Arrange
+		final var id = randomUUID().toString();
+		final var asset = TestFactory.getAsset();
+
+		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id)).thenReturn(asset);
+
+		// Act
+		final var result = webTestClient.get()
+			.uri(PATH + "/{id}", id)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(APPLICATION_JSON)
+			.expectBody(Asset.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(result).usingRecursiveComparison().isEqualTo(asset);
+		verify(assetServiceMock).getAsset(MUNICIPALITY_ID, id);
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@Test
+	void getAssetFaultyUUID() {
+
+		// Arrange
+		final var id = "imNotARealUUID";
+
+		// Act
+		final var response = webTestClient.get()
+			.uri(PATH + "/{id}", id)
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().getFirst().getField()).isEqualTo("getAsset.id");
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void getAssetInvalidMunicipalityId() {
+
+		// Arrange
+		final var uuid = randomUUID().toString();
+
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
+				.build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(response.getViolations())
+			.extracting(Violation::getField, Violation::getMessage)
+			.containsExactly(tuple("getAsset.municipalityId", "not a valid municipality ID"));
+
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void createAsset() {
 
 		// Arrange
@@ -196,7 +277,6 @@ class AssetResourceTest {
 			.extracting(
 				Violation::getField, Violation::getMessage)
 			.containsExactlyInAnyOrder(
-				tuple("assetId", "must not be empty"),
 				tuple("issued", "must not be null"),
 				tuple("partyId", "not a valid UUID"),
 				tuple("status", "must not be null"),

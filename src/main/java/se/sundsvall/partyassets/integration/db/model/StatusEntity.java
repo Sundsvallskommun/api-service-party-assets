@@ -1,17 +1,12 @@
 package se.sundsvall.partyassets.integration.db.model;
 
-import static jakarta.persistence.FetchType.EAGER;
-import static java.time.OffsetDateTime.now;
-import static java.time.ZoneId.systemDefault;
-import static java.time.temporal.ChronoUnit.MILLIS;
-import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
-
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.PrePersist;
@@ -22,16 +17,21 @@ import java.util.List;
 import java.util.Objects;
 import org.hibernate.annotations.TimeZoneStorage;
 
+import static jakarta.persistence.FetchType.EAGER;
+import static java.time.OffsetDateTime.now;
+import static java.time.ZoneId.systemDefault;
+import static java.time.temporal.ChronoUnit.MILLIS;
+import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
+
 @Entity
-@Table(name = "status",
-	indexes = {
-		@Index(name = "idx_status_municipality_id", columnList = "municipality_id")
-	})
+@IdClass(StatusEntityId.class)
+@Table(name = "status")
 public class StatusEntity {
 
 	@Id
 	private String name;
 
+	@Id
 	@Column(name = "municipality_id")
 	private String municipalityId;
 
@@ -42,8 +42,11 @@ public class StatusEntity {
 	private OffsetDateTime updated;
 
 	@ElementCollection(fetch = EAGER)
-	@CollectionTable(name = "status_reason", joinColumns = @JoinColumn(name = "status_name", referencedColumnName = "name", foreignKey = @ForeignKey(name = "fk_status_reason_status_name")), indexes = {
-		@Index(name = "idx_status_reason_status_name", columnList = "status_name")
+	@CollectionTable(name = "status_reason", joinColumns = {
+		@JoinColumn(name = "status_name", referencedColumnName = "name"),
+		@JoinColumn(name = "municipality_id", referencedColumnName = "municipality_id")
+	}, foreignKey = @ForeignKey(name = "fk_status_reason_status"), indexes = {
+		@Index(name = "idx_status_reason_status_name", columnList = "status_name, municipality_id")
 	})
 	@Column(name = "reason", nullable = false)
 	private List<String> reasons;

@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>se.sundsvall.dept44</groupId>
 		<artifactId>dept44-service-parent</artifactId>
-		<version>7.0.0</version>
+		<version>7.0.1</version>
 		<relativePath />
 		<!-- lookup parent from repository -->
 	</parent>
@@ -13,8 +13,6 @@
 	<version>4.0</version>
 	<name>party-assets</name>
 	<properties>
-		<json-schema-validator.version>3.0.0</json-schema-validator.version>
-		<maven-artifact.version>3.9.12</maven-artifact.version>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.19.0</fastexcel.version>
 		<!-- Service properties -->
@@ -53,18 +51,6 @@
 			<artifactId>hibernate-jpamodelgen</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<!-- JSON schema functionality -->
-		<dependency>
-			<groupId>com.networknt</groupId>
-			<artifactId>json-schema-validator</artifactId>
-			<version>${json-schema-validator.version}</version>
-		</dependency>
-		<dependency>
-			<!-- Schema version comparison -->
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-artifact</artifactId>
-			<version>${maven-artifact.version}</version>
-		</dependency>
 		<!-- PR3 import dependencies -->
 		<dependency>
 			<groupId>org.dhatim</groupId>
@@ -84,7 +70,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>mariadb</artifactId>
+			<artifactId>testcontainers-mariadb</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

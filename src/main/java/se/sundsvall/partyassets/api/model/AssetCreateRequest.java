@@ -1,7 +1,5 @@
 package se.sundsvall.partyassets.api.model;
 
-import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -14,11 +12,13 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @ValidStatusReason
 public class AssetCreateRequest {
 
-	@NotEmpty
-	@Schema(description = "Asset id", examples = "PRH-123456789", requiredMode = REQUIRED)
+	@Schema(description = "External asset id (e.g. PRH-123456789) used as an identifier by external systems", examples = "PRH-123456789", requiredMode = NOT_REQUIRED)
 	private String assetId;
 
 	@Schema(description = "Source of origin for the asset", examples = "CASEDATA")

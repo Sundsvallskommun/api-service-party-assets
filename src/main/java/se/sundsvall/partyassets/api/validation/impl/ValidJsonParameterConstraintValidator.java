@@ -1,9 +1,5 @@
 package se.sundsvall.partyassets.api.validation.impl;
 
-import static java.util.Objects.isNull;
-import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
-import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
-
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Map;
@@ -15,6 +11,10 @@ import se.sundsvall.dept44.exception.ServerProblem;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
+
+import static java.util.Objects.isNull;
+import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
+import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
 public class ValidJsonParameterConstraintValidator implements ConstraintValidator<ValidJsonParameter, AssetJsonParameter> {
 

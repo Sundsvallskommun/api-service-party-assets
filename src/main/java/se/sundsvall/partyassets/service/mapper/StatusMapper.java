@@ -1,8 +1,5 @@
 package se.sundsvall.partyassets.service.mapper;
 
-import static java.util.Collections.emptyList;
-import static java.util.Optional.ofNullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +8,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
+
+import static java.util.Collections.emptyList;
+import static java.util.Optional.ofNullable;
 
 public final class StatusMapper {
 
@@ -25,11 +25,11 @@ public final class StatusMapper {
 	public static StatusEntity toEntity(final Status status, final List<String> reasons, final String municipalityId) {
 		return StatusEntity.create()
 			.withName(status.name())
-			.withReasons(retreiveUniqueItems(reasons))
+			.withReasons(retrieveUniqueItems(reasons))
 			.withMunicipalityId(municipalityId);
 	}
 
-	private static List<String> retreiveUniqueItems(final List<String> list) {
+	private static List<String> retrieveUniqueItems(final List<String> list) {
 		return new ArrayList<>(ofNullable(list).orElse(emptyList())
 			.stream()
 			.map(StringUtils::stripToEmpty)

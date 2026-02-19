@@ -55,3 +55,4 @@ application-default.properties
 
 # Claude
 CLAUDE.md
+/.claude/

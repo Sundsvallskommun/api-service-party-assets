@@ -1,16 +1,5 @@
 package se.sundsvall.partyassets.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
-import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
-import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,7 +9,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,6 +19,17 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
+import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
+import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -59,7 +58,7 @@ class AssetServiceTest {
 		final var entity = getAssetEntity(id, partyId);
 		final var request = new AssetSearchRequest();
 
-		try (final MockedStatic<AssetSpecification> assetSpecificationMock = mockStatic(AssetSpecification.class)) {
+		try (final var _ = mockStatic(AssetSpecification.class)) {
 			when(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request)).thenReturn(specificationMock);
 			when(repositoryMock.findAll(Mockito.<Specification<AssetEntity>>any())).thenReturn(List.of(entity));
 
@@ -71,6 +70,35 @@ class AssetServiceTest {
 		}
 
 		verify(repositoryMock).findAll(Mockito.<Specification<AssetEntity>>any());
+	}
+
+	@Test
+	void getAsset() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		final var result = service.getAsset(MUNICIPALITY_ID, id);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getId()).isEqualTo(id);
+
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
+	}
+
+	@Test
+	void getAssetNotFound() {
+		final var id = UUID.randomUUID().toString();
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.empty());
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.getAsset(MUNICIPALITY_ID, id))
+			.withMessage("Asset not found: Asset with id " + id + " not found for municipalityId " + MUNICIPALITY_ID);
+
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 	}
 
 	@Test
@@ -130,6 +158,25 @@ class AssetServiceTest {
 	}
 
 	@Test
+	void createAssetWithNullAssetId() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+		final var assetCreateRequest = getAssetCreateRequest(partyId).withAssetId(null);
+
+		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
+		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
+
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
+
+		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
+		verify(repositoryMock, never()).existsByAssetIdAndMunicipalityId(any(), any());
+		verify(repositoryMock).save(any(AssetEntity.class));
+
+		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
+	}
+
+	@Test
 	void deleteAsset() {
 		final var uuid = UUID.randomUUID().toString();
 
@@ -137,7 +184,7 @@ class AssetServiceTest {
 
 		service.deleteAsset(MUNICIPALITY_ID, uuid);
 		verify(repositoryMock).existsByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
-		verify(repositoryMock).deleteById(uuid);
+		verify(repositoryMock).deleteByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 	}
 
 	@Test
@@ -148,7 +195,7 @@ class AssetServiceTest {
 			.isThrownBy(() -> service.deleteAsset(MUNICIPALITY_ID, uuid))
 			.withMessage("Asset not found: Asset with id " + uuid + " not found for municipalityId " + MUNICIPALITY_ID);
 		verify(repositoryMock).existsByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
-		verify(repositoryMock, never()).deleteById(uuid);
+		verify(repositoryMock, never()).deleteByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 	}
 
 	@Test

@@ -1,12 +1,12 @@
 package se.sundsvall.partyassets.integration.party;
 
+import org.springframework.stereotype.Component;
+import org.zalando.problem.Problem;
+
 import static generated.se.sundsvall.party.PartyType.ENTERPRISE;
 import static generated.se.sundsvall.party.PartyType.PRIVATE;
 import static java.lang.String.format;
 import static org.zalando.problem.Status.NOT_FOUND;
-
-import org.springframework.stereotype.Component;
-import org.zalando.problem.Problem;
 
 @Component
 public class PartyTypeProvider {
