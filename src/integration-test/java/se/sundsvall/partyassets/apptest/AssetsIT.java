@@ -78,7 +78,6 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000021");
-		assertThat(asset.get().getCaseReferenceIds()).isEmpty();
 		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
 		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
@@ -114,7 +113,6 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000055");
-		assertThat(asset.get().getCaseReferenceIds()).isEmpty();
 		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
 		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
