@@ -1,0 +1,23 @@
+{
+	"id": "e84b72ee-1a34-44b5-b8f6-2e0e42e99010",
+	"assetId": "CON-0000000003",
+	"origin": "MAZEDATA",
+	"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+	"type": "PERMIT",
+	"issued": "2023-01-01",
+	"validTo": "2023-12-31",
+	"status": "ACTIVE",
+	"description": "Bygglov",
+	"additionalParameters": {},
+	"jsonParameters": [
+		{
+			"key": "theKey",
+			"value": {
+				"productId": 888,
+				"productName": "Updated product name",
+				"price": 99
+			},
+			"schemaId": "2281_schema_1.0"
+		}
+	]
+}

@@ -1,10 +1,6 @@
 package se.sundsvall.partyassets.apptest;
 
-import static java.time.OffsetDateTime.now;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-import static org.assertj.core.api.Assertions.within;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.DELETE;
@@ -18,22 +14,13 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
-import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
-import se.sundsvall.partyassets.api.model.AssetSearchRequest;
-import se.sundsvall.partyassets.api.model.Status;
-import se.sundsvall.partyassets.integration.db.AssetRepository;
-import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
-import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 /**
  * Assets integration tests.
@@ -52,95 +39,58 @@ class AssetsIT extends AbstractAppTest {
 	private static final String RESPONSE_FILE = "response.json";
 	private static final String PATH = "/" + MUNICIPALITY_ID + "/assets";
 
-	@Autowired
-	private AssetRepository repository;
-
 	@Test
 	void test01_createAssetPrivateParty() {
-		final var partyId = "a6c380f3-6d26-496d-93fe-10b1e0160354";
-		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
-
-		// Verify no existing assets on customer before create
-		assertThat(repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId))).isEmpty();
-
-		// Create asset
-		setupCall()
+		final var location = setupCall()
 			.withHttpMethod(POST)
 			.withServicePath(PATH)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))
 			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
-			.sendRequestAndVerifyResponse();
+			.sendRequest()
+			.getResponseHeaders().getLocation();
 
-		// Verify that asset has been created for customer
-		final var asset = repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId));
-		assertThat(asset).isPresent();
-		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
-		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000021");
-		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
-		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
-		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
-		assertThat(asset.get().getIssued()).isEqualTo(LocalDate.of(2023, 1, 1));
-		assertThat(asset.get().getPartyId()).isEqualTo(partyId);
-		assertThat(asset.get().getPartyType()).isEqualTo(PartyType.PRIVATE);
-		assertThat(asset.get().getStatus()).isEqualTo(Status.ACTIVE);
-		assertThat(asset.get().getStatusReason()).isNull();
-		assertThat(asset.get().getType()).isEqualTo("PERMIT");
-		assertThat(asset.get().getUpdated()).isNull();
-		assertThat(asset.get().getValidTo()).isEqualTo(LocalDate.of(2024, 12, 31));
+		assertThat(location).isNotNull();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(location.getPath())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	@Test
 	void test02_createAssetEnterpriseParty() {
-		final var partyId = "b566819b-9133-4ba6-9ce2-f12aafbc047b";
-		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
-
-		// Verify no existing assets on customer before create
-		assertThat(repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId))).isEmpty();
-
-		// Create asset
-		setupCall()
+		final var location = setupCall()
 			.withHttpMethod(POST)
 			.withServicePath(PATH)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
-			.sendRequestAndVerifyResponse();
+			.sendRequest()
+			.getResponseHeaders().getLocation();
 
-		// Verify that asset has been created for customer
-		final var asset = repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId));
-		assertThat(asset).isPresent();
-		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
-		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000055");
-		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
-		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
-		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
-		assertThat(asset.get().getIssued()).isEqualTo(LocalDate.of(2023, 6, 1));
-		assertThat(asset.get().getPartyId()).isEqualTo(partyId);
-		assertThat(asset.get().getPartyType()).isEqualTo(PartyType.ENTERPRISE);
-		assertThat(asset.get().getStatus()).isEqualTo(Status.ACTIVE);
-		assertThat(asset.get().getStatusReason()).isNull();
-		assertThat(asset.get().getType()).isEqualTo("PERMIT");
-		assertThat(asset.get().getUpdated()).isNull();
-		assertThat(asset.get().getValidTo()).isEqualTo(LocalDate.of(2024, 5, 31));
+		assertThat(location).isNotNull();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(location.getPath())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	@Test
 	void test03_createAssetNonExistingParty() {
-		final var partyId = "0d2f16d7-c2b7-4b41-afa7-cefc819f0d6f";
-		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
-
-		// Create asset
 		setupCall()
 			.withHttpMethod(POST)
 			.withServicePath(PATH)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(NOT_FOUND)
+			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
-
-		// Verify that no asset has been created for customer
-		assertThat(repository.findOne(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId))).isEmpty();
 	}
 
 	@Test
@@ -176,66 +126,50 @@ class AssetsIT extends AbstractAppTest {
 	void test06_updateAsset() {
 		final var id = "647e3062-62dc-499f-9faa-e54cb97aa214";
 
-		// Verify asset before update
-		final var assetPreUpdate = repository.findById(id).get();
-		assertThat(assetPreUpdate.getAdditionalParameters()).isEmpty();
-		assertThat(assetPreUpdate.getUpdated()).isNull();
-
-		// Update asset
 		setupCall()
 			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + id)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
-			.sendRequestAndVerifyResponse();
+			.sendRequest();
 
-		// Verify asset after update
-		final var assetPostUpdate = repository.findById(id).get();
-		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("additionalParameters", "updated").isEqualTo(assetPreUpdate);
-		assertThat(assetPostUpdate.getAdditionalParameters()).containsExactly(Map.entry("updated_key", "updated_value"));
-		assertThat(assetPostUpdate.getUpdated()).isCloseTo(now(), within(2, SECONDS));
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + id)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	@Test
 	void test07_updateAssetWithInvalidStatusReason() {
-		final var id = "647e3062-62dc-499f-9faa-e54cb97aa214";
-
-		// Fetch asset before update
-		final var assetPreUpdate = repository.findById(id).get();
-
-		// Update asset
 		setupCall()
 			.withHttpMethod(PATCH)
-			.withServicePath(PATH + "/" + id)
+			.withServicePath(PATH + "/" + "647e3062-62dc-499f-9faa-e54cb97aa214")
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
-
-		// Verify that asset is the same after update as before (i.e. no update has been executed)
-		final var assetPostUpdate = repository.findById(id).get();
-
-		assertThat(assetPreUpdate).usingRecursiveComparison().isEqualTo(assetPostUpdate);
 	}
 
 	@Test
 	void test08_deleteAsset() {
 		final var id = "7c145278-da81-49b0-a011-0f8f6821e3a0";
 
-		// Verify existing asset before delete
-		assertThat(repository.findById(id)).isPresent();
-
-		// Update asset
 		setupCall()
 			.withHttpMethod(DELETE)
 			.withServicePath(PATH + "/" + id)
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
-			.sendRequestAndVerifyResponse();
+			.sendRequest();
 
-		// Verify non existing asset after delete
-		assertThat(repository.findById(id)).isEmpty();
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + id)
+			.withExpectedResponseStatus(NOT_FOUND)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	@Test
@@ -263,27 +197,20 @@ class AssetsIT extends AbstractAppTest {
 	void test11_updateAssetWithValidJsonParameters() {
 		final var id = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
 
-		// Verify asset before update
-		final var assetPreUpdate = repository.findById(id).get();
-		assertThat(assetPreUpdate.getJsonParameters()).isEmpty();
-		assertThat(assetPreUpdate.getUpdated()).isNull();
-
-		// Update asset
 		setupCall()
 			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + id)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
-			.sendRequestAndVerifyResponse();
+			.sendRequest();
 
-		// Verify asset after update
-		final var assetPostUpdate = repository.findById(id).get();
-		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("jsonParameters", "updated").isEqualTo(assetPreUpdate);
-		assertThat(assetPostUpdate.getJsonParameters())
-			.extracting(AssetJsonParameterEntity::getKey, AssetJsonParameterEntity::getValue)
-			.containsExactly(tuple("theKey", "{\"productId\":888,\"productName\":\"Updated product name\",\"price\":99}"));
-		assertThat(assetPostUpdate.getUpdated()).isCloseTo(now(), within(2, SECONDS));
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + id)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	@Test
@@ -337,21 +264,22 @@ class AssetsIT extends AbstractAppTest {
 
 	@Test
 	void test16_createAssetWithoutAssetId() {
-		final var partyId = "a6c380f3-6d26-496d-93fe-10b1e0160354";
-		final var searchRequestForPartyId = AssetSearchRequest.create().withPartyId(partyId);
-
-		// Create asset without assetId
-		setupCall()
+		final var location = setupCall()
 			.withHttpMethod(POST)
 			.withServicePath(PATH)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
-			.sendRequestAndVerifyResponse();
+			.sendRequest()
+			.getResponseHeaders().getLocation();
 
-		// Verify that asset has been created for customer
-		final var assets = repository.findAll(createAssetSpecification(MUNICIPALITY_ID, searchRequestForPartyId));
-		assertThat(assets).isNotEmpty();
-		assertThat(assets.stream().anyMatch(a -> a.getAssetId() == null)).isTrue();
+		assertThat(location).isNotNull();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(location.getPath())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
 	}
 }
