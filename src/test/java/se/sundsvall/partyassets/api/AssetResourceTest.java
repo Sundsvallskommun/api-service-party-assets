@@ -81,7 +81,6 @@ class AssetResourceTest {
 				.queryParam("issued", "2020-01-01")
 				.queryParam("validTo", "2020-01-01")
 				.queryParam("description", "description")
-				.queryParam("caseReferenceIds", randomUUID())
 				.build())
 			.exchange()
 			.expectStatus()

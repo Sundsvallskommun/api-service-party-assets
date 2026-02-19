@@ -708,13 +708,6 @@ components:
           description: PartyId
           examples:
           - 123e4567-e89b-12d3-a456-426614174000
-        caseReferenceIds:
-          type: array
-          description: Case reference ids
-          examples:
-          - "[\"123e4567-e89b-12d3-a456-426614174000\"]"
-          items:
-            type: string
         type:
           type: string
           description: Asset type
@@ -794,13 +787,6 @@ components:
     AssetUpdateRequest:
       type: object
       properties:
-        caseReferenceIds:
-          type: array
-          description: Case reference ids
-          examples:
-          - "[\"123e4567-e89b-12d3-a456-426614174000\"]"
-          items:
-            type: string
         validTo:
           type: string
           format: date
@@ -853,13 +839,6 @@ components:
           description: PartyId
           examples:
           - 123e4567-e89b-12d3-a456-426614174000
-        caseReferenceIds:
-          type: array
-          description: Case reference ids
-          examples:
-          - "[\"945576d3-6e92-4118-ba33-53582d338ad3\"]"
-          items:
-            type: string
         type:
           type: string
           description: Asset type

@@ -3,7 +3,6 @@ package se.sundsvall.partyassets.service.mapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,7 +28,6 @@ public final class AssetMapper {
 			.withAdditionalParameters(entity.getAdditionalParameters())
 			.withAssetId(entity.getAssetId())
 			.withDescription(entity.getDescription())
-			.withCaseReferenceIds(entity.getCaseReferenceIds())
 			.withId(entity.getId())
 			.withIssued(entity.getIssued())
 			.withJsonParameters(toAssetJsonParameterList(entity.getJsonParameters()))
@@ -45,7 +43,6 @@ public final class AssetMapper {
 		return AssetEntity.create()
 			.withAdditionalParameters(request.getAdditionalParameters())
 			.withAssetId(request.getAssetId())
-			.withCaseReferenceIds(retrieveUniqueItems(request.getCaseReferenceIds())) // Filter out distinct values to save
 			.withDescription(request.getDescription())
 			.withIssued(request.getIssued())
 			.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(request.getJsonParameters()))
@@ -62,19 +59,11 @@ public final class AssetMapper {
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
 		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
 		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
-		Optional.ofNullable(request.getCaseReferenceIds()).ifPresent(caseReferenceIds -> entity.setCaseReferenceIds(retrieveUniqueItems(caseReferenceIds)));
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 
 		return entity;
-	}
-
-	private static ArrayList<String> retrieveUniqueItems(final List<String> list) {
-		return new ArrayList<>(ofNullable(list).orElse(emptyList())
-			.stream()
-			.distinct()
-			.toList());
 	}
 
 	private static List<AssetJsonParameter> toAssetJsonParameterList(List<AssetJsonParameterEntity> assetJsonParameterEntityList) {

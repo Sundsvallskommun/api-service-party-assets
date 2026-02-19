@@ -78,7 +78,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000021");
-		assertThat(asset.get().getCaseReferenceIds()).containsExactly("48649f4b-ec9f-4653-8586-14d69487c4be");
+		assertThat(asset.get().getCaseReferenceIds()).isEmpty();
 		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
 		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
@@ -114,7 +114,7 @@ class AssetsIT extends AbstractAppTest {
 		assertThat(asset).isPresent();
 		assertThat(asset.get().getAdditionalParameters()).isNullOrEmpty();
 		assertThat(asset.get().getAssetId()).isEqualTo("CON-0000000055");
-		assertThat(asset.get().getCaseReferenceIds()).containsExactly("391f7118-12d6-41c8-9032-4621c252000d");
+		assertThat(asset.get().getCaseReferenceIds()).isEmpty();
 		assertThat(asset.get().getCreated()).isCloseTo(now(), within(2, SECONDS));
 		assertThat(asset.get().getDescription()).isEqualTo("Bygglov");
 		assertThat(asset.get().getId()).matches("^[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}$");
@@ -181,7 +181,6 @@ class AssetsIT extends AbstractAppTest {
 		// Verify asset before update
 		final var assetPreUpdate = repository.findById(id).get();
 		assertThat(assetPreUpdate.getAdditionalParameters()).isEmpty();
-		assertThat(assetPreUpdate.getCaseReferenceIds()).isEmpty();
 		assertThat(assetPreUpdate.getUpdated()).isNull();
 
 		// Update asset
@@ -195,9 +194,8 @@ class AssetsIT extends AbstractAppTest {
 
 		// Verify asset after update
 		final var assetPostUpdate = repository.findById(id).get();
-		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("additionalParameters", "caseReferenceIds", "updated").isEqualTo(assetPreUpdate);
+		assertThat(assetPostUpdate).usingRecursiveComparison().ignoringFields("additionalParameters", "updated").isEqualTo(assetPreUpdate);
 		assertThat(assetPostUpdate.getAdditionalParameters()).containsExactly(Map.entry("updated_key", "updated_value"));
-		assertThat(assetPostUpdate.getCaseReferenceIds()).containsExactly("5965e286-5e11-450e-9da0-b749122f6280");
 		assertThat(assetPostUpdate.getUpdated()).isCloseTo(now(), within(2, SECONDS));
 	}
 
