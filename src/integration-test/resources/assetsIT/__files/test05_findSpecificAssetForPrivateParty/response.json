@@ -4,9 +4,6 @@
 		"assetId": "PRH-0000000002",
 		"origin": "CASEDATA",
 		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
-		"caseReferenceIds": [
-			"case_reference_3"
-		],
 		"type": "PERMIT",
 		"issued": "2023-01-01",
 		"validTo": "2023-12-31",

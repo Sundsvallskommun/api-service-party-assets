@@ -81,7 +81,6 @@ class AssetResourceTest {
 				.queryParam("issued", "2020-01-01")
 				.queryParam("validTo", "2020-01-01")
 				.queryParam("description", "description")
-				.queryParam("caseReferenceIds", randomUUID())
 				.build())
 			.exchange()
 			.expectStatus()
@@ -151,6 +150,87 @@ class AssetResourceTest {
 	}
 
 	@Test
+	void getAsset() {
+		// Arrange
+		final var id = randomUUID().toString();
+		final var asset = TestFactory.getAsset();
+
+		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id)).thenReturn(asset);
+
+		// Act
+		final var result = webTestClient.get()
+			.uri(PATH + "/{id}", id)
+			.exchange()
+			.expectStatus()
+			.isOk()
+			.expectHeader()
+			.contentType(APPLICATION_JSON)
+			.expectBody(Asset.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(result).usingRecursiveComparison().isEqualTo(asset);
+		verify(assetServiceMock).getAsset(MUNICIPALITY_ID, id);
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@Test
+	void getAssetFaultyUUID() {
+
+		// Arrange
+		final var id = "imNotARealUUID";
+
+		// Act
+		final var response = webTestClient.get()
+			.uri(PATH + "/{id}", id)
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus()).isNotNull();
+		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().getFirst().getField()).isEqualTo("getAsset.id");
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void getAssetInvalidMunicipalityId() {
+
+		// Arrange
+		final var uuid = randomUUID().toString();
+
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
+				.build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(response.getViolations())
+			.extracting(Violation::getField, Violation::getMessage)
+			.containsExactly(tuple("getAsset.municipalityId", "not a valid municipality ID"));
+
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void createAsset() {
 
 		// Arrange
@@ -196,7 +276,6 @@ class AssetResourceTest {
 			.extracting(
 				Violation::getField, Violation::getMessage)
 			.containsExactlyInAnyOrder(
-				tuple("assetId", "must not be empty"),
 				tuple("issued", "must not be null"),
 				tuple("partyId", "not a valid UUID"),
 				tuple("status", "must not be null"),

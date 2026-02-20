@@ -25,11 +25,11 @@ public final class StatusMapper {
 	public static StatusEntity toEntity(final Status status, final List<String> reasons, final String municipalityId) {
 		return StatusEntity.create()
 			.withName(status.name())
-			.withReasons(retreiveUniqueItems(reasons))
+			.withReasons(retrieveUniqueItems(reasons))
 			.withMunicipalityId(municipalityId);
 	}
 
-	private static List<String> retreiveUniqueItems(final List<String> list) {
+	private static List<String> retrieveUniqueItems(final List<String> list) {
 		return new ArrayList<>(ofNullable(list).orElse(emptyList())
 			.stream()
 			.map(StringUtils::stripToEmpty)

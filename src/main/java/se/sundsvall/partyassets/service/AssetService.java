@@ -2,6 +2,7 @@ package se.sundsvall.partyassets.service;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.zalando.problem.Problem;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
@@ -11,6 +12,7 @@ import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.zalando.problem.Status.CONFLICT;
 import static org.zalando.problem.Status.NOT_FOUND;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
@@ -18,7 +20,11 @@ import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 
 @Service
+@Transactional
 public class AssetService {
+
+	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
+	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
 
 	private final AssetRepository repository;
 	private final PartyTypeProvider partyTypeProvider;
@@ -35,8 +41,18 @@ public class AssetService {
 			.toList();
 	}
 
+	public Asset getAsset(final String municipalityId, final String id) {
+		return repository.findByIdAndMunicipalityId(id, municipalityId)
+			.map(AssetMapper::toAsset)
+			.orElseThrow(() -> Problem.builder()
+				.withStatus(NOT_FOUND)
+				.withTitle(ASSET_NOT_FOUND_TITLE)
+				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
+				.build());
+	}
+
 	public String createAsset(final String municipalityId, final AssetCreateRequest request) {
-		if (repository.existsByAssetIdAndMunicipalityId(request.getAssetId(), municipalityId)) {
+		if (isNotBlank(request.getAssetId()) && repository.existsByAssetIdAndMunicipalityId(request.getAssetId(), municipalityId)) {
 			throw Problem.builder()
 				.withStatus(CONFLICT)
 				.withTitle("Asset already exists")
@@ -51,12 +67,12 @@ public class AssetService {
 		if (!repository.existsByIdAndMunicipalityId(id, municipalityId)) {
 			throw Problem.builder()
 				.withStatus(NOT_FOUND)
-				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
+				.withTitle(ASSET_NOT_FOUND_TITLE)
+				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build();
 		}
 
-		repository.deleteById(id);
+		repository.deleteByIdAndMunicipalityId(id, municipalityId);
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
@@ -64,8 +80,8 @@ public class AssetService {
 		final var old = repository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
-				.withTitle("Asset not found")
-				.withDetail("Asset with id %s not found for municipalityId %s".formatted(id, municipalityId))
+				.withTitle(ASSET_NOT_FOUND_TITLE)
+				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
 
 		repository.save(updateEntity(old, request));

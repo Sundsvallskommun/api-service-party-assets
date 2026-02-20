@@ -38,7 +38,6 @@ class AssetCreateRequestTest {
 	void testBuilderMethods() {
 		final var additionalParameters = Map.of("key", "value");
 		final var assetId = "assetId";
-		final var caseReferenceIds = List.of("entry");
 		final var description = "description";
 		final var issued = LocalDate.now();
 		final var jsonParameters = List.of(AssetJsonParameter.create());
@@ -52,7 +51,6 @@ class AssetCreateRequestTest {
 		final var bean = AssetCreateRequest.create()
 			.withAdditionalParameters(additionalParameters)
 			.withAssetId(assetId)
-			.withCaseReferenceIds(caseReferenceIds)
 			.withDescription(description)
 			.withIssued(issued)
 			.withJsonParameters(jsonParameters)
@@ -66,7 +64,6 @@ class AssetCreateRequestTest {
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
-		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getIssued()).isEqualTo(issued);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);

@@ -38,7 +38,6 @@ class AssetTest {
 	void testBuilderMethods() {
 		final var additionalParameters = Map.of("key", "value");
 		final var assetId = "assetId";
-		final var caseReferenceIds = List.of("entry");
 		final var description = "description";
 		final var id = "id";
 		final var issued = LocalDate.now();
@@ -53,7 +52,6 @@ class AssetTest {
 		final var bean = Asset.create()
 			.withAdditionalParameters(additionalParameters)
 			.withAssetId(assetId)
-			.withCaseReferenceIds(caseReferenceIds)
 			.withDescription(description)
 			.withId(id)
 			.withJsonParameters(jsonParameters)
@@ -68,7 +66,6 @@ class AssetTest {
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
-		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getIssued()).isEqualTo(issued);

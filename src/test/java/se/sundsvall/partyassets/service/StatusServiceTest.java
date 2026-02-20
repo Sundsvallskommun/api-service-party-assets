@@ -14,6 +14,7 @@ import org.zalando.problem.ThrowableProblem;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.StatusRepository;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
+import se.sundsvall.partyassets.integration.db.model.StatusEntityId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -135,7 +136,7 @@ class StatusServiceTest {
 
 		// Assert
 		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
-		verify(repositoryMock).deleteById(status.name());
+		verify(repositoryMock).deleteById(new StatusEntityId(status.name(), MUNICIPALITY_ID));
 	}
 
 	@Test

@@ -10,7 +10,7 @@ import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 public class AssetSearchRequest {
 
-	@Schema(description = "Asset id", examples = "PRH-123456789")
+	@Schema(description = "External asset id (e.g. PRH-123456789) used as an identifier by external systems", examples = "PRH-123456789")
 	private String assetId;
 
 	@Schema(description = "Source of origin for the asset", examples = "CASEDATA")

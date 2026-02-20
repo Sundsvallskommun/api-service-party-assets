@@ -1,0 +1,8 @@
+{
+	"description": "Bygglov",
+	"partyId": "a6c380f3-6d26-496d-93fe-10b1e0160354",
+	"type": "PERMIT",
+	"issued": "2023-01-01",
+	"validTo": "2024-12-31",
+	"status": "ACTIVE"
+}

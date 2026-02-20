@@ -67,16 +67,6 @@ class PR3ImporterTest {
 	}
 
 	@Test
-	void addCenturyDigitToLegalId() {
-		assertThat(importer.addCenturyDigitToLegalId("")).isNull();
-		assertThat(importer.addCenturyDigitToLegalId("not-a-legal-id")).isNull();
-		assertThat(importer.addCenturyDigitToLegalId("196505018585")).isEqualTo("196505018585");
-		assertThat(importer.addCenturyDigitToLegalId("200301021456")).isEqualTo("200301021456");
-		assertThat(importer.addCenturyDigitToLegalId("6505018585")).isEqualTo("196505018585");
-		assertThat(importer.addCenturyDigitToLegalId("0301021456")).isEqualTo("200301021456");
-	}
-
-	@Test
 	void testExtractLegalIdWithCenturyDigits() {
 		// Arrange
 		when(mockRow.getCellText(10)).thenReturn("191234567890");

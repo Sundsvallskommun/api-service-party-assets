@@ -43,7 +43,7 @@ spring:
             client-id: the-client-id
             client-secret: the-client-secret
 pr3import:
-  enable: false
+  enabled: false
   static-asset-info:
     origin: someOrigin
     type: someType

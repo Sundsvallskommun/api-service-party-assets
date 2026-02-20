@@ -107,7 +107,7 @@ public class AssetJsonParameterEntity {
 
 	@PrePersist
 	void prePersist() {
-		if (nonNull(this.asset.getCreated())) {
+		if (nonNull(this.asset) && nonNull(this.asset.getCreated())) {
 			this.asset.preUpdate();
 		}
 	}

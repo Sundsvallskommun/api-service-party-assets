@@ -353,28 +353,6 @@ class PR3Importer {
 	}
 
 	/**
-	 * Naively adds a century digit to the given legal id, if it's missing.
-	 *
-	 * @param  legalId the legal id to add the century digit to.
-	 * @return         the original legal id with a leading century digit, if it was previously missing.
-	 */
-	String addCenturyDigitToLegalId(final String legalId) {
-		// Make sure we have digits only
-		if (legalId.isBlank() || !legalId.matches("^\\d+$")) {
-			return null;
-		}
-		// Do nothing if we already have a legal id with century digits
-		if (legalId.length() == 12 && (legalId.startsWith("19") || legalId.startsWith("20"))) {
-			return legalId;
-		}
-		// Naively validate
-		final var legalIdYear = Integer.parseInt(legalId.substring(0, 2));
-		final var centuryDigit = (LocalDate.now().getYear() - legalIdYear - 18) / 100;
-
-		return centuryDigit + legalId;
-	}
-
-	/**
 	 * Extracts the asset id from the given row (column 7, "TILLSTNR").
 	 *
 	 * @param  row the row.
@@ -444,7 +422,7 @@ class PR3Importer {
 	 */
 	Optional<String> extractSmartParkSync(final Row row) {
 		return extractCell(row, COL_SMART_PARK_SYNC)
-			.map(Integer::parseInt)
+			.flatMap(this::safeParseInt)
 			.map(intValue -> switch (intValue)
 			{
 				case 0 -> "false";
@@ -484,7 +462,7 @@ class PR3Importer {
 	 */
 	Optional<String> extractAppliedAs(final Row row) {
 		return extractCell(row, COL_APPLIED_AS)
-			.map(Integer::parseInt)
+			.flatMap(this::safeParseInt)
 			.map(intValue -> switch (intValue)
 			{
 				case 1 -> PASSENGER;
@@ -501,13 +479,21 @@ class PR3Importer {
 	 */
 	Optional<String> extractSex(final Row row) {
 		return extractCell(row, COL_SEX)
-			.map(Integer::parseInt)
+			.flatMap(this::safeParseInt)
 			.map(intValue -> switch (intValue)
 			{
 				case 0 -> "K";
 				case 1 -> "M";
 				default -> null;
 			});
+	}
+
+	private Optional<Integer> safeParseInt(final String value) {
+		try {
+			return Optional.of(Integer.parseInt(value));
+		} catch (final NumberFormatException e) {
+			return Optional.empty();
+		}
 	}
 
 	/**

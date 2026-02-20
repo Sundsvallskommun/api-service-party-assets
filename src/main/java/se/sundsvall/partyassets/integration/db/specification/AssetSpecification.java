@@ -28,6 +28,7 @@ public final class AssetSpecification {
 			addEqualCriteria(AssetEntity_.MUNICIPALITY_ID, municipalityId, predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.ASSET_ID, request.getAssetId(), predicates, criteriaBuilder, root);
+			addEqualCriteria(AssetEntity_.ORIGIN, request.getOrigin(), predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.TYPE, request.getType(), predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.ISSUED, request.getIssued(), predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.VALID_TO, request.getValidTo(), predicates, criteriaBuilder, root);

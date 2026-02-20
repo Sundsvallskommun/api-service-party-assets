@@ -11,7 +11,7 @@ public class Asset {
 	@Schema(description = "Unique id of asset", examples = "1c8f38a6-b492-4037-b7dc-de5bc6c629f0")
 	private String id;
 
-	@Schema(description = "External asset id", examples = "PRH-123456789")
+	@Schema(description = "External asset id (e.g. PRH-123456789) used as an identifier by external systems", examples = "PRH-123456789")
 	private String assetId;
 
 	@Schema(description = "Source of origin for the asset", examples = "CASEDATA")
@@ -19,9 +19,6 @@ public class Asset {
 
 	@Schema(description = "PartyId", examples = "123e4567-e89b-12d3-a456-426614174000")
 	private String partyId;
-
-	@Schema(description = "Case reference ids", examples = "[\"945576d3-6e92-4118-ba33-53582d338ad3\"]")
-	private List<String> caseReferenceIds;
 
 	@Schema(description = "Asset type", examples = "PERMIT")
 	private String type;
@@ -100,19 +97,6 @@ public class Asset {
 
 	public Asset withPartyId(String partyId) {
 		this.partyId = partyId;
-		return this;
-	}
-
-	public List<String> getCaseReferenceIds() {
-		return caseReferenceIds;
-	}
-
-	public void setCaseReferenceIds(List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-	}
-
-	public Asset withCaseReferenceIds(List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
 		return this;
 	}
 
@@ -222,7 +206,7 @@ public class Asset {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, id, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, description, id, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -237,14 +221,14 @@ public class Asset {
 			return false;
 		}
 		Asset other = (Asset) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(id,
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(id,
 			other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(
 				statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "Asset [id=" + id + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", caseReferenceIds=" + caseReferenceIds + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status
+		return "Asset [id=" + id + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status
 			+ ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 }

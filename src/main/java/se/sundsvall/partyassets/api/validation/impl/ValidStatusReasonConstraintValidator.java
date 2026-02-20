@@ -3,6 +3,7 @@ package se.sundsvall.partyassets.api.validation.impl;
 import jakarta.validation.ConstraintValidatorContext;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.hibernate.validator.internal.engine.messageinterpolation.util.InterpolationHelper;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -22,8 +23,6 @@ abstract class ValidStatusReasonConstraintValidator {
 
 	private static final String MUNICIPALITY_ID = "municipalityId";
 
-	private static final String DEFAULT_MUNICIPALITY_ID = "2281";
-
 	private final StatusService statusService;
 
 	protected ValidStatusReasonConstraintValidator(final StatusService statusService) {
@@ -35,17 +34,20 @@ abstract class ValidStatusReasonConstraintValidator {
 			return true;
 		}
 		final var municipalityId = getMunicipalityIdFromPath();
+		if (municipalityId.isEmpty()) {
+			return true;
+		}
 
-		return !statusService.getReasonsForAllStatuses(municipalityId).containsKey(status) && isNull(statusReason);
+		return !statusService.getReasonsForAllStatuses(municipalityId.get()).containsKey(status) && isNull(statusReason);
 	}
 
 	/**
 	 * TODO: Remove this and use the DEPT-44 version instead when that is implemented (UF-8954)
 	 * Getting value for path variable name from current request
 	 *
-	 * @return value of path parameter that matches sent in variable name
+	 * @return an Optional containing the municipalityId, or empty if not in an HTTP request context
 	 */
-	String getMunicipalityIdFromPath() {
+	Optional<String> getMunicipalityIdFromPath() {
 		return Stream.ofNullable(RequestContextHolder.getRequestAttributes())
 			.map(req -> req.getAttribute(URI_TEMPLATE_VARIABLES_ATTRIBUTE, SCOPE_REQUEST))
 			.filter(Objects::nonNull)
@@ -55,8 +57,7 @@ abstract class ValidStatusReasonConstraintValidator {
 			.filter(Objects::nonNull)
 			.filter(String.class::isInstance)
 			.map(String.class::cast)
-			.findAny()
-			.orElse(DEFAULT_MUNICIPALITY_ID);
+			.findAny();
 	}
 
 	boolean isValidStatusReason(final Status status, final String statusReason) {
@@ -64,21 +65,26 @@ abstract class ValidStatusReasonConstraintValidator {
 			return true;
 		}
 		final var municipalityId = getMunicipalityIdFromPath();
+		if (municipalityId.isEmpty()) {
+			return true;
+		}
 
 		return isNotEmpty(statusReason) &&
-			statusService.getReasonsForAllStatuses(municipalityId).getOrDefault(status, emptyList()).contains(statusReason);
+			statusService.getReasonsForAllStatuses(municipalityId.get()).getOrDefault(status, emptyList()).contains(statusReason);
 	}
 
 	void useCustomMessageForValidation(final ConstraintValidatorContext constraintContext, final Status status, final String statusReason) {
-
 		final var municipalityId = getMunicipalityIdFromPath();
+		if (municipalityId.isEmpty()) {
+			return;
+		}
 
 		constraintContext.disableDefaultConstraintViolation();
 		constraintContext.buildConstraintViolationWithTemplate(InterpolationHelper.escapeMessageParameter(
 			String.format(ERROR_MESSAGE_TEMPLATE,
 				statusReason,
 				status,
-				statusService.getReasonsForAllStatuses(municipalityId).getOrDefault(status, emptyList()))))
+				statusService.getReasonsForAllStatuses(municipalityId.get()).getOrDefault(status, emptyList()))))
 			.addConstraintViolation();
 	}
 

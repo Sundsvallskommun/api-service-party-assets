@@ -1,0 +1,15 @@
+{
+	"id": "647e3062-62dc-499f-9faa-e54cb97aa214",
+	"assetId": "CON-0000000013",
+	"origin": "MAZEDATA",
+	"partyId": "c5d21b57-c785-4d3c-8361-940cae999ff7",
+	"type": "PERMIT",
+	"issued": "2023-02-01",
+	"validTo": "2024-01-31",
+	"status": "ACTIVE",
+	"description": "Bygglov",
+	"additionalParameters": {
+		"updated_key": "updated_value"
+	},
+	"jsonParameters": []
+}

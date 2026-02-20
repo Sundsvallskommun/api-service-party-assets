@@ -10,6 +10,7 @@ import org.zalando.problem.Problem;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.StatusRepository;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
+import se.sundsvall.partyassets.integration.db.model.StatusEntityId;
 
 import static java.util.Collections.emptyList;
 import static org.zalando.problem.Status.CONFLICT;
@@ -59,7 +60,7 @@ public class StatusService {
 		if (!repository.existsByNameAndMunicipalityId(status.name(), municipalityId)) {
 			throw Problem.valueOf(NOT_FOUND, "Status %s does not have any statusreasons to delete".formatted(status.name()));
 		}
-		repository.deleteById(status.name());
+		repository.deleteById(new StatusEntityId(status.name(), municipalityId));
 	}
 
 }

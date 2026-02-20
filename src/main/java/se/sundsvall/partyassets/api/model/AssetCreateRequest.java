@@ -12,13 +12,13 @@ import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.NOT_REQUIRED;
 import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
 
 @ValidStatusReason
 public class AssetCreateRequest {
 
-	@NotEmpty
-	@Schema(description = "Asset id", examples = "PRH-123456789", requiredMode = REQUIRED)
+	@Schema(description = "External asset id (e.g. PRH-123456789) used as an identifier by external systems", examples = "PRH-123456789", requiredMode = NOT_REQUIRED)
 	private String assetId;
 
 	@Schema(description = "Source of origin for the asset", examples = "CASEDATA")
@@ -27,9 +27,6 @@ public class AssetCreateRequest {
 	@ValidUuid
 	@Schema(description = "PartyId", examples = "123e4567-e89b-12d3-a456-426614174000", requiredMode = REQUIRED)
 	private String partyId;
-
-	@Schema(description = "Case reference ids", examples = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
-	private List<String> caseReferenceIds;
 
 	@NotEmpty
 	@Schema(description = "Asset type", examples = "PERMIT", requiredMode = REQUIRED)
@@ -98,19 +95,6 @@ public class AssetCreateRequest {
 
 	public AssetCreateRequest withPartyId(String partyId) {
 		this.partyId = partyId;
-		return this;
-	}
-
-	public List<String> getCaseReferenceIds() {
-		return caseReferenceIds;
-	}
-
-	public void setCaseReferenceIds(List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-	}
-
-	public AssetCreateRequest withCaseReferenceIds(List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
 		return this;
 	}
 
@@ -227,7 +211,7 @@ public class AssetCreateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, description, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, description, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -242,14 +226,14 @@ public class AssetCreateRequest {
 			return false;
 		}
 		AssetCreateRequest other = (AssetCreateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(
 			issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason)
 			&& Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetCreateRequest [assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", caseReferenceIds=" + caseReferenceIds + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status + ", statusReason="
+		return "AssetCreateRequest [assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status + ", statusReason="
 			+ statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 }

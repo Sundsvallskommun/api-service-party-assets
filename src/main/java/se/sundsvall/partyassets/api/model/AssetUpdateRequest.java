@@ -11,9 +11,6 @@ import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 @ValidStatusReason
 public class AssetUpdateRequest {
 
-	@Schema(description = "Case reference ids", examples = "[\"123e4567-e89b-12d3-a456-426614174000\"]")
-	private List<String> caseReferenceIds;
-
 	@Schema(description = "Valid to date", examples = "2021-12-31")
 	private LocalDate validTo;
 
@@ -31,19 +28,6 @@ public class AssetUpdateRequest {
 
 	public static AssetUpdateRequest create() {
 		return new AssetUpdateRequest();
-	}
-
-	public List<String> getCaseReferenceIds() {
-		return caseReferenceIds;
-	}
-
-	public void setCaseReferenceIds(List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-	}
-
-	public AssetUpdateRequest withCaseReferenceIds(List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-		return this;
 	}
 
 	public LocalDate getValidTo() {
@@ -113,7 +97,7 @@ public class AssetUpdateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, caseReferenceIds, jsonParameters, status, statusReason, validTo);
+		return Objects.hash(additionalParameters, jsonParameters, status, statusReason, validTo);
 	}
 
 	@Override
@@ -128,12 +112,12 @@ public class AssetUpdateRequest {
 			return false;
 		}
 		AssetUpdateRequest other = (AssetUpdateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
 			other.statusReason) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetUpdateRequest [caseReferenceIds=" + caseReferenceIds + ", validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
+		return "AssetUpdateRequest [validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 }

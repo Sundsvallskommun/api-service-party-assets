@@ -214,4 +214,31 @@ class PR3ImporterExtractionTest {
 		verify(mockRow).getCellText(4);
 		verifyNoMoreInteractions(mockRow);
 	}
+
+	@Test
+	void extractSmartParkSyncForNonInteger() {
+		when(mockRow.getCellText(27)).thenReturn("abc");
+
+		var result = importer.extractSmartParkSync(mockRow);
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void extractAppliedAsForNonInteger() {
+		when(mockRow.getCellText(5)).thenReturn("xyz");
+
+		var result = importer.extractAppliedAs(mockRow);
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void extractSexForNonInteger() {
+		when(mockRow.getCellText(4)).thenReturn("abc");
+
+		var result = importer.extractSex(mockRow);
+
+		assertThat(result).isEmpty();
+	}
 }

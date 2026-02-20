@@ -10,11 +10,9 @@
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-party-assets</artifactId>
-	<version>4.0</version>
+	<version>5.0</version>
 	<name>party-assets</name>
 	<properties>
-		<json-schema-validator.version>3.0.0</json-schema-validator.version>
-		<maven-artifact.version>3.9.12</maven-artifact.version>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.19.0</fastexcel.version>
 		<!-- Service properties -->
@@ -52,18 +50,6 @@
 			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-jpamodelgen</artifactId>
 			<scope>provided</scope>
-		</dependency>
-		<!-- JSON schema functionality -->
-		<dependency>
-			<groupId>com.networknt</groupId>
-			<artifactId>json-schema-validator</artifactId>
-			<version>${json-schema-validator.version}</version>
-		</dependency>
-		<dependency>
-			<!-- Schema version comparison -->
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-artifact</artifactId>
-			<version>${maven-artifact.version}</version>
 		</dependency>
 		<!-- PR3 import dependencies -->
 		<dependency>

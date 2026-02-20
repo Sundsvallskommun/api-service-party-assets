@@ -15,7 +15,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -37,11 +36,6 @@ import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
 @Entity
 @Table(name = "asset",
-	uniqueConstraints = {
-		@UniqueConstraint(name = "uc_asset_asset_id", columnNames = {
-			"asset_id"
-		})
-	},
 	indexes = {
 		@Index(name = "idx_asset_municipality_id", columnList = "municipality_id")
 	})
@@ -56,7 +50,7 @@ public class AssetEntity {
 
 	private String origin;
 
-	@Column(name = "asset_id", nullable = false)
+	@Column(name = "asset_id")
 	private String assetId;
 
 	@Column(name = "party_id", nullable = false)
@@ -346,10 +340,11 @@ public class AssetEntity {
 			this.jsonParameters = new ArrayList<>();
 		}
 
-		ofNullable(jsonParameters).orElse(emptyList()).stream().forEach(p -> p.setAsset(this));
+		final var safeList = ofNullable(jsonParameters).orElse(emptyList());
+		safeList.forEach(p -> p.setAsset(this));
 
 		this.jsonParameters.clear();
-		this.jsonParameters.addAll(jsonParameters);
+		this.jsonParameters.addAll(safeList);
 
 		return this;
 	}
