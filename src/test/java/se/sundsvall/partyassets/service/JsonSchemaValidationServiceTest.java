@@ -1,14 +1,15 @@
 package se.sundsvall.partyassets.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
+import feign.Request;
+import feign.RequestTemplate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import se.sundsvall.dept44.exception.ClientProblem;
-import se.sundsvall.dept44.exception.ServerProblem;
 import se.sundsvall.partyassets.integration.jsonschema.JsonSchemaClient;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -16,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import static org.zalando.problem.Status.BAD_GATEWAY;
 
 @ExtendWith(MockitoExtension.class)
 class JsonSchemaValidationServiceTest {
@@ -50,12 +50,13 @@ class JsonSchemaValidationServiceTest {
 		final var municipalityId = "2281";
 		final var schemaId = "2281_schema_1.0";
 		final var jsonValue = OBJECT_MAPPER.createObjectNode().put("invalid", true);
-		final var validationError = new ClientProblem(BAD_GATEWAY, "json-schema error: {detail=Validation failed: required property 'productId' not found, status=400 Bad Request, title=Bad Request}");
+		final var request = Request.create(Request.HttpMethod.POST, "url", java.util.Map.of(), null, new RequestTemplate());
+		final var validationError = new FeignException.BadRequest("json-schema error", request, "Validation failed: required property 'productId' not found".getBytes(), null);
 
 		doThrow(validationError).when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonValue);
 
 		// Act
-		final var exception = assertThrows(ClientProblem.class,
+		final var exception = assertThrows(FeignException.class,
 			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
 
 		// Assert
@@ -70,12 +71,13 @@ class JsonSchemaValidationServiceTest {
 		final var municipalityId = "2281";
 		final var schemaId = "2281_nonexistent_1.0";
 		final var jsonValue = OBJECT_MAPPER.createObjectNode().put("productId", 1);
-		final var notFoundError = new ClientProblem(BAD_GATEWAY, "json-schema error: {detail=Schema not found: 2281_nonexistent_1.0, status=404 Not Found, title=Not Found}");
+		final var request = Request.create(Request.HttpMethod.POST, "url", java.util.Map.of(), null, new RequestTemplate());
+		final var notFoundError = new FeignException.NotFound("json-schema error", request, "Schema not found: 2281_nonexistent_1.0".getBytes(), null);
 
 		doThrow(notFoundError).when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonValue);
 
 		// Act
-		final var exception = assertThrows(ClientProblem.class,
+		final var exception = assertThrows(FeignException.class,
 			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
 
 		// Assert
@@ -90,12 +92,13 @@ class JsonSchemaValidationServiceTest {
 		final var municipalityId = "2281";
 		final var schemaId = "2281_schema_1.0";
 		final var jsonValue = OBJECT_MAPPER.createObjectNode().put("productId", 1);
-		final var serverError = new ServerProblem(BAD_GATEWAY, "json-schema error: {detail=Internal Server Error, status=500 Internal Server Error, title=Internal Server Error}");
+		final var request = Request.create(Request.HttpMethod.POST, "url", java.util.Map.of(), null, new RequestTemplate());
+		final var serverError = new FeignException.InternalServerError("json-schema error", request, "Internal Server Error".getBytes(), null);
 
 		doThrow(serverError).when(jsonSchemaClientMock).validateJson(municipalityId, schemaId, jsonValue);
 
 		// Act
-		final var exception = assertThrows(ServerProblem.class,
+		final var exception = assertThrows(FeignException.class,
 			() -> jsonSchemaValidationService.validate(municipalityId, schemaId, jsonValue));
 
 		// Assert

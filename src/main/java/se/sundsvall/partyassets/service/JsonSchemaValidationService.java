@@ -1,8 +1,8 @@
 package se.sundsvall.partyassets.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 import se.sundsvall.partyassets.integration.jsonschema.JsonSchemaClient;
+import tools.jackson.databind.JsonNode;
 
 @Service
 public class JsonSchemaValidationService {

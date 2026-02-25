@@ -1,5 +1,11 @@
 {
-	"title": "Internal Server Error",
-	"status": 500,
-	"detail": "HV000028: Unexpected exception during isValid call."
+	"type": "about:blank",
+	"status": 400,
+	"violations": [
+		{
+			"field": "jsonParameters[0]",
+			"message": "Internal Server Error: An unexpected error occurred"
+		}
+	],
+	"title": "Constraint Violation"
 }

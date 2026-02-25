@@ -5,7 +5,7 @@
 			"message": "'NON_VALID_REASON' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
 		}
 	],
-	"type": "https://zalando.github.io/problem/constraint-violation",
+	"type": "about:blank",
 	"title": "Constraint Violation",
 	"status": 400
 }

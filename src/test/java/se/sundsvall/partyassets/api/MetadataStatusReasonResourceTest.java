@@ -9,12 +9,13 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.StatusService;
@@ -26,12 +27,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
-import static org.zalando.problem.Status.BAD_REQUEST;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
+@AutoConfigureWebTestClient
 class MetadataStatusReasonResourceTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
@@ -91,7 +93,7 @@ class MetadataStatusReasonResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("readAllReasons.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(serviceMock);
 	}
@@ -133,7 +135,7 @@ class MetadataStatusReasonResourceTest {
 			{
 			"title" : "Bad Request",
 			"status" : 400,
-			"detail" : "Method parameter 'status': Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
+			"detail" : "Failed to convert 'status' with value: 'BOGUS_STATUS'"
 			}""";
 
 		// Act
@@ -173,7 +175,7 @@ class MetadataStatusReasonResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("readReasons.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(serviceMock);
 	}
@@ -208,7 +210,7 @@ class MetadataStatusReasonResourceTest {
 			{
 			"title" : "Bad Request",
 			"status" : 400,
-			"detail" : "Method parameter 'status': Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
+			"detail" : "Failed to convert 'status' with value: 'BOGUS_STATUS'"
 			}""";
 
 		// Act
@@ -238,7 +240,7 @@ class MetadataStatusReasonResourceTest {
 		final var body = new ArrayList<>();
 		final var expectedJsonMessage = """
 			{
-				"type" : "https://zalando.github.io/problem/constraint-violation",
+				"type" : "about:blank",
 				"status" : 400,
 				"violations" : [ {
 					"field" : "createReasons.statusReasons[0].<list element>",
@@ -273,7 +275,7 @@ class MetadataStatusReasonResourceTest {
 		final var body = new ArrayList<>();
 		final var expectedJsonMessage = """
 			{
-				"type" : "https://zalando.github.io/problem/constraint-violation",
+				"type" : "about:blank",
 				"status" : 400,
 				"violations" : [ {
 					"field" : "createReasons.statusReasons",
@@ -322,7 +324,7 @@ class MetadataStatusReasonResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("createReasons.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(serviceMock);
 	}
@@ -353,7 +355,7 @@ class MetadataStatusReasonResourceTest {
 			{
 			"title" : "Bad Request",
 			"status" : 400,
-			"detail" : "Method parameter 'status': Failed to convert value of type 'java.lang.String' to required type 'se.sundsvall.partyassets.api.model.Status'; Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.PathVariable se.sundsvall.partyassets.api.model.Status] for value [BOGUS_STATUS]"
+			"detail" : "Failed to convert 'status' with value: 'BOGUS_STATUS'"
 			}""";
 
 		// Act
@@ -391,7 +393,7 @@ class MetadataStatusReasonResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("deleteReasons.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(serviceMock);
 	}

@@ -8,7 +8,6 @@ import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -233,7 +232,7 @@ class AssetsIT extends AbstractAppTest {
 			.withServicePath(PATH)
 			.withHttpMethod(POST)
 			.withRequest(REQUEST_FILE)
-			.withExpectedResponseStatus(INTERNAL_SERVER_ERROR)
+			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}

@@ -6,15 +6,15 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
-import org.zalando.problem.Problem;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.StatusRepository;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
 import se.sundsvall.partyassets.integration.db.model.StatusEntityId;
 
 import static java.util.Collections.emptyList;
-import static org.zalando.problem.Status.CONFLICT;
-import static org.zalando.problem.Status.NOT_FOUND;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.service.mapper.StatusMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.StatusMapper.toReasons;
 

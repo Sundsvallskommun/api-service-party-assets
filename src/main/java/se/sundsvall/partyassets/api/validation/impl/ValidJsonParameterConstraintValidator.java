@@ -6,8 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 import org.springframework.web.context.request.RequestContextHolder;
-import se.sundsvall.dept44.exception.ClientProblem;
-import se.sundsvall.dept44.exception.ServerProblem;
+import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
@@ -45,11 +44,9 @@ public class ValidJsonParameterConstraintValidator implements ConstraintValidato
 				assetJsonParameter.getSchemaId(),
 				assetJsonParameter.getValue());
 			return true;
-		} catch (ClientProblem e) {
+		} catch (ThrowableProblem e) {
 			addViolation(context, extractOriginalMessage(e));
 			return false;
-		} catch (ServerProblem e) {
-			throw e;
 		} catch (Exception e) {
 			addViolation(context, e.getMessage());
 			return false;
@@ -57,23 +54,24 @@ public class ValidJsonParameterConstraintValidator implements ConstraintValidato
 	}
 
 	/**
-	 * Extract original error message from wrapped ClientProblem detail.
+	 * Extract original error message from ThrowableProblem.
 	 * ProblemErrorDecoder wraps the detail as: "{integration} error: {detail={detail}, status={status}, title={title}}"
+	 * For non-wrapped problems (e.g. Problem.valueOf), falls back to getMessage() which returns "title: detail".
 	 */
-	private String extractOriginalMessage(ClientProblem e) {
-		if (e.getDetail() == null) {
+	private String extractOriginalMessage(ThrowableProblem e) {
+		final var wrappedDetail = e.getDetail();
+		if (wrappedDetail == null || wrappedDetail.isBlank()) {
 			return "Validation failed";
 		}
-		var wrappedDetail = e.getDetail();
-		var detailStart = wrappedDetail.indexOf("detail=");
-		var statusStart = wrappedDetail.indexOf(", status=");
-		var titleStart = wrappedDetail.lastIndexOf("title=");
+		final var detailStart = wrappedDetail.indexOf("detail=");
+		final var statusStart = wrappedDetail.indexOf(", status=");
+		final var titleStart = wrappedDetail.lastIndexOf("title=");
 		if (detailStart >= 0 && statusStart > detailStart && titleStart > statusStart) {
-			var originalDetail = wrappedDetail.substring(detailStart + "detail=".length(), statusStart);
-			var originalTitle = wrappedDetail.substring(titleStart + "title=".length(), wrappedDetail.length() - 1);
+			final var originalDetail = wrappedDetail.substring(detailStart + "detail=".length(), statusStart);
+			final var originalTitle = wrappedDetail.substring(titleStart + "title=".length(), wrappedDetail.length() - 1);
 			return originalTitle + ": " + originalDetail;
 		}
-		return wrappedDetail;
+		return e.getMessage();
 	}
 
 	/**
