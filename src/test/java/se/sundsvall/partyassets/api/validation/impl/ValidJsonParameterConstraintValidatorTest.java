@@ -1,7 +1,5 @@
 package se.sundsvall.partyassets.api.validation.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.ConstraintValidatorContext.ConstraintViolationBuilder;
 import java.util.Map;
@@ -19,9 +17,10 @@ import se.sundsvall.dept44.exception.ClientProblem;
 import se.sundsvall.dept44.exception.ServerProblem;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -30,9 +29,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.BAD_GATEWAY;
 import static org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
-import static org.zalando.problem.Status.BAD_GATEWAY;
 
 @ExtendWith(MockitoExtension.class)
 class ValidJsonParameterConstraintValidatorTest {
@@ -121,7 +120,7 @@ class ValidJsonParameterConstraintValidatorTest {
 	}
 
 	@Test
-	void validateServerProblemIsRethrown() {
+	void validateServerProblemIsCaughtAsViolation() {
 		// Arrange
 		setupMunicipalityId();
 		final var key = "key";
@@ -132,16 +131,19 @@ class ValidJsonParameterConstraintValidatorTest {
 			.withSchemaId(schemaId)
 			.withValue(json);
 
-		final var serverProblem = new ServerProblem(BAD_GATEWAY, "json-schema error: {detail=Internal Server Error, status=500 Internal Server Error, title=Internal Server Error}");
-		doThrow(serverProblem)
+		when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
+		doThrow(new ServerProblem(BAD_GATEWAY, "json-schema error: {detail=Internal Server Error, status=500 Internal Server Error, title=Internal Server Error}"))
 			.when(jsonSchemaValidationServiceMock).validate(MUNICIPALITY_ID, schemaId, json);
 
-		// Act & Assert
-		assertThatThrownBy(() -> validator.isValid(assetJsonParameter, constraintValidatorContextMock))
-			.isSameAs(serverProblem);
+		// Act
+		final var result = validator.isValid(assetJsonParameter, constraintValidatorContextMock);
 
+		// Assert
+		assertThat(result).isFalse();
 		verify(jsonSchemaValidationServiceMock).validate(MUNICIPALITY_ID, schemaId, json);
-		verifyNoInteractions(constraintViolationBuilderMock);
+		verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
+		verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate("Internal Server Error: Internal Server Error");
+		verify(constraintViolationBuilderMock).addConstraintViolation();
 	}
 
 	@Test

@@ -10,7 +10,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zalando.problem.ThrowableProblem;
+import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.StatusRepository;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ExtendWith(MockitoExtension.class)
 class StatusServiceTest {
@@ -120,7 +122,7 @@ class StatusServiceTest {
 		// Assert
 		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
-		assertThat(e.getStatus()).isEqualTo(org.zalando.problem.Status.CONFLICT);
+		assertThat(e.getStatus()).isEqualTo(CONFLICT);
 		assertThat(e.getMessage()).isEqualTo("Conflict: Statusreasons already exists for status BLOCKED");
 	}
 
@@ -150,7 +152,7 @@ class StatusServiceTest {
 		// Assert
 		verify(repositoryMock).existsByNameAndMunicipalityId(status.name(), MUNICIPALITY_ID);
 		verifyNoMoreInteractions(repositoryMock);
-		assertThat(e.getStatus()).isEqualTo(org.zalando.problem.Status.NOT_FOUND);
+		assertThat(e.getStatus()).isEqualTo(NOT_FOUND);
 		assertThat(e.getMessage()).isEqualTo("Not Found: Status ACTIVE does not have any statusreasons to delete");
 	}
 

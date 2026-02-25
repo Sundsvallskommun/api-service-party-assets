@@ -1,8 +1,5 @@
 package se.sundsvall.partyassets.service.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -13,6 +10,8 @@ import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
@@ -83,11 +82,7 @@ public final class AssetMapper {
 	}
 
 	private static JsonNode toJsonNode(String value) {
-		try {
-			return value != null ? OBJECT_MAPPER.readTree(value) : null;
-		} catch (JsonProcessingException e) {
-			throw new IllegalStateException("Failed to parse JSON value from database", e);
-		}
+		return value != null ? OBJECT_MAPPER.readTree(value) : null;
 	}
 
 	private static List<AssetJsonParameterEntity> toAssetJsonParameterEntityList(List<AssetJsonParameter> assetJsonParameterList) {

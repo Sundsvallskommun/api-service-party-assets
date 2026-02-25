@@ -1,6 +1,5 @@
 package se.sundsvall.partyassets.api;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -8,12 +7,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.zalando.problem.Problem;
-import org.zalando.problem.violations.ConstraintViolationProblem;
-import org.zalando.problem.violations.Violation;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
+import se.sundsvall.dept44.problem.violations.Violation;
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.Asset;
@@ -23,6 +23,7 @@ import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.AssetService;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 import se.sundsvall.partyassets.service.StatusService;
+import tools.jackson.databind.JsonNode;
 
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,11 +38,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.zalando.problem.Status.BAD_REQUEST;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
+@AutoConfigureWebTestClient
 class AssetResourceTest {
 
 	private static final Map<Status, List<String>> VALID_STATUS_REASONS_FOR_STATUSES = Map.of(
@@ -117,9 +119,9 @@ class AssetResourceTest {
 		// Assert
 		assertThat(test).isNotNull();
 		assertThat(test.getStatus()).isNotNull();
-		assertThat(test.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(test.getViolations().getFirst().getMessage()).isEqualTo("not a valid UUID");
-		assertThat(test.getViolations().getFirst().getField()).isEqualTo("partyId");
+		assertThat(test.getStatus().value()).isEqualTo(400);
+		assertThat(test.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
+		assertThat(test.getViolations().getFirst().field()).isEqualTo("partyId");
 		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 		verifyNoInteractions(assetServiceMock);
@@ -144,7 +146,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("getAssets.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(assetServiceMock);
 	}
@@ -194,9 +196,9 @@ class AssetResourceTest {
 		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("not a valid UUID");
-		assertThat(response.getViolations().getFirst().getField()).isEqualTo("getAsset.id");
+		assertThat(response.getStatus().value()).isEqualTo(400);
+		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().getFirst().field()).isEqualTo("getAsset.id");
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 
@@ -224,7 +226,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("getAsset.municipalityId", "not a valid municipality ID"));
 
 		verifyNoInteractions(assetServiceMock);
@@ -271,10 +273,10 @@ class AssetResourceTest {
 		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
+		assertThat(response.getStatus().value()).isEqualTo(400);
 		assertThat(response.getViolations())
 			.extracting(
-				Violation::getField, Violation::getMessage)
+				Violation::field, Violation::message)
 			.containsExactlyInAnyOrder(
 				tuple("issued", "must not be null"),
 				tuple("partyId", "not a valid UUID"),
@@ -309,7 +311,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("jsonParameters[0]", "Bad Request: some-error"));
 		verifyNoInteractions(assetServiceMock);
 	}
@@ -319,26 +321,28 @@ class AssetResourceTest {
 
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString());
+		final var expectedJsonMessage = """
+			{
+				"type" : "about:blank",
+				"status" : 400,
+				"violations" : [ {
+					"field" : "assetCreateRequest",
+					"message" : "'statusReason' is not valid reason for status ACTIVE. Valid reasons are []."
+				} ],
+				"title" : "Constraint Violation"
+			}""";
 
 		// Act
-		final var response = webTestClient.post()
+		webTestClient.post()
 			.uri(PATH)
 			.bodyValue(assetRequest)
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
+			.expectBody()
+			.json(expectedJsonMessage);
 
 		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("'statusReason' is not valid reason for status ACTIVE. Valid reasons are [].");
-		assertThat(response.getViolations().getFirst().getField()).isEqualTo("assetCreateRequest");
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 		verifyNoInteractions(assetServiceMock);
 	}
 
@@ -367,7 +371,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("createAsset.municipalityId", "not a valid municipality ID"));
 
 		verifyNoInteractions(assetServiceMock);
@@ -402,29 +406,30 @@ class AssetResourceTest {
 		// Arrange
 		final var id = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest();
+		final var expectedJsonMessage = """
+			{
+				"type" : "about:blank",
+				"status" : 400,
+				"violations" : [ {
+					"field" : "assetUpdateRequest",
+					"message" : "'statusReasonUpdated' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
+				} ],
+				"title" : "Constraint Violation"
+			}""";
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 
 		// Act
-		final var response = webTestClient.patch()
+		webTestClient.patch()
 			.uri(PATH + "/{id}", id)
 			.bodyValue(assetRequest)
 			.exchange()
 			.expectStatus()
 			.is4xxClientError()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
+			.expectBody()
+			.json(expectedJsonMessage);
 
 		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("'statusReasonUpdated' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST].");
-		assertThat(response.getViolations().getFirst().getField()).isEqualTo("assetUpdateRequest");
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
-
 		verifyNoInteractions(assetServiceMock);
 	}
 
@@ -452,9 +457,9 @@ class AssetResourceTest {
 		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("not a valid UUID");
-		assertThat(response.getViolations().getFirst().getField()).isEqualTo("updateAsset.id");
+		assertThat(response.getStatus().value()).isEqualTo(400);
+		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().getFirst().field()).isEqualTo("updateAsset.id");
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 
@@ -487,7 +492,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("updateAsset.municipalityId", "not a valid municipality ID"));
 
 		verifyNoInteractions(assetServiceMock);
@@ -519,7 +524,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("jsonParameters[0]", "Bad Request: some-error"));
 
 		verifyNoInteractions(assetServiceMock);
@@ -563,9 +568,9 @@ class AssetResourceTest {
 		// Assert
 		assertThat(response).isNotNull();
 		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().getStatusCode()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().getMessage()).isEqualTo("not a valid UUID");
-		assertThat(response.getViolations().getFirst().getField()).isEqualTo("deleteAsset.id");
+		assertThat(response.getStatus().value()).isEqualTo(400);
+		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
+		assertThat(response.getViolations().getFirst().field()).isEqualTo("deleteAsset.id");
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 
@@ -594,7 +599,7 @@ class AssetResourceTest {
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
 		assertThat(response.getViolations())
-			.extracting(Violation::getField, Violation::getMessage)
+			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("deleteAsset.municipalityId", "not a valid municipality ID"));
 
 		verifyNoInteractions(assetServiceMock);
