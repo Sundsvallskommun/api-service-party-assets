@@ -240,7 +240,7 @@ class MetadataStatusReasonResourceTest {
 		final var body = new ArrayList<>();
 		final var expectedJsonMessage = """
 			{
-				"type" : "about:blank",
+				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
 				"status" : 400,
 				"violations" : [ {
 					"field" : "createReasons.statusReasons[0].<list element>",
@@ -275,7 +275,7 @@ class MetadataStatusReasonResourceTest {
 		final var body = new ArrayList<>();
 		final var expectedJsonMessage = """
 			{
-				"type" : "about:blank",
+				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
 				"status" : 400,
 				"violations" : [ {
 					"field" : "createReasons.statusReasons",

@@ -105,14 +105,12 @@ class PR3ImportResourceTest {
 
 	@Test
 	void handleImportWithInvalidInput() {
-		// TODO: Should return 400, but MultipartException handling is missing in dept44 ProblemExceptionHandler (was handled by
-		// Zalando problem-spring-web)
 		webTestClient.post()
 			.uri(PATH)
 			.contentType(MULTIPART_FORM_DATA)
 			.exchange()
 			.expectStatus()
-			.is5xxServerError();
+			.is4xxClientError();
 
 		verifyNoInteractions(mockImporter, mockMessagingClient);
 	}

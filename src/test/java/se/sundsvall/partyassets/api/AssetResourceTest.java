@@ -323,7 +323,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString());
 		final var expectedJsonMessage = """
 			{
-				"type" : "about:blank",
+				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
 				"status" : 400,
 				"violations" : [ {
 					"field" : "assetCreateRequest",
@@ -408,7 +408,7 @@ class AssetResourceTest {
 		final var assetRequest = TestFactory.getAssetUpdateRequest();
 		final var expectedJsonMessage = """
 			{
-				"type" : "about:blank",
+				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
 				"status" : 400,
 				"violations" : [ {
 					"field" : "assetUpdateRequest",
