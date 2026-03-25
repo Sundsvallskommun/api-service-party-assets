@@ -3,8 +3,13 @@ package se.sundsvall.partyassets.api;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
@@ -43,16 +48,20 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
+@ExtendWith(MockitoExtension.class)
 @AutoConfigureWebTestClient
-class AssetResourceTest {
+class DraftAssetResourceTest {
 
 	private static final Map<Status, List<String>> VALID_STATUS_REASONS_FOR_STATUSES = Map.of(
 		Status.BLOCKED, List.of("IRREGULARITY", "LOST"),
 		Status.ACTIVE, List.of("IRREGULARITY", "LOST"));
 
 	private static final String MUNICIPALITY_ID = "2281";
-	private static final String PATH = MUNICIPALITY_ID + "/assets";
+	private static final String PATH = MUNICIPALITY_ID + "/asset-drafts";
 	private static final String INVALID = "#invalid#";
+
+	@Captor
+	private ArgumentCaptor<AssetCreateRequest> createRequestCaptor;
 
 	@MockitoBean
 	private AssetService assetServiceMock;
@@ -67,18 +76,18 @@ class AssetResourceTest {
 	private WebTestClient webTestClient;
 
 	@Test
-	void getAssets() {
+	void getDraftAssets() {
 		// Arrange
-		final var assets = List.of(TestFactory.getAsset());
+		final var assets = List.of(TestFactory.getDraftAsset());
 
-		when(assetServiceMock.getAssets(eq(MUNICIPALITY_ID), any(AssetSearchRequest.class))).thenReturn(assets);
+		when(assetServiceMock.getDraftAssets(eq(MUNICIPALITY_ID), any(AssetSearchRequest.class))).thenReturn(assets);
 
 		// Act
 		final var result = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path(PATH)
 				.queryParam("partyId", randomUUID())
 				.queryParam("assetId", "assetId")
-				.queryParam("status", Status.ACTIVE)
+				.queryParam("status", Status.DRAFT)
 				.queryParam("type", "PERMIT")
 				.queryParam("issued", "2020-01-01")
 				.queryParam("validTo", "2020-01-01")
@@ -95,7 +104,7 @@ class AssetResourceTest {
 
 		// Assert
 		assertThat(result).usingRecursiveComparison().isEqualTo(assets);
-		verify(assetServiceMock).getAssets(eq(MUNICIPALITY_ID), any(AssetSearchRequest.class));
+		verify(assetServiceMock).getDraftAssets(eq(MUNICIPALITY_ID), any(AssetSearchRequest.class));
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 
@@ -103,7 +112,7 @@ class AssetResourceTest {
 	@ValueSource(strings = {
 		"imNotARealUUID", "1", "1234-1234-1234-1234"
 	})
-	void getAssetsFaultyPartyId(final String uuid) {
+	void getDraftAssetsFaultyPartyId(final String uuid) {
 		// Act
 		final var test = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path(PATH)
@@ -128,8 +137,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void getAssetsInvalidMunicipalityId() {
-
+	void getDraftAssetsInvalidMunicipalityId() {
 		// Act
 		final var response = webTestClient.get()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets")
@@ -152,92 +160,10 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void getAsset() {
-		// Arrange
-		final var id = randomUUID().toString();
-		final var asset = TestFactory.getAsset();
-
-		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id)).thenReturn(asset);
-
-		// Act
-		final var result = webTestClient.get()
-			.uri(PATH + "/{id}", id)
-			.exchange()
-			.expectStatus()
-			.isOk()
-			.expectHeader()
-			.contentType(APPLICATION_JSON)
-			.expectBody(Asset.class)
-			.returnResult()
-			.getResponseBody();
-
-		// Assert
-		assertThat(result).usingRecursiveComparison().isEqualTo(asset);
-		verify(assetServiceMock).getAsset(MUNICIPALITY_ID, id);
-		verifyNoMoreInteractions(assetServiceMock);
-	}
-
-	@Test
-	void getAssetFaultyUUID() {
-
-		// Arrange
-		final var id = "imNotARealUUID";
-
-		// Act
-		final var response = webTestClient.get()
-			.uri(PATH + "/{id}", id)
-			.exchange()
-			.expectStatus()
-			.is4xxClientError()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().value()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
-		assertThat(response.getViolations().getFirst().field()).isEqualTo("getAsset.id");
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
-
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void getAssetInvalidMunicipalityId() {
-
+	void createDraftAsset() {
 		// Arrange
 		final var uuid = randomUUID().toString();
-
-		// Act
-		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
-				.build())
-			.exchange()
-			.expectStatus().isBadRequest()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
-		assertThat(response.getViolations())
-			.extracting(Violation::field, Violation::message)
-			.containsExactly(tuple("getAsset.municipalityId", "not a valid municipality ID"));
-
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void createAsset() {
-
-		// Arrange
-		final var uuid = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatus(Status.DRAFT).withStatusReason(null);
 
 		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest)).thenReturn(uuid);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
@@ -249,16 +175,44 @@ class AssetResourceTest {
 			.exchange()
 			.expectStatus()
 			.isCreated()
-			.expectHeader().location("/" + MUNICIPALITY_ID + "/assets/" + uuid);
+			.expectHeader().location("/" + MUNICIPALITY_ID + "/asset-drafts/" + uuid);
 
 		// Assert
-		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest);
+		verify(assetServiceMock).createAsset(eq(MUNICIPALITY_ID), createRequestCaptor.capture());
 		verifyNoMoreInteractions(assetServiceMock);
+
+		var createRequest = createRequestCaptor.getValue();
+		assertThat(createRequest.getStatus()).isEqualTo(Status.DRAFT);
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = "DRAFT", mode = EnumSource.Mode.EXCLUDE)
+	void createAssetWithOtherThanDraftStatus(final Status status) {
+		// Arrange
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatus(status).withStatusReason(null);
+		final var expectedJsonMessage = """
+			{
+				"detail": "Status %s is not allowed when creating draft assets",
+				"status" : 400,
+				"title" : "Bad Request"
+			}""".formatted(status);
+
+		// Act
+		webTestClient.post()
+			.uri(PATH)
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody()
+			.json(expectedJsonMessage);
+
+		// Assert
+		verifyNoInteractions(assetServiceMock);
 	}
 
 	@Test
-	void createAssetEmptyRequest() {
-
+	void createDraftAssetEmptyRequest() {
 		// Act
 		final var response = webTestClient.post()
 			.uri(PATH)
@@ -288,8 +242,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAssetInvalidJsonParameter() {
-
+	void createDraftAssetInvalidJsonParameter() {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
@@ -317,33 +270,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAssetWithDraftStatus() {
-		// Arrange
-		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatus(Status.DRAFT).withStatusReason(null);
-		final var expectedJsonMessage = """
-			{
-				"detail": "DRAFT status is not allowed when creating a regular asset",
-				"status" : 400,
-				"title" : "Bad Request"
-			}""";
-
-		// Act
-		webTestClient.post()
-			.uri(PATH)
-			.bodyValue(assetRequest)
-			.exchange()
-			.expectStatus()
-			.is4xxClientError()
-			.expectBody()
-			.json(expectedJsonMessage);
-
-		// Assert
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void createAssetFaultyStatusReason() {
-
+	void createDraftAssetFaultyStatusReason() {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString());
 		final var expectedJsonMessage = """
@@ -372,8 +299,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAssetInvalidMunicipalityId() {
-
+	void createDraftAssetInvalidMunicipalityId() {
 		// Arrange
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
 
@@ -403,7 +329,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void updateAsset() {
+	void updateDraftAsset() {
 
 		// Arrange
 		final var id = randomUUID().toString();
@@ -426,34 +352,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void updateAssetWithDraftStatus() {
-		// Arrange
-		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.DRAFT).withStatusReason(null);
-		final var expectedJsonMessage = """
-			{
-				"detail": "Changing asset status to DRAFT is not allowed when updating a regular asset",
-				"status" : 400,
-				"title" : "Bad Request"
-			}""";
-
-		// Act
-		webTestClient.patch()
-			.uri(PATH + "/{id}", id)
-			.bodyValue(assetRequest)
-			.exchange()
-			.expectStatus()
-			.is4xxClientError()
-			.expectBody()
-			.json(expectedJsonMessage);
-
-		// Assert
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void updateAssetFaultyStatusReason() {
-
+	void updateDraftAssetFaultyStatusReason() {
 		// Arrange
 		final var id = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest();
@@ -485,8 +384,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void updateAssetFaultyUUID() {
-
+	void updateDraftAssetFaultyUUID() {
 		// Arrange
 		final var id = "imNotARealUUID";
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
@@ -510,7 +408,7 @@ class AssetResourceTest {
 		assertThat(response.getStatus()).isNotNull();
 		assertThat(response.getStatus().value()).isEqualTo(400);
 		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
-		assertThat(response.getViolations().getFirst().field()).isEqualTo("updateAsset.id");
+		assertThat(response.getViolations().getFirst().field()).isEqualTo("updateDraftAsset.id");
 		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
 
@@ -518,8 +416,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void updateAssetInvalidMunicipalityId() {
-
+	void updateDraftAssetInvalidMunicipalityId() {
 		// Arrange
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
@@ -550,8 +447,7 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void updateAssetInvalidJsonParameter() {
-
+	void updateDraftAssetInvalidJsonParameter() {
 		// Arrange
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
@@ -577,81 +473,6 @@ class AssetResourceTest {
 		assertThat(response.getViolations())
 			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("jsonParameters[0]", "Bad Request: some-error"));
-
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void deleteAsset() {
-
-		// Arrange
-		final var uuid = randomUUID().toString();
-
-		// Act
-		webTestClient.delete()
-			.uri(PATH + "/{id}", uuid)
-			.exchange()
-			.expectStatus()
-			.isNoContent();
-
-		// Assert
-		verify(assetServiceMock).deleteAsset(MUNICIPALITY_ID, uuid);
-
-		verifyNoMoreInteractions(assetServiceMock);
-	}
-
-	@Test
-	void deleteAssertFaultyUUID() {
-
-		// Arrange
-		final var uuid = "imNotARealUUID";
-
-		// Act
-		final var response = webTestClient.delete()
-			.uri(PATH + "/{id}", uuid)
-			.exchange()
-			.expectStatus()
-			.is4xxClientError()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getStatus()).isNotNull();
-		assertThat(response.getStatus().value()).isEqualTo(400);
-		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
-		assertThat(response.getViolations().getFirst().field()).isEqualTo("deleteAsset.id");
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
-
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void deleteAssetInvalidMunicipalityId() {
-
-		// Arrange
-		final var uuid = randomUUID().toString();
-
-		// Act
-		final var response = webTestClient.delete()
-			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid)
-				.queryParam("partyId", randomUUID())
-				.build())
-			.exchange()
-			.expectStatus().isBadRequest()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
-		assertThat(response.getViolations())
-			.extracting(Violation::field, Violation::message)
-			.containsExactly(tuple("deleteAsset.municipalityId", "not a valid municipality ID"));
 
 		verifyNoInteractions(assetServiceMock);
 	}

@@ -68,6 +68,10 @@ public final class TestFactory {
 			.withValidTo(LocalDate.of(2010, 1, 1));
 	}
 
+	public static Asset getDraftAsset() {
+		return getAsset().withStatus(Status.DRAFT);
+	}
+
 	public static AssetCreateRequest getAssetCreateRequest(final String partyId) {
 		return AssetCreateRequest.create()
 			.withAdditionalParameters(Map.of("key", "value"))

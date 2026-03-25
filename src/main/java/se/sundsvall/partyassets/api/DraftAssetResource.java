@@ -12,7 +12,6 @@ import java.util.List;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,88 +43,60 @@ import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 
 @RestController
 @Validated
-@RequestMapping(value = "/{municipalityId}/assets")
-@Tag(name = "Assets")
+@RequestMapping(value = "/{municipalityId}/asset-drafts")
+@Tag(name = "Draft Assets")
 @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = {
 	Problem.class, ConstraintViolationProblem.class
 })))
 @ApiResponse(responseCode = "500", description = "Internal Server Error", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-class AssetResource {
+class DraftAssetResource {
 
 	private final AssetService service;
 
-	AssetResource(final AssetService service) {
+	DraftAssetResource(final AssetService service) {
 		this.service = service;
 	}
 
 	@GetMapping(produces = APPLICATION_JSON_VALUE)
-	@Operation(summary = "Get assets", responses = {
+	@Operation(summary = "Get draft assets", responses = {
 		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
 	})
-	ResponseEntity<List<Asset>> getAssets(
+	ResponseEntity<List<Asset>> getDraftAssets(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@ParameterObject @Valid final AssetSearchRequest request) {
 
-		return ok(service.getAssets(municipalityId, request));
-	}
-
-	@GetMapping(path = "{id}", produces = APPLICATION_JSON_VALUE)
-	@Operation(summary = "Get asset", responses = {
-		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true),
-		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	})
-	ResponseEntity<Asset> getAsset(
-		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String id) {
-
-		return ok(service.getAsset(municipalityId, id));
+		return ok(service.getDraftAssets(municipalityId, request));
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
-	@Operation(summary = "Create an asset", responses = {
+	@Operation(summary = "Create a draft asset", responses = {
 		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
 	})
-	ResponseEntity<Void> createAsset(
+	ResponseEntity<Void> createDraftAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Valid @RequestBody final AssetCreateRequest asset) {
 
-		if (asset.getStatus() == DRAFT) {
-			throw badRequest("{0} status is not allowed when creating a regular asset", DRAFT);
+		// Make sure that the asset status isn't set to DRAFT
+		if (asset.getStatus() != DRAFT) {
+			throw badRequest("Status {0} is not allowed when creating draft assets", asset.getStatus());
 		}
 
-		final var result = service.createAsset(municipalityId, asset);
-		return created(fromPath("/" + municipalityId + "/assets/{id}").buildAndExpand(result).toUri())
+		final var result = service.createAsset(municipalityId, asset.withStatus(DRAFT));
+		return created(fromPath("/" + municipalityId + "/asset-drafts/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
 
 	@PatchMapping(path = "{id}", consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
-	@Operation(summary = "Update an asset", responses = {
+	@Operation(summary = "Update a draft asset", responses = {
 		@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true),
 		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
-	ResponseEntity<Void> updateAsset(
+	ResponseEntity<Void> updateDraftAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
 
-		if (asset.getStatus() == DRAFT) {
-			throw badRequest("Changing asset status to {0} is not allowed when updating a regular asset", DRAFT);
-		}
-
 		service.updateAsset(municipalityId, id, asset);
-		return noContent().build();
-	}
-
-	@DeleteMapping(path = "{id}", produces = ALL_VALUE)
-	@Operation(summary = "Delete an asset", responses = {
-		@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true),
-		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
-	})
-	ResponseEntity<Void> deleteAsset(
-		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String id) {
-
-		service.deleteAsset(municipalityId, id);
 		return noContent().build();
 	}
 }

@@ -37,6 +37,7 @@ spring:
           schema-generation:
             database:
               action: none
+    open-in-view: false
   security:
     oauth2:
       client:
