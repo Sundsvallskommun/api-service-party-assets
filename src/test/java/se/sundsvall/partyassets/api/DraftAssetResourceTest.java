@@ -7,8 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,9 +57,6 @@ class DraftAssetResourceTest {
 	private static final String MUNICIPALITY_ID = "2281";
 	private static final String PATH = MUNICIPALITY_ID + "/asset-drafts";
 	private static final String INVALID = "#invalid#";
-
-	@Captor
-	private ArgumentCaptor<AssetCreateRequest> createRequestCaptor;
 
 	@MockitoBean
 	private AssetService assetServiceMock;
@@ -178,11 +173,8 @@ class DraftAssetResourceTest {
 			.expectHeader().location("/" + MUNICIPALITY_ID + "/asset-drafts/" + uuid);
 
 		// Assert
-		verify(assetServiceMock).createAsset(eq(MUNICIPALITY_ID), createRequestCaptor.capture());
+		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest);
 		verifyNoMoreInteractions(assetServiceMock);
-
-		var createRequest = createRequestCaptor.getValue();
-		assertThat(createRequest.getStatus()).isEqualTo(Status.DRAFT);
 	}
 
 	@ParameterizedTest
