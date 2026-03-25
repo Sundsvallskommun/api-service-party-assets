@@ -1,0 +1,5 @@
+{
+	"detail": "Changing asset status to DRAFT is not allowed when updating a regular asset",
+	"status": 400,
+	"title": "Bad Request"
+}
