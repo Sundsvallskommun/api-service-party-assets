@@ -1,0 +1,9 @@
+{
+	"assetId": "CON-0000000099",
+	"description": "Bygglov",
+	"partyId": "7ae1ecbf-c24b-48a8-8777-69d7c7a9764d",
+	"type": "PERMIT",
+	"issued": "2023-01-01",
+	"validTo": "2024-12-31",
+	"status": "DRAFT"
+}
