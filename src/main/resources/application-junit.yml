@@ -8,8 +8,6 @@ integration:
     readTimeout: 20
     url: api-party-url
 spring:
-  cache:
-    type: none
   datasource:
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     url: jdbc:tc:mariadb:10.6:///junittest
