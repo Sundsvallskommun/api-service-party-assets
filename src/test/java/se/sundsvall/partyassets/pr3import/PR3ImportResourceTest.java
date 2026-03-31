@@ -1,7 +1,6 @@
 package se.sundsvall.partyassets.pr3import;
 
 import generated.se.sundsvall.messaging.EmailRequest;
-import java.io.IOException;
 import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +10,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -54,17 +55,24 @@ class PR3ImportResourceTest {
 	private WebTestClient webTestClient;
 
 	@Test
-	void handleImport() throws IOException {
+	void handleImport() throws Exception {
 		final var importFile = new ClassPathResource("/test.xlsx");
+		final var fileBytes = importFile.getContentAsByteArray();
+
 		final var email = "someone@something.com";
 		final var importResult = new PR3Importer.Result()
 			.withTotal(12)
 			.withFailed(2)
-			.withFailedExcelData(importFile.getContentAsByteArray());
+			.withFailedExcelData(fileBytes);
 		when(mockImporter.importFromExcel(any(InputStream.class), any(String.class))).thenReturn(importResult);
 
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
-		multipartBodyBuilder.part("file", importFile);
+		multipartBodyBuilder.part("file", new ByteArrayResource(fileBytes) {
+			@Override
+			public String getFilename() {
+				return "test.xlsx";
+			}
+		}).contentType(MediaType.parseMediaType(PR3ImportResource.CONTENT_TYPE_EXCEL));
 		multipartBodyBuilder.part("email", email);
 
 		final var result = webTestClient.post()
@@ -116,18 +124,24 @@ class PR3ImportResourceTest {
 	}
 
 	@Test
-	void handleImportAnge() throws IOException {
+	void handleImportAnge() throws Exception {
 		final var importFile = new ClassPathResource("/test.xlsx");
+		final var fileBytes = importFile.getContentAsByteArray();
 		final var importResult = new PR3Importer.Result()
 			.withTotal(12)
 			.withFailed(2)
-			.withFailedExcelData(importFile.getContentAsByteArray());
+			.withFailedExcelData(fileBytes);
 		final var email = "someone@something.com";
 
 		when(mockImporter.importFromExcel(any(InputStream.class), any(String.class))).thenReturn(importResult);
 
 		final var multipartBodyBuilder = new MultipartBodyBuilder();
-		multipartBodyBuilder.part("file", importFile);
+		multipartBodyBuilder.part("file", new ByteArrayResource(fileBytes) {
+			@Override
+			public String getFilename() {
+				return "test.xlsx";
+			}
+		}).contentType(MediaType.parseMediaType(PR3ImportResource.CONTENT_TYPE_EXCEL));
 		multipartBodyBuilder.part("email", email);
 
 		final var result = webTestClient.post()
