@@ -15,7 +15,9 @@ import se.sundsvall.partyassets.service.mapper.AssetMapper;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
+import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 
@@ -35,7 +37,15 @@ public class AssetService {
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
-		return repository.findAll(createAssetSpecification(municipalityId, request))
+		return repository.findAll(createAssetSpecification(municipalityId, request).and(createAssetSpecificationExcludingDraftAsssets()))
+			.stream()
+			.map(AssetMapper::toAsset)
+			.toList();
+	}
+
+	public List<Asset> getDraftAssets(final String municipalityId, final AssetSearchRequest request) {
+		// Explicitly and always use DRAFT status
+		return repository.findAll(createAssetSpecification(municipalityId, request.withStatus(DRAFT)))
 			.stream()
 			.map(AssetMapper::toAsset)
 			.toList();

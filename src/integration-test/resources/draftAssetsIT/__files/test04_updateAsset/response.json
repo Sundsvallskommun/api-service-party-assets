@@ -1,0 +1,15 @@
+{
+	"id": "abd6596f-45a0-4912-89e4-8cdcea9a043a",
+	"assetId": "PRH-0000000004",
+	"origin": "CASEDATA",
+	"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+	"type": "PERMIT",
+	"issued": "2025-01-01",
+	"validTo": "2025-12-31",
+	"status": "DRAFT",
+	"description": "Parkeringstillstånd",
+	"additionalParameters": {
+		"updated_key": "updated_value"
+	},
+	"jsonParameters": []
+}
