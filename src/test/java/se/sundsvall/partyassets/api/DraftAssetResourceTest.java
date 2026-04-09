@@ -325,7 +325,8 @@ class DraftAssetResourceTest {
 
 		// Arrange
 		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
+		final var assetRequest = TestFactory.getDraftAssetUpdateRequest();
+		assetRequest.setStatusReason("LOST");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
@@ -353,7 +354,7 @@ class DraftAssetResourceTest {
 				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
 				"status" : 400,
 				"violations" : [ {
-					"field" : "assetUpdateRequest",
+					"field" : "draftAssetUpdateRequest",
 					"message" : "'statusReasonUpdated' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
 				} ],
 				"title" : "Constraint Violation"

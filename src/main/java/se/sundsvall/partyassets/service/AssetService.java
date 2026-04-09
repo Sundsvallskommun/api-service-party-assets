@@ -1,14 +1,13 @@
 package se.sundsvall.partyassets.service;
 
 import java.util.List;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.dept44.problem.Problem;
-import se.sundsvall.partyassets.api.model.Asset;
-import se.sundsvall.partyassets.api.model.AssetCreateRequest;
-import se.sundsvall.partyassets.api.model.AssetSearchRequest;
-import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.*;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
@@ -87,13 +86,25 @@ public class AssetService {
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 
+		final var old = getAssetEntity(municipalityId, id);
+
+		repository.save(updateEntity(old, request));
+	}
+
+	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
+
+		final var old = getAssetEntity(municipalityId, id);
+
+		repository.save(updateEntity(old, request));
+	}
+
+	private @NonNull AssetEntity getAssetEntity(String municipalityId, String id) {
 		final var old = repository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle(ASSET_NOT_FOUND_TITLE)
 				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
-
-		repository.save(updateEntity(old, request));
+		return old;
 	}
 }

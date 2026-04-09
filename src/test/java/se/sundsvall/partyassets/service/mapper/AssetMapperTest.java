@@ -78,7 +78,6 @@ class AssetMapperTest {
 		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getStatus()).isEqualTo(request.getStatus());
 		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
-		assertThat(entity.getValidTo()).isEqualTo(request.getValidTo());
 
 		assertThat(entity.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(entity.getDescription()).isEqualTo(original.getDescription());
