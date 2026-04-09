@@ -15,6 +15,7 @@ import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
 
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.dept44.test.AbstractAppTest;
@@ -278,6 +279,29 @@ class AssetsIT extends AbstractAppTest {
 			.withHttpMethod(GET)
 			.withServicePath(location.getPath())
 			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test17_createAssetWithDraftStatus() {
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+
+	}
+
+	@Test
+	void test18_updateAssetWithDraftStatus() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + UUID.randomUUID())
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}

@@ -15,15 +15,20 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity_;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 
 public final class AssetSpecification {
 
 	private AssetSpecification() {}
 
-	public static Specification<AssetEntity> createAssetSpecification(final String municipalityId, final AssetSearchRequest request) {
-		return ((root, query, criteriaBuilder) -> {
+	public static Specification<AssetEntity> createAssetSpecificationExcludingDraftAsssets() {
+		return (root, _, criteriaBuilder) -> criteriaBuilder.notEqual(root.get(AssetEntity_.STATUS), DRAFT);
+	}
 
-			final List<Predicate> predicates = new ArrayList<>();
+	public static Specification<AssetEntity> createAssetSpecification(final String municipalityId, final AssetSearchRequest request) {
+		return (root, _, criteriaBuilder) -> {
+
+			final var predicates = new ArrayList<Predicate>();
 
 			addEqualCriteria(AssetEntity_.MUNICIPALITY_ID, municipalityId, predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
@@ -37,12 +42,12 @@ public final class AssetSpecification {
 			addEqualCriteria(AssetEntity_.DESCRIPTION, request.getDescription(), predicates, criteriaBuilder, root);
 
 			if (isNotEmpty(request.getAdditionalParameters())) {
-				final List<Predicate> parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(AssetEntity_.ADDITIONAL_PARAMETERS));
+				final var parameterPredicates = createParameterPredicates(request, criteriaBuilder, root.joinMap(AssetEntity_.ADDITIONAL_PARAMETERS));
 				predicates.add(criteriaBuilder.or(parameterPredicates.toArray(new Predicate[0])));
 			}
 
-			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-		});
+			return criteriaBuilder.and(predicates);
+		};
 	}
 
 	private static List<Predicate> createParameterPredicates(final AssetSearchRequest request, final CriteriaBuilder criteriaBuilder, final MapJoin<AssetEntity, String, String> join) {
@@ -68,5 +73,4 @@ public final class AssetSpecification {
 				}
 			});
 	}
-
 }

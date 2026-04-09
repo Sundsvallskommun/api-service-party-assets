@@ -9,7 +9,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import se.sundsvall.dept44.problem.ThrowableProblem;
@@ -23,6 +22,7 @@ import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
 import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
 import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
+import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -41,6 +42,15 @@ class AssetServiceTest {
 
 	@Mock
 	private Specification<AssetEntity> specificationMock;
+
+	@Mock
+	private Specification<AssetEntity> specificationExcludingDraftAsssetsMock;
+
+	@Mock
+	private Specification<AssetEntity> combinedSpecificationMock;
+
+	@Captor
+	private ArgumentCaptor<AssetSearchRequest> searchRequestCaptor;
 
 	@Mock
 	private PartyTypeProvider partyTypeProviderMock;
@@ -60,16 +70,42 @@ class AssetServiceTest {
 
 		try (final var _ = mockStatic(AssetSpecification.class)) {
 			when(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request)).thenReturn(specificationMock);
-			when(repositoryMock.findAll(Mockito.<Specification<AssetEntity>>any())).thenReturn(List.of(entity));
+			when(AssetSpecification.createAssetSpecificationExcludingDraftAsssets()).thenReturn(specificationExcludingDraftAsssetsMock);
+			when(specificationMock.and(specificationExcludingDraftAsssetsMock)).thenReturn(combinedSpecificationMock);
+			when(repositoryMock.findAll(combinedSpecificationMock)).thenReturn(List.of(entity));
 
 			final var result = service.getAssets(MUNICIPALITY_ID, request);
 
 			assertThat(result).isNotNull().hasSize(1);
 			assertThat(result.getFirst()).usingRecursiveComparison().ignoringFields("jsonParameters").isEqualTo(entity);
-
 		}
 
-		verify(repositoryMock).findAll(Mockito.<Specification<AssetEntity>>any());
+		verify(repositoryMock).findAll(combinedSpecificationMock);
+	}
+
+	@Test
+	void getDraftAssets() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+		final var request = new AssetSearchRequest();
+
+		try (final var assetSpecificationStaticMock = mockStatic(AssetSpecification.class)) {
+			when(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request)).thenReturn(specificationMock);
+			when(repositoryMock.findAll(specificationMock)).thenReturn(List.of(entity));
+
+			final var result = service.getDraftAssets(MUNICIPALITY_ID, request);
+
+			assertThat(result).isNotNull().hasSize(1);
+			assertThat(result.getFirst()).usingRecursiveComparison().ignoringFields("jsonParameters").isEqualTo(entity);
+
+			assetSpecificationStaticMock.verify(() -> AssetSpecification.createAssetSpecification(eq(MUNICIPALITY_ID), searchRequestCaptor.capture()));
+
+			var searchRequest = searchRequestCaptor.getValue();
+			assertThat(searchRequest.getStatus()).isEqualTo(DRAFT);
+		}
+
+		verify(repositoryMock).findAll(specificationMock);
 	}
 
 	@Test

@@ -1,0 +1,5 @@
+{
+	"detail": "Status ACTIVE is not allowed when creating draft assets",
+	"status": 400,
+	"title": "Bad Request"
+}
