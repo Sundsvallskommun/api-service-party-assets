@@ -22,10 +22,6 @@ resilience4j:
 spring:
   application:
     name: api-partyassets
-  cache:
-    cache-names: statusReasonCache
-    caffeine:
-      spec: maximumSize=20, expireAfterWrite=3600s
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
   flyway:
