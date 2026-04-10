@@ -95,12 +95,11 @@ public class AssetService {
 	}
 
 	private @NonNull AssetEntity getAssetEntity(String municipalityId, String id) {
-		final var old = repository.findByIdAndMunicipalityId(id, municipalityId)
+		return repository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle(ASSET_NOT_FOUND_TITLE)
 				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
-		return old;
 	}
 }
