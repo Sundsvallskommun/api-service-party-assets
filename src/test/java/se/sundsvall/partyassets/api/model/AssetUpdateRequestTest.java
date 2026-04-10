@@ -40,7 +40,6 @@ class AssetUpdateRequestTest {
 		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
-		final var validTo = LocalDate.now();
 
 		final var bean = AssetUpdateRequest.create()
 			.withAdditionalParameters(additionalParameters)
