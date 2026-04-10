@@ -3,10 +3,7 @@ package se.sundsvall.partyassets.service.mapper;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import se.sundsvall.partyassets.api.model.Asset;
-import se.sundsvall.partyassets.api.model.AssetCreateRequest;
-import se.sundsvall.partyassets.api.model.AssetJsonParameter;
-import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.*;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
@@ -60,8 +57,12 @@ public final class AssetMapper {
 		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
-		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+		return entity;
+	}
 
+	public static AssetEntity updateEntity(final AssetEntity entity, final DraftAssetUpdateRequest request) {
+		updateEntity(entity, (AssetUpdateRequest) request);
+		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		return entity;
 	}
 

@@ -12,6 +12,7 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
@@ -97,8 +98,19 @@ public final class TestFactory {
 				.withSchemaId("2281_person_schema_2.0.0")
 				.withValue(OBJECT_MAPPER.createObjectNode().put("newAttribute", "value"))))
 			.withStatus(Status.BLOCKED)
-			.withStatusReason("statusReasonUpdated")
-			.withValidTo(LocalDate.of(2011, 2, 2));
+			.withStatusReason("statusReasonUpdated");
+	}
+
+	public static DraftAssetUpdateRequest getDraftAssetUpdateRequest() {
+		final var request = new DraftAssetUpdateRequest();
+		request.setAdditionalParameters(Map.of("key", "changed_value", "key2", "value2"));
+		request.setJsonParameters(List.of(AssetJsonParameter.create()
+			.withKey("key2")
+			.withSchemaId("2281_person_schema_2.0.0")
+			.withValue(OBJECT_MAPPER.createObjectNode().put("newAttribute", "value"))));
+		request.setStatus(Status.BLOCKED);
+		request.setStatusReason("statusReasonUpdated");
+		return request;
 	}
 
 	public static AssetSearchRequest getAssetSearchRequest() {
