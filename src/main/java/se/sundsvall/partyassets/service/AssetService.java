@@ -70,6 +70,7 @@ public class AssetService {
 		}
 
 		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
+
 	}
 
 	public void deleteAsset(final String municipalityId, final String id) {
@@ -80,22 +81,17 @@ public class AssetService {
 				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build();
 		}
-
 		repository.deleteByIdAndMunicipalityId(id, municipalityId);
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 
-		final var old = getAssetEntity(municipalityId, id);
-
-		repository.save(updateEntity(old, request));
+		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
 
-		final var old = getAssetEntity(municipalityId, id);
-
-		repository.save(updateEntity(old, request));
+		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
 	}
 
 	private @NonNull AssetEntity getAssetEntity(String municipalityId, String id) {
