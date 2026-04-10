@@ -1,14 +1,13 @@
 package se.sundsvall.partyassets.service;
 
 import java.util.List;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.dept44.problem.Problem;
-import se.sundsvall.partyassets.api.model.Asset;
-import se.sundsvall.partyassets.api.model.AssetCreateRequest;
-import se.sundsvall.partyassets.api.model.AssetSearchRequest;
-import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.*;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
@@ -71,6 +70,7 @@ public class AssetService {
 		}
 
 		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
+
 	}
 
 	public void deleteAsset(final String municipalityId, final String id) {
@@ -81,19 +81,25 @@ public class AssetService {
 				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build();
 		}
-
 		repository.deleteByIdAndMunicipalityId(id, municipalityId);
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 
-		final var old = repository.findByIdAndMunicipalityId(id, municipalityId)
+		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
+	}
+
+	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
+
+		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
+	}
+
+	private @NonNull AssetEntity getAssetEntity(String municipalityId, String id) {
+		return repository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle(ASSET_NOT_FOUND_TITLE)
 				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
-
-		repository.save(updateEntity(old, request));
 	}
 }
