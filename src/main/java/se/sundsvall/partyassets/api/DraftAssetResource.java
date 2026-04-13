@@ -23,7 +23,10 @@ import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
-import se.sundsvall.partyassets.api.model.*;
+import se.sundsvall.partyassets.api.model.Asset;
+import se.sundsvall.partyassets.api.model.AssetCreateRequest;
+import se.sundsvall.partyassets.api.model.AssetSearchRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.service.AssetService;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
