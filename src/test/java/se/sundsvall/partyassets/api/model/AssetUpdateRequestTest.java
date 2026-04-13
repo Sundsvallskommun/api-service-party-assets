@@ -1,8 +1,6 @@
 package se.sundsvall.partyassets.api.model;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,27 +34,18 @@ class AssetUpdateRequestTest {
 
 	@Test
 	void testBuilderMethods() {
-		final var additionalParameters = Map.of("key", "value");
-		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var status = Status.ACTIVE;
-		final var statusReason = "statusReason";
 
-		final var bean = AssetUpdateRequest.create()
-			.withAdditionalParameters(additionalParameters)
-			.withJsonParameters(jsonParameters)
-			.withStatus(status)
-			.withStatusReason(statusReason);
+		final var draftAssetUpdateRequest = new AssetUpdateRequest();
+		draftAssetUpdateRequest.setStatus(status);
 
-		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
-		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
-		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
-		assertThat(bean.getStatus()).isEqualTo(status);
-		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
+		assertThat(draftAssetUpdateRequest).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(draftAssetUpdateRequest.getStatus()).isEqualTo(status);
+
 	}
 
 	@Test
 	void testNoDirtOnCreatedBean() {
-		assertThat(AssetUpdateRequest.create()).hasAllNullFieldsOrProperties();
 		assertThat(new AssetUpdateRequest()).hasAllNullFieldsOrProperties();
 	}
 }

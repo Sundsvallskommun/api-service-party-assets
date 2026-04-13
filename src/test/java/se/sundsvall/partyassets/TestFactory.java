@@ -92,13 +92,7 @@ public final class TestFactory {
 
 	public static AssetUpdateRequest getAssetUpdateRequest() {
 		return AssetUpdateRequest.create()
-			.withAdditionalParameters(Map.of("key", "changed_value", "key2", "value2"))
-			.withJsonParameters(List.of(AssetJsonParameter.create()
-				.withKey("key2")
-				.withSchemaId("2281_person_schema_2.0.0")
-				.withValue(OBJECT_MAPPER.createObjectNode().put("newAttribute", "value"))))
-			.withStatus(Status.BLOCKED)
-			.withStatusReason("statusReasonUpdated");
+			.withStatus(Status.BLOCKED);
 	}
 
 	public static DraftAssetUpdateRequest getDraftAssetUpdateRequest() {

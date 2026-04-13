@@ -407,7 +407,7 @@ class AssetResourceTest {
 
 		// Arrange
 		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("LOST");
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.ACTIVE);
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
@@ -429,7 +429,7 @@ class AssetResourceTest {
 	void updateAssetWithDraftStatus() {
 		// Arrange
 		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.DRAFT).withStatusReason(null);
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.DRAFT);
 		final var expectedJsonMessage = """
 			{
 				"detail": "Changing asset status to DRAFT is not allowed when updating a regular asset",
@@ -452,44 +452,11 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void updateAssetFaultyStatusReason() {
-
-		// Arrange
-		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest();
-		final var expectedJsonMessage = """
-			{
-				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
-				"status" : 400,
-				"violations" : [ {
-					"field" : "assetUpdateRequest",
-					"message" : "'statusReasonUpdated' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
-				} ],
-				"title" : "Constraint Violation"
-			}""";
-
-		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
-
-		// Act
-		webTestClient.patch()
-			.uri(PATH + "/{id}", id)
-			.bodyValue(assetRequest)
-			.exchange()
-			.expectStatus()
-			.is4xxClientError()
-			.expectBody()
-			.json(expectedJsonMessage);
-
-		// Assert
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
 	void updateAssetFaultyUUID() {
 
 		// Arrange
 		final var id = "imNotARealUUID";
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.DRAFT);
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
@@ -522,7 +489,7 @@ class AssetResourceTest {
 
 		// Arrange
 		final var uuid = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(null);
 
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
@@ -545,38 +512,6 @@ class AssetResourceTest {
 		assertThat(response.getViolations())
 			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("updateAsset.municipalityId", "not a valid municipality ID"));
-
-		verifyNoInteractions(assetServiceMock);
-	}
-
-	@Test
-	void updateAssetInvalidJsonParameter() {
-
-		// Arrange
-		final var uuid = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
-
-		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
-
-		// Act
-		final var response = webTestClient.patch()
-			.uri(uriBuilder -> uriBuilder.path("/" + MUNICIPALITY_ID + "/assets/" + uuid)
-				.queryParam("partyId", randomUUID())
-				.build())
-			.bodyValue(assetRequest)
-			.exchange()
-			.expectStatus().isBadRequest()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		// Assert
-		assertThat(response).isNotNull();
-		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
-		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
-		assertThat(response.getViolations())
-			.extracting(Violation::field, Violation::message)
-			.containsExactly(tuple("jsonParameters[0]", "Bad Request: some-error"));
 
 		verifyNoInteractions(assetServiceMock);
 	}

@@ -57,16 +57,15 @@ public final class AssetMapper {
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
-		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
-		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
-		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		return entity;
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final DraftAssetUpdateRequest request) {
-		updateEntity(entity, (AssetUpdateRequest) request);
+		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
+		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
 		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		return entity;
 	}
 

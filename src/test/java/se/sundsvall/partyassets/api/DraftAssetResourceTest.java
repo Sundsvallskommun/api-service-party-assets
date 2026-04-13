@@ -348,7 +348,7 @@ class DraftAssetResourceTest {
 	void updateDraftAssetFaultyStatusReason() {
 		// Arrange
 		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest();
+		final var assetRequest = TestFactory.getDraftAssetUpdateRequest();
 		final var expectedJsonMessage = """
 			{
 				"type" : "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
@@ -380,7 +380,7 @@ class DraftAssetResourceTest {
 	void updateDraftAssetFaultyUUID() {
 		// Arrange
 		final var id = "imNotARealUUID";
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason("IRREGULARITY");
+		final var assetRequest = TestFactory.getDraftAssetUpdateRequest().withStatusReason("IRREGULARITY");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
@@ -412,7 +412,7 @@ class DraftAssetResourceTest {
 	void updateDraftAssetInvalidMunicipalityId() {
 		// Arrange
 		final var uuid = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
+		final var assetRequest = TestFactory.getDraftAssetUpdateRequest().withStatusReason(null);
 
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
@@ -443,13 +443,13 @@ class DraftAssetResourceTest {
 	void updateDraftAssetInvalidJsonParameter() {
 		// Arrange
 		final var uuid = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatusReason(null);
+		final var assetRequest = TestFactory.getDraftAssetUpdateRequest().withStatusReason(null);
 
 		doThrow(Problem.valueOf(BAD_REQUEST, "some-error")).when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		final var response = webTestClient.patch()
-			.uri(uriBuilder -> uriBuilder.path("/" + MUNICIPALITY_ID + "/assets/" + uuid)
+			.uri(uriBuilder -> uriBuilder.path("/" + MUNICIPALITY_ID + "/asset-drafts/" + uuid)
 				.queryParam("partyId", randomUUID())
 				.build())
 			.bodyValue(assetRequest)

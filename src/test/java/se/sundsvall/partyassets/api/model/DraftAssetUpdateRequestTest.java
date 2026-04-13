@@ -42,27 +42,24 @@ class DraftAssetUpdateRequestTest {
 		final var statusReason = "statusReason";
 		final var validTo = LocalDate.now();
 
-		final var draftAssetUpdateRequest = new DraftAssetUpdateRequest();
-		draftAssetUpdateRequest.setAdditionalParameters(additionalParameters);
-		draftAssetUpdateRequest.setJsonParameters(jsonParameters);
-		draftAssetUpdateRequest.setStatus(status);
-		draftAssetUpdateRequest.setStatusReason(statusReason);
-		draftAssetUpdateRequest.setValidTo(validTo);
+		final var bean = DraftAssetUpdateRequest.create()
+			.withAdditionalParameters(additionalParameters)
+			.withJsonParameters(jsonParameters)
+			.withStatus(status)
+			.withStatusReason(statusReason)
+			.withValidTo(validTo);
 
-		assertThat(draftAssetUpdateRequest).isNotNull().hasNoNullFieldsOrProperties();
-		assertThat(draftAssetUpdateRequest.getAdditionalParameters()).isEqualTo(additionalParameters);
-		assertThat(draftAssetUpdateRequest.getJsonParameters()).isEqualTo(jsonParameters);
-		assertThat(draftAssetUpdateRequest.getStatus()).isEqualTo(status);
-		assertThat(draftAssetUpdateRequest.getStatusReason()).isEqualTo(statusReason);
-		assertThat(draftAssetUpdateRequest.getValidTo()).isEqualTo(validTo);
-
-		final var beanWithValidTo = new DraftAssetUpdateRequest();
-		beanWithValidTo.withValidTo(validTo);
-		assertThat(beanWithValidTo.getValidTo()).isEqualTo(validTo);
+		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
+		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
+		assertThat(bean.getStatus()).isEqualTo(status);
+		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
+		assertThat(bean.getValidTo()).isEqualTo(validTo);
 	}
 
 	@Test
 	void testNoDirtOnCreatedBean() {
+		assertThat(DraftAssetUpdateRequest.create()).hasAllNullFieldsOrProperties();
 		assertThat(new DraftAssetUpdateRequest()).hasAllNullFieldsOrProperties();
 	}
 }
