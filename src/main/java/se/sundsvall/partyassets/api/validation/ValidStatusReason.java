@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import se.sundsvall.partyassets.api.validation.impl.ValidStatusReasonOnCreateConstraintValidator;
+import se.sundsvall.partyassets.api.validation.impl.ValidStatusReasonOnNonDraftUpdateConstraintValidator;
 import se.sundsvall.partyassets.api.validation.impl.ValidStatusReasonOnUpdateConstraintValidator;
 
 @Documented
@@ -16,7 +17,7 @@ import se.sundsvall.partyassets.api.validation.impl.ValidStatusReasonOnUpdateCon
 })
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {
-	ValidStatusReasonOnCreateConstraintValidator.class, ValidStatusReasonOnUpdateConstraintValidator.class
+	ValidStatusReasonOnCreateConstraintValidator.class, ValidStatusReasonOnUpdateConstraintValidator.class, ValidStatusReasonOnNonDraftUpdateConstraintValidator.class
 })
 public @interface ValidStatusReason {
 	String message() default "one or more of properties in list are not present in entity.";

@@ -35,13 +35,15 @@ class AssetUpdateRequestTest {
 	@Test
 	void testBuilderMethods() {
 		final var status = Status.ACTIVE;
+		final var statusReason = "someReason";
 
-		final var draftAssetUpdateRequest = new AssetUpdateRequest();
-		draftAssetUpdateRequest.setStatus(status);
+		final var assetUpdateRequest = new AssetUpdateRequest();
+		assetUpdateRequest.setStatus(status);
+		assetUpdateRequest.setStatusReason(statusReason);
 
-		assertThat(draftAssetUpdateRequest).isNotNull().hasNoNullFieldsOrProperties();
-		assertThat(draftAssetUpdateRequest.getStatus()).isEqualTo(status);
-
+		assertThat(assetUpdateRequest).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(assetUpdateRequest.getStatus()).isEqualTo(status);
+		assertThat(assetUpdateRequest.getStatusReason()).isEqualTo(statusReason);
 	}
 
 	@Test

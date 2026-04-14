@@ -84,7 +84,7 @@ abstract class ValidStatusReasonConstraintValidator {
 			String.format(ERROR_MESSAGE_TEMPLATE,
 				statusReason,
 				status,
-				statusService.getReasonsForAllStatuses(municipalityId.get()).getOrDefault(status, emptyList()))))
+				Optional.ofNullable(statusService.getReasonsForAllStatuses(municipalityId.get())).orElse(Map.of()).getOrDefault(status, emptyList()))))
 			.addConstraintViolation();
 	}
 

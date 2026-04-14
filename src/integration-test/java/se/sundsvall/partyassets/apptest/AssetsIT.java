@@ -196,10 +196,11 @@ class AssetsIT extends AbstractAppTest {
 	@Test
 	void test11_updateAssetWithValidJsonParameters() {
 		final var id = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
+		final var draftPath = "/" + MUNICIPALITY_ID + "/asset-drafts";
 
 		setupCall()
 			.withHttpMethod(PATCH)
-			.withServicePath(PATH + "/" + id)
+			.withServicePath(draftPath + "/" + id)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
@@ -216,11 +217,11 @@ class AssetsIT extends AbstractAppTest {
 	@Test
 	void test12_updateAssetWithInvalidJsonParameters() {
 		final var id = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
+		final var draftPath = "/" + MUNICIPALITY_ID + "/asset-drafts";
 
-		// Update asset
 		setupCall()
 			.withHttpMethod(PATCH)
-			.withServicePath(PATH + "/" + id)
+			.withServicePath(draftPath + "/" + id)
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)

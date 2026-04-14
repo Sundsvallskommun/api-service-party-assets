@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.0"
 servers:
-  - url: http://localhost:53276
+  - url: http://localhost:61634
     description: Generated server url
 tags:
   - name: Metadata - Statusreasons
@@ -740,10 +740,10 @@ components:
             $ref: "#/components/schemas/Violation"
         title:
           type: string
-        detail:
-          type: string
         causeAsProblem:
           $ref: "#/components/schemas/ThrowableProblem"
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -868,12 +868,6 @@ components:
     JsonNode:
       type: object
       properties:
-        number:
-          type: boolean
-        container:
-          type: boolean
-        floatingPointNumber:
-          type: boolean
         nodeType:
           type: string
           enum:
@@ -890,9 +884,9 @@ components:
           type: boolean
         integralNumber:
           type: boolean
-        valueNode:
-          type: boolean
         missingNode:
+          type: boolean
+        valueNode:
           type: boolean
         pojo:
           type: boolean
@@ -914,6 +908,12 @@ components:
         boolean:
           type: boolean
         binary:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        container:
+          type: boolean
+        number:
           type: boolean
         empty:
           type: boolean
@@ -940,21 +940,15 @@ components:
           description: Status reason
           examples:
             - Status reason
-        additionalParameters:
-          type: object
-          additionalProperties:
-            type: string
-          description: Additional parameters
-          examples:
-            - "{\"foo\":\"bar\"}"
-        jsonParameters:
-          type: array
-          description: JSON parameters
-          items:
-            $ref: "#/components/schemas/AssetJsonParameter"
     DraftAssetUpdateRequest:
       type: object
       properties:
+        validTo:
+          type: string
+          format: date
+          description: Valid to date
+          examples:
+            - 2021-12-31
         status:
           $ref: "#/components/schemas/Status"
           description: Asset status
@@ -977,12 +971,6 @@ components:
           description: JSON parameters
           items:
             $ref: "#/components/schemas/AssetJsonParameter"
-        validTo:
-          type: string
-          format: date
-          description: Valid to date
-          examples:
-            - 2021-12-31
     Asset:
       type: object
       properties:

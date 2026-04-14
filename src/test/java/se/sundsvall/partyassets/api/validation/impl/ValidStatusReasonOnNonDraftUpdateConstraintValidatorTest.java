@@ -15,7 +15,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
-import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.StatusService;
 
@@ -30,7 +30,7 @@ import static org.springframework.web.context.request.RequestAttributes.SCOPE_RE
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
 @ExtendWith(MockitoExtension.class)
-class ValidStatusReasonOnUpdateConstraintValidatorTest {
+class ValidStatusReasonOnNonDraftUpdateConstraintValidatorTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
 
@@ -54,7 +54,7 @@ class ValidStatusReasonOnUpdateConstraintValidatorTest {
 	private RequestAttributes requestAttributesMock;
 
 	@InjectMocks
-	private ValidStatusReasonOnUpdateConstraintValidator validator;
+	private ValidStatusReasonOnNonDraftUpdateConstraintValidator validator;
 
 	@ParameterizedTest
 	@MethodSource("validReasonStatusesProvider")
@@ -67,10 +67,9 @@ class ValidStatusReasonOnUpdateConstraintValidatorTest {
 			lenient().when(requestAttributesMock.getAttribute(URI_TEMPLATE_VARIABLES_ATTRIBUTE, SCOPE_REQUEST)).thenReturn(attributes);
 			lenient().when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 
-			assertThat(validator.isValid(AssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isTrue();
+			assertThat(validator.isValid(DraftAssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isTrue();
 
 			verifyNoInteractions(constraintValidatorContextMock);
-
 		}
 	}
 
@@ -86,12 +85,11 @@ class ValidStatusReasonOnUpdateConstraintValidatorTest {
 			when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 			when(constraintValidatorContextMock.buildConstraintViolationWithTemplate(any())).thenReturn(constraintViolationBuilderMock);
 
-			assertThat(validator.isValid(AssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isFalse();
+			assertThat(validator.isValid(DraftAssetUpdateRequest.create().withStatus(status).withStatusReason(statusReason), constraintValidatorContextMock)).isFalse();
 
 			verify(constraintValidatorContextMock).disableDefaultConstraintViolation();
 			verify(constraintValidatorContextMock).buildConstraintViolationWithTemplate(ERROR_MESSAGE.formatted(statusReason, status, validReasons));
 			verify(constraintViolationBuilderMock).addConstraintViolation();
-
 		}
 	}
 

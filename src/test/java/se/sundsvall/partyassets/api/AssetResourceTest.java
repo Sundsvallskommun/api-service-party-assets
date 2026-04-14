@@ -407,7 +407,7 @@ class AssetResourceTest {
 
 		// Arrange
 		final var id = randomUUID().toString();
-		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.ACTIVE);
+		final var assetRequest = TestFactory.getAssetUpdateRequest().withStatus(Status.ACTIVE).withStatusReason("IRREGULARITY");
 
 		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));

@@ -58,6 +58,7 @@ public final class AssetMapper {
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
+		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		return entity;
 	}
 

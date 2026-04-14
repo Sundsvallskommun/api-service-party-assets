@@ -8,8 +8,6 @@
 	"validTo": "2024-01-31",
 	"status": "ACTIVE",
 	"description": "Bygglov",
-	"additionalParameters": {
-		"updated_key": "updated_value"
-	},
+	"additionalParameters": {},
 	"jsonParameters": []
 }
