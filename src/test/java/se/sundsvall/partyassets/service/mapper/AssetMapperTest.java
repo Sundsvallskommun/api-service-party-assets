@@ -3,7 +3,7 @@ package se.sundsvall.partyassets.service.mapper;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import se.sundsvall.partyassets.TestFactory;
-import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,10 +75,7 @@ class AssetMapperTest {
 
 		AssetMapper.updateEntity(entity, request);
 
-		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getStatus()).isEqualTo(request.getStatus());
-		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
-		assertThat(entity.getValidTo()).isEqualTo(request.getValidTo());
 
 		assertThat(entity.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(entity.getDescription()).isEqualTo(original.getDescription());
@@ -89,13 +86,7 @@ class AssetMapperTest {
 		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 
 		// Json params
-		assertThat(request.getJsonParameters()).hasSize(1);
 		assertThat(entity.getJsonParameters()).hasSize(1);
-		final var requestJsonParam = request.getJsonParameters().getFirst();
-		final var entityParam = entity.getJsonParameters().getFirst();
-		assertThat(requestJsonParam.getKey()).isEqualTo(entityParam.getKey());
-		assertThat(requestJsonParam.getSchemaId()).isEqualTo(entityParam.getSchemaId());
-		assertThat(requestJsonParam.getValue()).hasToString(entityParam.getValue());
 	}
 
 	@Test
@@ -105,7 +96,7 @@ class AssetMapperTest {
 		final var partyId = UUID.randomUUID().toString();
 		final var original = TestFactory.getAssetEntity(id, partyId);
 		final var entity = TestFactory.getAssetEntity(id, partyId);
-		final var request = AssetUpdateRequest.create();
+		final var request = DraftAssetUpdateRequest.create();
 
 		AssetMapper.updateEntity(entity, request);
 

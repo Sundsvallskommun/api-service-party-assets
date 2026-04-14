@@ -26,7 +26,7 @@ import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
-import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.service.AssetService;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -94,7 +94,7 @@ class DraftAssetResource {
 	})
 	ResponseEntity<Void> updateDraftAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String id, @Valid @RequestBody final AssetUpdateRequest asset) {
+		@PathVariable @ValidUuid final String id, @Valid @RequestBody final DraftAssetUpdateRequest asset) {
 
 		service.updateAsset(municipalityId, id, asset);
 		return noContent().build();

@@ -7,6 +7,7 @@ import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
@@ -56,12 +57,16 @@ public final class AssetMapper {
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
-		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
-		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
-		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+		return entity;
+	}
 
+	public static AssetEntity updateEntity(final AssetEntity entity, final DraftAssetUpdateRequest request) {
+		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
+		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
+		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		return entity;
 	}
 

@@ -1,46 +1,19 @@
 package se.sundsvall.partyassets.api.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import se.sundsvall.partyassets.api.validation.ValidJsonParameter;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 
 @ValidStatusReason
 public class AssetUpdateRequest {
-
-	@Schema(description = "Valid to date", examples = "2021-12-31")
-	private LocalDate validTo;
-
 	@Schema(description = "Asset status", examples = "ACTIVE")
 	private Status status;
 
 	@Schema(description = "Status reason", examples = "Status reason")
 	private String statusReason;
 
-	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
-	private Map<String, String> additionalParameters;
-
-	@Schema(description = "JSON parameters")
-	private List<@ValidJsonParameter AssetJsonParameter> jsonParameters;
-
 	public static AssetUpdateRequest create() {
 		return new AssetUpdateRequest();
-	}
-
-	public LocalDate getValidTo() {
-		return validTo;
-	}
-
-	public void setValidTo(LocalDate validTo) {
-		this.validTo = validTo;
-	}
-
-	public AssetUpdateRequest withValidTo(LocalDate validTo) {
-		this.validTo = validTo;
-		return this;
 	}
 
 	public Status getStatus() {
@@ -69,35 +42,9 @@ public class AssetUpdateRequest {
 		return this;
 	}
 
-	public Map<String, String> getAdditionalParameters() {
-		return additionalParameters;
-	}
-
-	public void setAdditionalParameters(Map<String, String> additionalParameters) {
-		this.additionalParameters = additionalParameters;
-	}
-
-	public AssetUpdateRequest withAdditionalParameters(Map<String, String> additionalParameters) {
-		this.additionalParameters = additionalParameters;
-		return this;
-	}
-
-	public List<AssetJsonParameter> getJsonParameters() {
-		return jsonParameters;
-	}
-
-	public void setJsonParameters(List<AssetJsonParameter> jsonParameters) {
-		this.jsonParameters = jsonParameters;
-	}
-
-	public AssetUpdateRequest withJsonParameters(List<AssetJsonParameter> jsonParameters) {
-		this.jsonParameters = jsonParameters;
-		return this;
-	}
-
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, jsonParameters, status, statusReason, validTo);
+		return Objects.hash(status, statusReason);
 	}
 
 	@Override
@@ -112,12 +59,11 @@ public class AssetUpdateRequest {
 			return false;
 		}
 		AssetUpdateRequest other = (AssetUpdateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
-			other.statusReason) && Objects.equals(validTo, other.validTo);
+		return status == other.status && Objects.equals(statusReason, other.statusReason);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetUpdateRequest [validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
+		return "AssetUpdateRequest [status=" + status + ", statusReason=" + statusReason + "]";
 	}
 }

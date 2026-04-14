@@ -1,6 +1,8 @@
 package se.sundsvall.partyassets.api.model;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -15,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 
-class AssetUpdateRequestTest {
+class DraftAssetUpdateRequestTest {
 
 	@BeforeAll
 	static void setup() {
@@ -24,7 +26,7 @@ class AssetUpdateRequestTest {
 
 	@Test
 	void testBean() {
-		assertThat(AssetUpdateRequest.class, allOf(
+		assertThat(DraftAssetUpdateRequest.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
 			hasValidBeanHashCode(),
@@ -34,20 +36,30 @@ class AssetUpdateRequestTest {
 
 	@Test
 	void testBuilderMethods() {
+		final var additionalParameters = Map.of("key", "value");
+		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var status = Status.ACTIVE;
-		final var statusReason = "someReason";
+		final var statusReason = "statusReason";
+		final var validTo = LocalDate.now();
 
-		final var assetUpdateRequest = new AssetUpdateRequest();
-		assetUpdateRequest.setStatus(status);
-		assetUpdateRequest.setStatusReason(statusReason);
+		final var bean = DraftAssetUpdateRequest.create()
+			.withAdditionalParameters(additionalParameters)
+			.withJsonParameters(jsonParameters)
+			.withStatus(status)
+			.withStatusReason(statusReason)
+			.withValidTo(validTo);
 
-		assertThat(assetUpdateRequest).isNotNull().hasNoNullFieldsOrProperties();
-		assertThat(assetUpdateRequest.getStatus()).isEqualTo(status);
-		assertThat(assetUpdateRequest.getStatusReason()).isEqualTo(statusReason);
+		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
+		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
+		assertThat(bean.getStatus()).isEqualTo(status);
+		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
+		assertThat(bean.getValidTo()).isEqualTo(validTo);
 	}
 
 	@Test
 	void testNoDirtOnCreatedBean() {
-		assertThat(new AssetUpdateRequest()).hasAllNullFieldsOrProperties();
+		assertThat(DraftAssetUpdateRequest.create()).hasAllNullFieldsOrProperties();
+		assertThat(new DraftAssetUpdateRequest()).hasAllNullFieldsOrProperties();
 	}
 }
