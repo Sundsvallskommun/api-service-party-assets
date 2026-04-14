@@ -15,6 +15,7 @@ import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
@@ -94,6 +95,38 @@ class DraftAssetsIT extends AbstractAppTest {
 		setupCall()
 			.withHttpMethod(GET)
 			.withServicePath(PATH.replace("asset-drafts", "assets") + "/" + id)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test05_updateDraftAssetWithInvalidStatusReason() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + "abd6596f-45a0-4912-89e4-8cdcea9a043a")
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test06_updateDraftAssetNotFound() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + "00000000-0000-0000-0000-000000000000")
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(NOT_FOUND)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test07_getDraftAssetsEmpty() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "?partyId=c5d21b57-c785-4d3c-8361-940cae999ff7")
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();

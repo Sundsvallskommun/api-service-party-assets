@@ -1,0 +1,11 @@
+{
+	"violations": [
+		{
+			"field": "draftAssetUpdateRequest",
+			"message": "'NON_VALID_REASON' is not valid reason for status BLOCKED. Valid reasons are [IRREGULARITY, LOST]."
+		}
+	],
+	"type": "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
+	"title": "Constraint Violation",
+	"status": 400
+}
