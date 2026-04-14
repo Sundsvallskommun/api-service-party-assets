@@ -6,9 +6,9 @@ import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 import se.sundsvall.partyassets.service.StatusService;
 
-public class ValidStatusReasonOnNonDraftUpdateConstraintValidator extends ValidStatusReasonConstraintValidator implements ConstraintValidator<ValidStatusReason, DraftAssetUpdateRequest> {
+public class ValidStatusReasonDraftUpdateConstraintValidator extends ValidStatusReasonConstraintValidator implements ConstraintValidator<ValidStatusReason, DraftAssetUpdateRequest> {
 
-	public ValidStatusReasonOnNonDraftUpdateConstraintValidator(StatusService statusService) {
+	public ValidStatusReasonDraftUpdateConstraintValidator(StatusService statusService) {
 		super(statusService);
 	}
 

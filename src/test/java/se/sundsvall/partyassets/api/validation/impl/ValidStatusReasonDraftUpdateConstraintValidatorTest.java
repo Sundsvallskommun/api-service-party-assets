@@ -30,7 +30,7 @@ import static org.springframework.web.context.request.RequestAttributes.SCOPE_RE
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 
 @ExtendWith(MockitoExtension.class)
-class ValidStatusReasonOnNonDraftUpdateConstraintValidatorTest {
+class ValidStatusReasonDraftUpdateConstraintValidatorTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
 
@@ -54,7 +54,7 @@ class ValidStatusReasonOnNonDraftUpdateConstraintValidatorTest {
 	private RequestAttributes requestAttributesMock;
 
 	@InjectMocks
-	private ValidStatusReasonOnNonDraftUpdateConstraintValidator validator;
+	private ValidStatusReasonDraftUpdateConstraintValidator validator;
 
 	@ParameterizedTest
 	@MethodSource("validReasonStatusesProvider")
