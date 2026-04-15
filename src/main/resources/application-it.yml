@@ -3,6 +3,8 @@ integration:
     url: http://localhost:${wiremock.server.port}/api-json-schema
   party:
     url: http://localhost:${wiremock.server.port}/api-party
+  relation:
+    url: http://localhost:${wiremock.server.port}/api-relation
 spring:
   datasource:
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
@@ -24,6 +26,8 @@ spring:
             token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
           party:
             token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
+          relation:
+            token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
           pr3import-messaging:
             token-uri: http://localhost:${wiremock.server.port}/api-gateway/token
         registration:
@@ -31,6 +35,9 @@ spring:
             client-id: the-client-id
             client-secret: the-client-secret
           party:
+            client-id: the-client-id
+            client-secret: the-client-secret
+          relation:
             client-id: the-client-id
             client-secret: the-client-secret
           pr3import-messaging:
