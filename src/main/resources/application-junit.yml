@@ -7,6 +7,10 @@ integration:
     connectTimeout: 10
     readTimeout: 20
     url: api-party-url
+  relation:
+    connectTimeout: 10
+    readTimeout: 20
+    url: api-relation-url
 spring:
   datasource:
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
@@ -36,6 +40,8 @@ spring:
             token-uri: api-gateway-url
           party:
             token-uri: api-gateway-url
+          relation:
+            token-uri: api-gateway-url
           pr3import-messaging:
             token-uri: api-gateway-url
         registration:
@@ -43,6 +49,9 @@ spring:
             client-id: client-id
             client-secret: client-secret
           party:
+            client-id: client-id
+            client-secret: client-secret
+          relation:
             client-id: client-id
             client-secret: client-secret
           pr3import-messaging:

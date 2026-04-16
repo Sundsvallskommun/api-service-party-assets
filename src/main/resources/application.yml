@@ -5,6 +5,9 @@ integration:
   party:
     connectTimeout: 5
     readTimeout: 30
+  relation:
+     connectTimeout: 5
+     readTimeout: 30
 logging:
   level:
     root: 'INFO'
@@ -44,6 +47,9 @@ spring:
           party:
             authorization-grant-type: client_credentials
             provider: party
+          relation:
+            authorization-grant-type: client_credentials
+            provider: relation
           pr3import-messaging:
             authorization-grant-type: client_credentials
             provider: pr3import-messaging
