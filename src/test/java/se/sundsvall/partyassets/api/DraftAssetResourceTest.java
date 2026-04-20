@@ -160,7 +160,7 @@ class DraftAssetResourceTest {
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatus(Status.DRAFT).withStatusReason(null);
 
-		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest)).thenReturn(uuid);
+		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest, null)).thenReturn(uuid);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
@@ -173,7 +173,7 @@ class DraftAssetResourceTest {
 			.expectHeader().location("/" + MUNICIPALITY_ID + "/asset-drafts/" + uuid);
 
 		// Assert
-		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest);
+		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest, null);
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 

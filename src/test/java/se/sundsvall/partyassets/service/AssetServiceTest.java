@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.service;
 
+import generated.se.sundsvall.relation.Relation;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
+import se.sundsvall.partyassets.integration.relation.RelationClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -26,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
 import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
@@ -57,6 +60,12 @@ class AssetServiceTest {
 
 	@Captor
 	private ArgumentCaptor<AssetEntity> entityCaptor;
+
+	@Mock
+	private RelationClient relationClientMock;
+
+	@Captor
+	private ArgumentCaptor<Relation> relationCaptor;
 
 	@InjectMocks
 	private AssetService service;
@@ -147,7 +156,7 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest, null);
 
 		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
@@ -155,6 +164,39 @@ class AssetServiceTest {
 
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+	}
+
+	@Test
+	void createAssetWithReferredFrom() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+		final var assetCreateRequest = getAssetCreateRequest(partyId);
+		final var relation = "|1234;case;service;MY_NAMESPACE|";
+
+		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
+		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
+
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest, relation);
+
+		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
+		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
+		verify(repositoryMock).save(entityCaptor.capture());
+		verify(relationClientMock).createRelation(eq(MUNICIPALITY_ID), relationCaptor.capture());
+
+		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
+		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
+		assertThat(relationCaptor.getValue()).isNotNull();
+		assertThat(relationCaptor.getValue().getType()).isEqualTo("LINK");
+		assertThat(relationCaptor.getValue().getSource().getResourceId()).isEqualTo("1234");
+		assertThat(relationCaptor.getValue().getSource().getType()).isEqualTo("case");
+		assertThat(relationCaptor.getValue().getSource().getService()).isEqualTo("service");
+		assertThat(relationCaptor.getValue().getSource().getNamespace()).isEqualTo("MY_NAMESPACE");
+		assertThat(relationCaptor.getValue().getTarget().getResourceId()).isEqualTo(String.valueOf(id));
+		assertThat(relationCaptor.getValue().getTarget().getType()).isEqualTo("asset");
+		assertThat(relationCaptor.getValue().getTarget().getService()).isEqualTo("partyassets");
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
 	}
 
 	@Test
@@ -167,7 +209,7 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.ENTERPRISE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest, null);
 
 		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
@@ -175,6 +217,7 @@ class AssetServiceTest {
 
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.ENTERPRISE);
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
 	}
 
 	@Test
@@ -185,12 +228,13 @@ class AssetServiceTest {
 		when(repositoryMock.existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID)).thenReturn(true);
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAsset(MUNICIPALITY_ID, assetCreateRequest))
+			.isThrownBy(() -> service.createAsset(MUNICIPALITY_ID, assetCreateRequest, null))
 			.withMessage("Asset already exists: Asset with assetId assetId already exists");
 
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(partyTypeProviderMock, never()).calculatePartyType(any(), any());
 		verify(repositoryMock, never()).save(any(AssetEntity.class));
+		verify(relationClientMock, never()).createRelation(any(), any());
 	}
 
 	@Test
@@ -203,11 +247,12 @@ class AssetServiceTest {
 		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest);
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest, null);
 
 		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
 		verify(repositoryMock, never()).existsByAssetIdAndMunicipalityId(any(), any());
 		verify(repositoryMock).save(any(AssetEntity.class));
+		verify(relationClientMock, never()).createRelation(any(), any());
 
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
 	}

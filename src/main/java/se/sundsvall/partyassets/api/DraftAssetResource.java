@@ -81,7 +81,7 @@ class DraftAssetResource {
 			throw badRequest("Status {0} is not allowed when creating draft assets", asset.getStatus());
 		}
 
-		final var result = service.createAsset(municipalityId, asset);
+		final var result = service.createAsset(municipalityId, asset, null);
 		return created(fromPath("/" + municipalityId + "/asset-drafts/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();

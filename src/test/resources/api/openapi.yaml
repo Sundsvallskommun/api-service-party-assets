@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.0"
 servers:
-  - url: http://localhost:61634
+  - url: http://localhost:61561
     description: Generated server url
 tags:
   - name: Metadata - Statusreasons
@@ -271,6 +271,13 @@ paths:
           schema:
             type: string
           example: 2281
+        - name: relation
+          in: query
+          description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
+          required: false
+          schema:
+            type: string
+          example: LINK|1234;case;service;MY_NAMESPACE|
       requestBody:
         content:
           application/json:
@@ -712,16 +719,16 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
+        title:
+          type: string
+        detail:
+          type: string
         status:
           type: integer
           format: int32
@@ -740,13 +747,13 @@ components:
             $ref: "#/components/schemas/Violation"
         title:
           type: string
-        causeAsProblem:
-          $ref: "#/components/schemas/ThrowableProblem"
-        detail:
-          type: string
         instance:
           type: string
           format: uri
+        detail:
+          type: string
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
     ThrowableProblem:
       type: object
       properties:
@@ -868,6 +875,41 @@ components:
     JsonNode:
       type: object
       properties:
+        empty:
+          type: boolean
+        array:
+          type: boolean
+        "null":
+          type: boolean
+        object:
+          type: boolean
+        float:
+          type: boolean
+        container:
+          type: boolean
+        binary:
+          type: boolean
+        pojo:
+          type: boolean
+        int:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
+        boolean:
+          type: boolean
+        long:
+          type: boolean
+        double:
+          type: boolean
+        short:
+          type: boolean
+        string:
+          type: boolean
+        valueNode:
+          type: boolean
+        bigDecimal:
+          type: boolean
         nodeType:
           type: string
           enum:
@@ -880,50 +922,15 @@ components:
             - OBJECT
             - POJO
             - STRING
-        string:
-          type: boolean
-        integralNumber:
-          type: boolean
         missingNode:
-          type: boolean
-        valueNode:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
-        double:
-          type: boolean
-        bigDecimal:
-          type: boolean
-        bigInteger:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        boolean:
-          type: boolean
-        binary:
           type: boolean
         floatingPointNumber:
           type: boolean
-        container:
+        bigInteger:
+          type: boolean
+        integralNumber:
           type: boolean
         number:
-          type: boolean
-        empty:
-          type: boolean
-        array:
-          type: boolean
-        "null":
-          type: boolean
-        object:
-          type: boolean
-        float:
           type: boolean
         embeddedValue:
           type: boolean

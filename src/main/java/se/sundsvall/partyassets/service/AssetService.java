@@ -5,10 +5,12 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.support.Relation;
 import se.sundsvall.partyassets.api.model.*;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
+import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -19,6 +21,7 @@ import static se.sundsvall.partyassets.integration.db.specification.AssetSpecifi
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
+import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
 
 @Service
 @Transactional
@@ -26,13 +29,16 @@ public class AssetService {
 
 	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
 	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
+	private static final String RELATION_TYPE = "LINK";
 
 	private final AssetRepository repository;
 	private final PartyTypeProvider partyTypeProvider;
+	private final RelationClient relationClient;
 
-	public AssetService(final AssetRepository repository, final PartyTypeProvider partyTypeProvider) {
+	public AssetService(final AssetRepository repository, final PartyTypeProvider partyTypeProvider, final RelationClient relationClient) {
 		this.repository = repository;
 		this.partyTypeProvider = partyTypeProvider;
+		this.relationClient = relationClient;
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
@@ -60,7 +66,7 @@ public class AssetService {
 				.build());
 	}
 
-	public String createAsset(final String municipalityId, final AssetCreateRequest request) {
+	public String createAsset(final String municipalityId, final AssetCreateRequest request, final String relation) {
 		if (isNotBlank(request.getAssetId()) && repository.existsByAssetIdAndMunicipalityId(request.getAssetId(), municipalityId)) {
 			throw Problem.builder()
 				.withStatus(CONFLICT)
@@ -69,7 +75,12 @@ public class AssetService {
 				.build();
 		}
 
-		return repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
+		final var createdAssetId = repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
+
+		if (isNotBlank(relation)) {
+			createRelation(municipalityId, relation, createdAssetId);
+		}
+		return createdAssetId;
 	}
 
 	public void deleteAsset(final String municipalityId, final String id) {
@@ -99,5 +110,13 @@ public class AssetService {
 				.withTitle(ASSET_NOT_FOUND_TITLE)
 				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 				.build());
+	}
+
+	private void createRelation(String municipalityId, String relationSource, String assetId) {
+		final var relation = toRelation(RELATION_TYPE, Relation.parseRelation(relationSource), assetId);
+
+		if (relation != null) {
+			relationClient.createRelation(municipalityId, relation);
+		}
 	}
 }
