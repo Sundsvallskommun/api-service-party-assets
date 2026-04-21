@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.0"
 servers:
-  - url: http://localhost:61634
+  - url: http://localhost:61538
     description: Generated server url
 tags:
   - name: Metadata - Statusreasons
@@ -271,6 +271,13 @@ paths:
           schema:
             type: string
           example: 2281
+        - name: sourceReference
+          in: query
+          description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
+          required: false
+          schema:
+            type: string
+          example: LINK|1234;case;service;MY_NAMESPACE|
       requestBody:
         content:
           application/json:
@@ -432,6 +439,13 @@ paths:
           schema:
             type: string
           example: 2281
+        - name: sourceReference
+          in: query
+          description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
+          required: false
+          schema:
+            type: string
+          example: LINK|1234;case;service;MY_NAMESPACE|
       requestBody:
         content:
           application/json:
@@ -712,16 +726,16 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
+        title:
+          type: string
+        detail:
+          type: string
         status:
           type: integer
           format: int32
@@ -740,13 +754,13 @@ components:
             $ref: "#/components/schemas/Violation"
         title:
           type: string
-        causeAsProblem:
-          $ref: "#/components/schemas/ThrowableProblem"
-        detail:
-          type: string
         instance:
           type: string
           format: uri
+        detail:
+          type: string
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
     ThrowableProblem:
       type: object
       properties:
@@ -868,6 +882,51 @@ components:
     JsonNode:
       type: object
       properties:
+        empty:
+          type: boolean
+        array:
+          type: boolean
+        "null":
+          type: boolean
+        object:
+          type: boolean
+        float:
+          type: boolean
+        container:
+          type: boolean
+        number:
+          type: boolean
+        boolean:
+          type: boolean
+        binary:
+          type: boolean
+        short:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
+        int:
+          type: boolean
+        long:
+          type: boolean
+        string:
+          type: boolean
+        pojo:
+          type: boolean
+        double:
+          type: boolean
+        integralNumber:
+          type: boolean
+        valueNode:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        bigDecimal:
+          type: boolean
+        bigInteger:
+          type: boolean
+        missingNode:
+          type: boolean
         nodeType:
           type: string
           enum:
@@ -880,51 +939,6 @@ components:
             - OBJECT
             - POJO
             - STRING
-        string:
-          type: boolean
-        integralNumber:
-          type: boolean
-        missingNode:
-          type: boolean
-        valueNode:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
-        double:
-          type: boolean
-        bigDecimal:
-          type: boolean
-        bigInteger:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        boolean:
-          type: boolean
-        binary:
-          type: boolean
-        floatingPointNumber:
-          type: boolean
-        container:
-          type: boolean
-        number:
-          type: boolean
-        empty:
-          type: boolean
-        array:
-          type: boolean
-        "null":
-          type: boolean
-        object:
-          type: boolean
-        float:
-          type: boolean
         embeddedValue:
           type: boolean
     AssetUpdateRequest:

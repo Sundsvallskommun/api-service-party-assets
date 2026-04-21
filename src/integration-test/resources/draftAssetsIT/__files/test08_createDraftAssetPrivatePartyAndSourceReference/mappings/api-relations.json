@@ -1,0 +1,30 @@
+{
+	"request": {
+		"method": "POST",
+		"urlPathPattern": "/api-relation/2281/relations",
+		"bodyPatterns": [
+			{
+				"equalToJson": {
+					"type": "LINK",
+					"source": {
+						"resourceId": "1234",
+						"type": "case",
+						"service": "service",
+						"namespace": "MY_NAMESPACE"
+					},
+					"target": {
+						"resourceId": "${json-unit.regex}[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+						"type": "asset",
+						"service": "partyassets"
+					}
+				}
+			}
+		]
+	},
+	"response": {
+		"status": 201,
+		"headers": {
+			"Location": "/api-relation/2281/relations/RELATION-ID-123"
+		}
+	}
+}
