@@ -177,6 +177,32 @@ class DraftAssetResourceTest {
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 
+	@Test
+	void createDraftAssetWithSourceReference() {
+		// Arrange
+		final var uuid = randomUUID().toString();
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatus(Status.DRAFT).withStatusReason(null);
+		final var sourceReference = "LINK|1234;case;service;MY_NAMESPACE|";
+
+		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest, sourceReference)).thenReturn(uuid);
+		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
+
+		// Act
+		webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.path(PATH)
+				.queryParam("sourceReference", sourceReference)
+				.build())
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus()
+			.isCreated()
+			.expectHeader().location("/" + MUNICIPALITY_ID + "/asset-drafts/" + uuid);
+
+		// Assert
+		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest, sourceReference);
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
 	@ParameterizedTest
 	@EnumSource(value = Status.class, names = "DRAFT", mode = EnumSource.Mode.EXCLUDE)
 	void createAssetWithOtherThanDraftStatus(final Status status) {

@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.service;
 
 import java.util.List;
+import java.util.Objects;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
@@ -29,6 +31,8 @@ public class AssetService {
 
 	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
 	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
+	private static final String INVALID_SOURCE_REFERENCE_TITLE = "Invalid source reference";
+	private static final String INVALID_SOURCE_REFERENCE_DETAIL = "Provided source reference '%s' is invalid. Expected format: '|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'";
 	private static final String RELATION_TYPE = "LINK";
 
 	private final AssetRepository repository;
@@ -66,7 +70,7 @@ public class AssetService {
 				.build());
 	}
 
-	public String createAsset(final String municipalityId, final AssetCreateRequest request, final String relation) {
+	public String createAsset(final String municipalityId, final AssetCreateRequest request, final String sourceReference) {
 		if (isNotBlank(request.getAssetId()) && repository.existsByAssetIdAndMunicipalityId(request.getAssetId(), municipalityId)) {
 			throw Problem.builder()
 				.withStatus(CONFLICT)
@@ -77,8 +81,8 @@ public class AssetService {
 
 		final var createdAssetId = repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
 
-		if (isNotBlank(relation)) {
-			createRelation(municipalityId, relation, createdAssetId);
+		if (isNotBlank(sourceReference)) {
+			createRelation(municipalityId, sourceReference, createdAssetId);
 		}
 		return createdAssetId;
 	}
@@ -112,11 +116,16 @@ public class AssetService {
 				.build());
 	}
 
-	private void createRelation(String municipalityId, String relationSource, String assetId) {
-		final var relation = toRelation(RELATION_TYPE, Relation.parseRelation(relationSource), assetId);
+	private void createRelation(String municipalityId, String sourceReference, String assetId) {
+		final var relation = toRelation(RELATION_TYPE, Relation.parseRelation(sourceReference), assetId);
 
-		if (relation != null) {
-			relationClient.createRelation(municipalityId, relation);
+		if (Objects.isNull(relation)) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle(INVALID_SOURCE_REFERENCE_TITLE)
+				.withDetail(INVALID_SOURCE_REFERENCE_DETAIL.formatted(sourceReference))
+				.build();
 		}
+		relationClient.createRelation(municipalityId, relation);
 	}
 }

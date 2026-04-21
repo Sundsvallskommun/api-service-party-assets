@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import se.sundsvall.dept44.common.validators.annotation.ValidMunicipalityId;
 import se.sundsvall.dept44.common.validators.annotation.ValidUuid;
@@ -74,6 +75,9 @@ class DraftAssetResource {
 	})
 	ResponseEntity<Void> createDraftAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@Parameter(name = "sourceReference",
+			description = "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'",
+			example = "LINK|1234;case;service;MY_NAMESPACE|") @RequestParam(required = false) final String sourceReference,
 		@Valid @RequestBody final AssetCreateRequest asset) {
 
 		// Make sure that the asset status isn't set to DRAFT
@@ -81,7 +85,7 @@ class DraftAssetResource {
 			throw badRequest("Status {0} is not allowed when creating draft assets", asset.getStatus());
 		}
 
-		final var result = service.createAsset(municipalityId, asset, null);
+		final var result = service.createAsset(municipalityId, asset, sourceReference);
 		return created(fromPath("/" + municipalityId + "/asset-drafts/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();

@@ -88,16 +88,16 @@ class AssetResource {
 	})
 	ResponseEntity<Void> createAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@Parameter(name = "relation",
+		@Parameter(name = "sourceReference",
 			description = "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'",
-			example = "LINK|1234;case;service;MY_NAMESPACE|") @RequestParam(required = false) final String relation,
+			example = "LINK|1234;case;service;MY_NAMESPACE|") @RequestParam(required = false) final String sourceReference,
 		@Valid @RequestBody final AssetCreateRequest asset) {
 
 		if (asset.getStatus() == DRAFT) {
 			throw badRequest("{0} status is not allowed when creating a regular asset", DRAFT);
 		}
 
-		final var result = service.createAsset(municipalityId, asset, relation);
+		final var result = service.createAsset(municipalityId, asset, sourceReference);
 		return created(fromPath("/" + municipalityId + "/assets/{id}").buildAndExpand(result).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();

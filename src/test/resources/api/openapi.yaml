@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.0"
 servers:
-  - url: http://localhost:61561
+  - url: http://localhost:61538
     description: Generated server url
 tags:
   - name: Metadata - Statusreasons
@@ -271,7 +271,7 @@ paths:
           schema:
             type: string
           example: 2281
-        - name: relation
+        - name: sourceReference
           in: query
           description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
           required: false
@@ -439,6 +439,13 @@ paths:
           schema:
             type: string
           example: 2281
+        - name: sourceReference
+          in: query
+          description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
+          required: false
+          schema:
+            type: string
+          example: LINK|1234;case;service;MY_NAMESPACE|
       requestBody:
         content:
           application/json:
@@ -887,28 +894,38 @@ components:
           type: boolean
         container:
           type: boolean
+        number:
+          type: boolean
+        boolean:
+          type: boolean
         binary:
           type: boolean
-        pojo:
-          type: boolean
-        int:
+        short:
           type: boolean
         textual:
           type: boolean
           deprecated: true
-        boolean:
+        int:
           type: boolean
         long:
           type: boolean
+        string:
+          type: boolean
+        pojo:
+          type: boolean
         double:
           type: boolean
-        short:
-          type: boolean
-        string:
+        integralNumber:
           type: boolean
         valueNode:
           type: boolean
+        floatingPointNumber:
+          type: boolean
         bigDecimal:
+          type: boolean
+        bigInteger:
+          type: boolean
+        missingNode:
           type: boolean
         nodeType:
           type: string
@@ -922,16 +939,6 @@ components:
             - OBJECT
             - POJO
             - STRING
-        missingNode:
-          type: boolean
-        floatingPointNumber:
-          type: boolean
-        bigInteger:
-          type: boolean
-        integralNumber:
-          type: boolean
-        number:
-          type: boolean
         embeddedValue:
           type: boolean
     AssetUpdateRequest:

@@ -131,4 +131,26 @@ class DraftAssetsIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test08_createDraftAssetPrivatePartyAndSourceReference() {
+		final var location = setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH + "?sourceReference=|1234;case;service;MY_NAMESPACE|")
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))
+			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
+			.sendRequest()
+			.getResponseHeaders().getLocation();
+
+		assertThat(location).isNotNull();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(location.getPath().replace("asset-drafts", "assets"))
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

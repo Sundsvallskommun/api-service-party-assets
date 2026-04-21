@@ -257,20 +257,20 @@ class AssetResourceTest {
 	}
 
 	@Test
-	void createAssetWithReferredFrom() {
+	void createAssetWithSourceReference() {
 
 		// Arrange
 		final var uuid = randomUUID().toString();
 		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null);
-		final var relation = "LINK|1234;case;service;MY_NAMESPACE|";
+		final var sourceReference = "LINK|1234;case;service;MY_NAMESPACE|";
 
-		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest, relation)).thenReturn(uuid);
+		when(assetServiceMock.createAsset(MUNICIPALITY_ID, assetRequest, sourceReference)).thenReturn(uuid);
 		doNothing().when(jsonSchemaValidationServiceMock).validate(anyString(), anyString(), any(JsonNode.class));
 
 		// Act
 		webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.path(PATH)
-				.queryParam("relation", relation)
+				.queryParam("sourceReference", sourceReference)
 				.build())
 			.bodyValue(assetRequest)
 			.exchange()
@@ -279,7 +279,7 @@ class AssetResourceTest {
 			.expectHeader().location("/" + MUNICIPALITY_ID + "/assets/" + uuid);
 
 		// Assert
-		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest, relation);
+		verify(assetServiceMock).createAsset(MUNICIPALITY_ID, assetRequest, sourceReference);
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 

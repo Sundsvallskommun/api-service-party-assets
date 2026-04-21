@@ -168,17 +168,17 @@ class AssetServiceTest {
 	}
 
 	@Test
-	void createAssetWithReferredFrom() {
+	void createAssetWithSourceReference() {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
 		final var entity = getAssetEntity(id, partyId);
 		final var assetCreateRequest = getAssetCreateRequest(partyId);
-		final var relation = "|1234;case;service;MY_NAMESPACE|";
+		final var sourceReference = "|1234;case;service;MY_NAMESPACE|";
 
 		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
 		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
 
-		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest, relation);
+		final var result = service.createAsset(MUNICIPALITY_ID, assetCreateRequest, sourceReference);
 
 		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
@@ -196,6 +196,28 @@ class AssetServiceTest {
 		assertThat(relationCaptor.getValue().getTarget().getResourceId()).isEqualTo(String.valueOf(id));
 		assertThat(relationCaptor.getValue().getTarget().getType()).isEqualTo("asset");
 		assertThat(relationCaptor.getValue().getTarget().getService()).isEqualTo("partyassets");
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+	}
+
+	@Test
+	void createAssetWithSourceReferenceInInvalidFormat() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId);
+		final var assetCreateRequest = getAssetCreateRequest(partyId);
+		final var sourceReference = "||1234;invalid-format;service;MY_NAMESPACE";
+
+		when(partyTypeProviderMock.calculatePartyType(MUNICIPALITY_ID, partyId)).thenReturn(PartyType.PRIVATE);
+		when(repositoryMock.save(any(AssetEntity.class))).thenReturn(entity);
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.createAsset(MUNICIPALITY_ID, assetCreateRequest, sourceReference))
+			.withMessage("Invalid source reference: Provided source reference '||1234;invalid-format;service;MY_NAMESPACE' is invalid. Expected format: '|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'");
+
+		verify(partyTypeProviderMock).calculatePartyType(MUNICIPALITY_ID, partyId);
+		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
+		verify(repositoryMock).save(entityCaptor.capture());
+		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
 		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
 	}
 
