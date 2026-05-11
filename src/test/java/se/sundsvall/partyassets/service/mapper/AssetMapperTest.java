@@ -90,6 +90,27 @@ class AssetMapperTest {
 	}
 
 	@Test
+	void updateEntityWithDraftRequest() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = TestFactory.getDraftAssetUpdateRequest();
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
+		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
+		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
+		assertThat(entity.getValidTo()).isEqualTo(entity.getValidTo());
+
+		// Json params
+		assertThat(entity.getJsonParameters()).hasSize(1);
+		assertThat(entity.getJsonParameters().getFirst().getKey()).isEqualTo("key2");
+		assertThat(entity.getJsonParameters().getFirst().getSchemaId()).isEqualTo("2281_person_schema_2.0.0");
+	}
+
+	@Test
 	void updateEntityWithEmptyValues() {
 
 		final var id = UUID.randomUUID().toString();

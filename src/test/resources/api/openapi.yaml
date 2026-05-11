@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.0"
+  version: "6.1"
 servers:
   - url: http://localhost:61538
     description: Generated server url
@@ -957,6 +957,12 @@ components:
     DraftAssetUpdateRequest:
       type: object
       properties:
+        issued:
+          type: string
+          format: date
+          description: Issued date
+          examples:
+            - 2021-01-01
         validTo:
           type: string
           format: date

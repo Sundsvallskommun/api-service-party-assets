@@ -37,6 +37,7 @@ class DraftAssetUpdateRequestTest {
 	@Test
 	void testBuilderMethods() {
 		final var additionalParameters = Map.of("key", "value");
+		final var issued = LocalDate.now();
 		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
@@ -44,6 +45,7 @@ class DraftAssetUpdateRequestTest {
 
 		final var bean = DraftAssetUpdateRequest.create()
 			.withAdditionalParameters(additionalParameters)
+			.withIssued(issued)
 			.withJsonParameters(jsonParameters)
 			.withStatus(status)
 			.withStatusReason(statusReason)
@@ -51,6 +53,7 @@ class DraftAssetUpdateRequestTest {
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
+		assertThat(bean.getIssued()).isEqualTo(issued);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
