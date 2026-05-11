@@ -98,6 +98,7 @@ public final class TestFactory {
 	public static DraftAssetUpdateRequest getDraftAssetUpdateRequest() {
 		final var request = new DraftAssetUpdateRequest();
 		request.setAdditionalParameters(Map.of("key", "changed_value", "key2", "value2"));
+		request.setIssued(LocalDate.of(2024, 6, 1));
 		request.setJsonParameters(List.of(AssetJsonParameter.create()
 			.withKey("key2")
 			.withSchemaId("2281_person_schema_2.0.0")

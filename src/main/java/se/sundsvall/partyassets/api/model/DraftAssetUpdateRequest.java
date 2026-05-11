@@ -11,6 +11,9 @@ import se.sundsvall.partyassets.api.validation.ValidStatusReason;
 @ValidStatusReason
 public class DraftAssetUpdateRequest {
 
+	@Schema(description = "Issued date", examples = "2021-01-01")
+	private LocalDate issued;
+
 	@Schema(description = "Valid to date", examples = "2021-12-31")
 	private LocalDate validTo;
 
@@ -28,6 +31,19 @@ public class DraftAssetUpdateRequest {
 
 	public static DraftAssetUpdateRequest create() {
 		return new DraftAssetUpdateRequest();
+	}
+
+	public LocalDate getIssued() {
+		return issued;
+	}
+
+	public void setIssued(LocalDate issued) {
+		this.issued = issued;
+	}
+
+	public DraftAssetUpdateRequest withIssued(LocalDate issued) {
+		this.issued = issued;
+		return this;
 	}
 
 	public LocalDate getValidTo() {
@@ -97,7 +113,7 @@ public class DraftAssetUpdateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, jsonParameters, status, statusReason, validTo);
+		return Objects.hash(additionalParameters, issued, jsonParameters, status, statusReason, validTo);
 	}
 
 	@Override
@@ -112,13 +128,13 @@ public class DraftAssetUpdateRequest {
 			return false;
 		}
 		DraftAssetUpdateRequest other = (DraftAssetUpdateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
 			other.statusReason) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "DraftAssetUpdateRequest [validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
+		return "DraftAssetUpdateRequest [issued=" + issued + ", validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 
 }
