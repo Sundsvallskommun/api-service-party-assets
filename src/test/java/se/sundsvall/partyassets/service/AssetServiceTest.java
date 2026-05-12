@@ -33,7 +33,9 @@ import static org.mockito.Mockito.when;
 import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
 import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
 import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
+import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
+import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -330,5 +332,129 @@ class AssetServiceTest {
 
 		verify(repositoryMock).findByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 		verify(repositoryMock, never()).save(any());
+	}
+
+	@Test
+	void copyAssetSetsOriginalToReplacedAndCreatesDraft() {
+		final var originalId = UUID.randomUUID().toString();
+		final var newId = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var original = getAssetEntity(originalId, partyId);
+
+		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
+		when(repositoryMock.save(any(AssetEntity.class))).thenAnswer(inv -> {
+			final AssetEntity e = inv.getArgument(0);
+			if (e.getStatus() == DRAFT) {
+				e.withId(newId);
+			}
+			return e;
+		});
+
+		final var result = service.copyAsset(MUNICIPALITY_ID, originalId);
+
+		verify(repositoryMock, org.mockito.Mockito.times(2)).save(entityCaptor.capture());
+		final var savedEntities = entityCaptor.getAllValues();
+		assertThat(savedEntities).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
+		assertThat(savedEntities).anySatisfy(e -> {
+			assertThat(e.getStatus()).isEqualTo(DRAFT);
+			assertThat(e.getReplacesId()).isEqualTo(originalId);
+		});
+		assertThat(result).isEqualTo(newId);
+	}
+
+	@Test
+	void copyAssetFailsWhenNotActive() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId).withStatus(DRAFT);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.copyAsset(MUNICIPALITY_ID, id))
+			.withMessage("Asset cannot be copied: Only ACTIVE assets can be copied, but asset " + id + " has status DRAFT");
+
+		verify(repositoryMock, never()).save(any());
+	}
+
+	@Test
+	void updateDraftAssetToActiveSetsOriginalToReplaced() {
+		final var draftId = UUID.randomUUID().toString();
+		final var originalId = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var draft = getAssetEntity(draftId, partyId)
+			.withStatus(DRAFT)
+			.withReplacesId(originalId)
+			.withValidTo(java.time.LocalDate.now().plusDays(30));
+		final var original = getAssetEntity(originalId, partyId).withStatus(ACTIVE);
+		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE);
+
+		when(repositoryMock.findByIdAndMunicipalityId(draftId, MUNICIPALITY_ID)).thenReturn(Optional.of(draft));
+		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
+
+		service.updateAsset(MUNICIPALITY_ID, draftId, request);
+
+		verify(repositoryMock, org.mockito.Mockito.times(2)).save(entityCaptor.capture());
+		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
+		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(ACTIVE));
+	}
+
+	@Test
+	void updateDraftAssetToActiveFailsWhenValidToIsInPast() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId)
+			.withStatus(DRAFT)
+			.withValidTo(java.time.LocalDate.now().minusDays(1));
+		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, request))
+			.withMessage("Invalid validTo date: validTo must be in the future when activating an asset");
+
+		verify(repositoryMock, never()).save(any());
+	}
+
+	@Test
+	void updateDraftAssetToActiveWithNoReplacesIdDoesNotTriggerReplacement() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId)
+			.withStatus(DRAFT)
+			.withValidTo(java.time.LocalDate.now().plusDays(10));
+		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, request);
+
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
+		verify(repositoryMock).save(entityCaptor.capture());
+		assertThat(entityCaptor.getValue().getStatus()).isEqualTo(ACTIVE);
+		verifyNoMoreInteractions(repositoryMock);
+	}
+
+	@Test
+	void updateDraftAssetToActiveDoesNotReplaceAlreadyReplacedOriginal() {
+		final var draftId = UUID.randomUUID().toString();
+		final var originalId = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var draft = getAssetEntity(draftId, partyId)
+			.withStatus(DRAFT)
+			.withReplacesId(originalId)
+			.withValidTo(java.time.LocalDate.now().plusDays(30));
+		final var original = getAssetEntity(originalId, partyId).withStatus(REPLACED);
+		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE);
+
+		when(repositoryMock.findByIdAndMunicipalityId(draftId, MUNICIPALITY_ID)).thenReturn(Optional.of(draft));
+		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
+
+		service.updateAsset(MUNICIPALITY_ID, draftId, request);
+
+		verify(repositoryMock).save(entityCaptor.capture());
+		assertThat(entityCaptor.getValue().getStatus()).isEqualTo(ACTIVE);
+		assertThat(original.getStatus()).isEqualTo(REPLACED);
 	}
 }

@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
@@ -18,9 +19,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
+import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
+import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
@@ -99,12 +103,57 @@ public class AssetService {
 		repository.deleteByIdAndMunicipalityId(id, municipalityId);
 	}
 
+	public String copyAsset(final String municipalityId, final String id) {
+		final var original = getAssetEntity(municipalityId, id);
+		if (original.getStatus() != ACTIVE) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Asset cannot be copied")
+				.withDetail("Only ACTIVE assets can be copied, but asset %s has status %s".formatted(id, original.getStatus()))
+				.build();
+		}
+
+		original.setStatus(REPLACED);
+		repository.save(original);
+		return repository.save(toCopyEntity(original)).getId();
+	}
+
 	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
-		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
+		final var entity = getAssetEntity(municipalityId, id);
+		updateEntity(entity, request);
+
+		if (ACTIVE == request.getStatus()) {
+			validateValidTo(entity);
+			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
+		}
+
+		repository.save(entity);
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
+	}
+
+	private void validateValidTo(final AssetEntity entity) {
+		if (entity.getValidTo() != null && !entity.getValidTo().isAfter(LocalDate.now())) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Invalid validTo date")
+				.withDetail("validTo must be in the future when activating an asset")
+				.build();
+		}
+	}
+
+	private void markOriginalAsReplaced(final String municipalityId, final String replacesId) {
+		if (replacesId == null) {
+			return;
+		}
+		repository.findByIdAndMunicipalityId(replacesId, municipalityId)
+			.filter(original -> original.getStatus() == ACTIVE)
+			.ifPresent(original -> {
+				original.setStatus(REPLACED);
+				repository.save(original);
+			});
 	}
 
 	private @NonNull AssetEntity getAssetEntity(String municipalityId, String id) {

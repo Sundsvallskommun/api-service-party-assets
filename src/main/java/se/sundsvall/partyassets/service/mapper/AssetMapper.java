@@ -8,6 +8,7 @@ import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
@@ -33,10 +34,38 @@ public final class AssetMapper {
 			.withJsonParameters(toAssetJsonParameterList(entity.getJsonParameters()))
 			.withOrigin(entity.getOrigin())
 			.withPartyId(entity.getPartyId())
+			.withReplacesId(entity.getReplacesId())
 			.withStatus(entity.getStatus())
 			.withStatusReason(entity.getStatusReason())
 			.withType(entity.getType())
 			.withValidTo(entity.getValidTo());
+	}
+
+	public static AssetEntity toCopyEntity(final AssetEntity original) {
+		return AssetEntity.create()
+			.withAdditionalParameters(original.getAdditionalParameters())
+			.withAssetId(original.getAssetId())
+			.withCaseReferenceIds(original.getCaseReferenceIds())
+			.withDescription(original.getDescription())
+			.withIssued(original.getIssued())
+			.addOrReplaceJsonParameters(copyJsonParameters(original.getJsonParameters()))
+			.withMunicipalityId(original.getMunicipalityId())
+			.withOrigin(original.getOrigin())
+			.withPartyId(original.getPartyId())
+			.withPartyType(original.getPartyType())
+			.withReplacesId(original.getId())
+			.withStatus(Status.DRAFT)
+			.withType(original.getType())
+			.withValidTo(original.getValidTo());
+	}
+
+	private static List<AssetJsonParameterEntity> copyJsonParameters(final List<AssetJsonParameterEntity> parameters) {
+		return ofNullable(parameters).orElse(emptyList()).stream()
+			.map(p -> AssetJsonParameterEntity.create()
+				.withKey(p.getKey())
+				.withSchemaId(p.getSchemaId())
+				.withValue(p.getValue()))
+			.toList();
 	}
 
 	public static AssetEntity toEntity(final AssetCreateRequest request, final PartyType partyType, final String municipalityId) {
@@ -66,6 +95,7 @@ public final class AssetMapper {
 		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
 		Optional.ofNullable(request.getIssued()).ifPresent(entity::setIssued);
 		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
+		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
 		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		return entity;

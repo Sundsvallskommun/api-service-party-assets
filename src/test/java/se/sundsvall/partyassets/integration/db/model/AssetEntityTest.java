@@ -58,6 +58,7 @@ class AssetEntityTest {
 		final var statusReason = "statusReason";
 		final var type = "type";
 		final var updated = OffsetDateTime.now();
+		final var replacesId = "replacesId";
 		final var validTo = LocalDate.now();
 
 		final var bean = AssetEntity.create()
@@ -73,6 +74,7 @@ class AssetEntityTest {
 			.withOrigin(origin)
 			.withPartyId(partyId)
 			.withPartyType(partyType)
+			.withReplacesId(replacesId)
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withType(type)
@@ -92,6 +94,7 @@ class AssetEntityTest {
 		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
 		assertThat(bean.getPartyType()).isEqualTo(partyType);
+		assertThat(bean.getReplacesId()).isEqualTo(replacesId);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getType()).isEqualTo(type);

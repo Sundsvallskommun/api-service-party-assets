@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -118,6 +119,21 @@ class AssetResource {
 
 		service.updateAsset(municipalityId, id, asset);
 		return noContent().build();
+	}
+
+	@PutMapping(path = "{id}", produces = ALL_VALUE)
+	@Operation(summary = "Copy an active asset as a draft", responses = {
+		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	ResponseEntity<Void> copyAsset(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable @ValidUuid final String id) {
+
+		final var newId = service.copyAsset(municipalityId, id);
+		return created(fromPath("/{municipalityId}/assets/{id}").buildAndExpand(municipalityId, newId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
 	}
 
 	@DeleteMapping(path = "{id}", produces = ALL_VALUE)
