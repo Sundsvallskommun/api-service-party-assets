@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
   title: api-partyassets
-  contact: {}
+  contact: { }
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.1"
+  version: "6.2"
 servers:
   - url: http://localhost:61538
     description: Generated server url
@@ -777,7 +777,7 @@ components:
         instance:
           type: string
           format: uri
-        causeAsProblem: {}
+        causeAsProblem: { }
     Violation:
       type: object
       properties:
@@ -969,6 +969,12 @@ components:
           description: Valid to date
           examples:
             - 2021-12-31
+        indefinitely:
+          type: boolean
+          description: "If true, validTo will be cleared (asset becomes indefinite).\
+            \ Takes precedence over validTo when both are supplied."
+          examples:
+            - "true"
         status:
           $ref: "#/components/schemas/Status"
           description: Asset status
@@ -1059,4 +1065,4 @@ components:
           description: JSON parameters
           items:
             $ref: "#/components/schemas/AssetJsonParameter"
-  securitySchemes: {}
+  securitySchemes: { }
