@@ -17,6 +17,9 @@ public class DraftAssetUpdateRequest {
 	@Schema(description = "Valid to date", examples = "2021-12-31")
 	private LocalDate validTo;
 
+	@Schema(description = "If true, validTo will be cleared (asset becomes indefinite). Takes precedence over validTo when both are supplied.", examples = "true")
+	private Boolean indefinitely;
+
 	@Schema(description = "Asset status", examples = "ACTIVE")
 	private Status status;
 
@@ -56,6 +59,19 @@ public class DraftAssetUpdateRequest {
 
 	public DraftAssetUpdateRequest withValidTo(LocalDate validTo) {
 		this.validTo = validTo;
+		return this;
+	}
+
+	public Boolean getIndefinitely() {
+		return indefinitely;
+	}
+
+	public void setIndefinitely(Boolean indefinitely) {
+		this.indefinitely = indefinitely;
+	}
+
+	public DraftAssetUpdateRequest withIndefinitely(Boolean indefinitely) {
+		this.indefinitely = indefinitely;
 		return this;
 	}
 
@@ -113,7 +129,7 @@ public class DraftAssetUpdateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, issued, jsonParameters, status, statusReason, validTo);
+		return Objects.hash(additionalParameters, indefinitely, issued, jsonParameters, status, statusReason, validTo);
 	}
 
 	@Override
@@ -128,13 +144,14 @@ public class DraftAssetUpdateRequest {
 			return false;
 		}
 		DraftAssetUpdateRequest other = (DraftAssetUpdateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status && Objects.equals(statusReason,
-			other.statusReason) && Objects.equals(validTo, other.validTo);
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(indefinitely, other.indefinitely) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status
+			&& Objects.equals(statusReason, other.statusReason) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "DraftAssetUpdateRequest [issued=" + issued + ", validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
+		return "DraftAssetUpdateRequest [issued=" + issued + ", validTo=" + validTo + ", indefinitely=" + indefinitely + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters="
+			+ jsonParameters + "]";
 	}
 
 }

@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.service.mapper;
 
+import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import se.sundsvall.partyassets.TestFactory;
@@ -102,12 +103,72 @@ class AssetMapperTest {
 		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
 		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
-		assertThat(entity.getValidTo()).isEqualTo(entity.getValidTo());
+		assertThat(entity.getValidTo()).isEqualTo(LocalDate.of(2010, 1, 1));
 
 		// Json params
 		assertThat(entity.getJsonParameters()).hasSize(1);
 		assertThat(entity.getJsonParameters().getFirst().getKey()).isEqualTo("key2");
 		assertThat(entity.getJsonParameters().getFirst().getSchemaId()).isEqualTo("2281_person_schema_2.0.0");
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyTrueClearsValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = DraftAssetUpdateRequest.create().withIndefinitely(true);
+
+		assertThat(entity.getValidTo()).isNotNull();
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isNull();
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyTrueOverridesSuppliedValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = DraftAssetUpdateRequest.create()
+			.withValidTo(LocalDate.of(2030, 1, 1))
+			.withIndefinitely(true);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isNull();
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyFalseKeepsExistingValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var original = TestFactory.getAssetEntity(id, partyId);
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = DraftAssetUpdateRequest.create().withIndefinitely(false);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isEqualTo(original.getValidTo());
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyFalseAndSuppliedValidToUpdatesValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var newValidTo = LocalDate.of(2030, 1, 1);
+		final var request = DraftAssetUpdateRequest.create()
+			.withValidTo(newValidTo)
+			.withIndefinitely(false);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isEqualTo(newValidTo);
 	}
 
 	@Test

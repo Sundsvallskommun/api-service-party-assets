@@ -133,6 +133,26 @@ class DraftAssetsIT extends AbstractAppTest {
 	}
 
 	@Test
+	void test09_updateDraftAssetSetIndefinitely() {
+		final var id = "abd6596f-45a0-4912-89e4-8cdcea9a043a";
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + id)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH.replace("asset-drafts", "assets") + "/" + id)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
 	void test08_createDraftAssetPrivatePartyAndSourceReference() {
 		final var location = setupCall()
 			.withHttpMethod(POST)
