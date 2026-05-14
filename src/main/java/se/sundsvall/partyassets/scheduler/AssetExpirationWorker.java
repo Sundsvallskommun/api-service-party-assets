@@ -1,9 +1,9 @@
 package se.sundsvall.partyassets.scheduler;
 
+import java.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
@@ -20,8 +20,14 @@ public class AssetExpirationWorker {
 		this.assetRepository = assetRepository;
 	}
 
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public void expire(final AssetEntity asset) {
+	@Transactional
+	public void expireAssets() {
+		final var assets = assetRepository.findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.now());
+		LOG.info("Found {} asset(s) to expire", assets.size());
+		assets.forEach(this::expire);
+	}
+
+	void expire(final AssetEntity asset) {
 		asset.setStatus(Status.EXPIRED);
 		assetRepository.save(asset);
 		LOG.info("Expired asset {}", asset.getId());

@@ -143,4 +143,37 @@ class AssetRepositoryTest {
 
 		assertThat(repository.findById(ENTERPRISE_PARTY_ASSET_ID_3)).isNotPresent();
 	}
+
+	@Test
+	void findByStatusAndValidToBefore_returnsActiveAssetsWithPastValidTo() {
+		final var result = repository.findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.now());
+
+		assertThat(result).hasSize(3)
+			.extracting(AssetEntity::getAssetId)
+			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_3, "PRH-0000000012", "CON-0000000013");
+	}
+
+	@Test
+	void findByStatusAndValidToBefore_excludesActiveAssetsWithFutureValidTo() {
+		// valid_to for PRH-0000000012 and CON-0000000013 is 2024-01-31, so only CON-0000000003 (2023-12-31) matches
+		final var result = repository.findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.of(2024, 1, 1));
+
+		assertThat(result).hasSize(1)
+			.extracting(AssetEntity::getAssetId)
+			.containsExactly(PRIVATE_PARTY_ASSET_3);
+	}
+
+	@Test
+	void findByStatusAndValidToBefore_returnsEmptyWhenNoMatchingStatus() {
+		final var result = repository.findByStatusAndValidToBefore(Status.DRAFT, LocalDate.now());
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void findByStatusAndValidToBefore_returnsEmptyWhenDateIsBeforeAllValidTos() {
+		final var result = repository.findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.of(2022, 1, 1));
+
+		assertThat(result).isEmpty();
+	}
 }
