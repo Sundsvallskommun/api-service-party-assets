@@ -133,6 +133,46 @@ class DraftAssetsIT extends AbstractAppTest {
 	}
 
 	@Test
+	void test09_activateDraftToActive() {
+		final var draftId = "a0000000-0000-0000-0000-000000000002";
+		final var originalId = "a0000000-0000-0000-0000-000000000001";
+		final var assetsPath = PATH.replace("asset-drafts", "assets");
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + draftId)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(assetsPath + "/" + draftId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse("active_response.json")
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(assetsPath + "/" + originalId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse("replaced_response.json")
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test10_activateDraftWithPastValidTo() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + "abd6596f-45a0-4912-89e4-8cdcea9a043a")
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
 	void test08_createDraftAssetPrivatePartyAndSourceReference() {
 		final var location = setupCall()
 			.withHttpMethod(POST)

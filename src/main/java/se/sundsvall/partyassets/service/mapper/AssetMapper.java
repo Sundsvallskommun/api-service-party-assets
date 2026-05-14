@@ -1,5 +1,7 @@
 package se.sundsvall.partyassets.service.mapper;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,9 +45,9 @@ public final class AssetMapper {
 
 	public static AssetEntity toCopyEntity(final AssetEntity original) {
 		return AssetEntity.create()
-			.withAdditionalParameters(original.getAdditionalParameters())
+			.withAdditionalParameters(original.getAdditionalParameters() != null ? new HashMap<>(original.getAdditionalParameters()) : null)
 			.withAssetId(original.getAssetId())
-			.withCaseReferenceIds(original.getCaseReferenceIds())
+			.withCaseReferenceIds(original.getCaseReferenceIds() != null ? new ArrayList<>(original.getCaseReferenceIds()) : null)
 			.withDescription(original.getDescription())
 			.withIssued(original.getIssued())
 			.addOrReplaceJsonParameters(copyJsonParameters(original.getJsonParameters()))

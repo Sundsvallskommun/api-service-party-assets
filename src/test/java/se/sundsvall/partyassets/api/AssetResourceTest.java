@@ -552,7 +552,7 @@ class AssetResourceTest {
 		when(assetServiceMock.copyAsset(MUNICIPALITY_ID, id)).thenReturn(newId);
 
 		// Act
-		webTestClient.put()
+		webTestClient.post()
 			.uri(PATH + "/{id}", id)
 			.exchange()
 			.expectStatus()
@@ -570,7 +570,7 @@ class AssetResourceTest {
 		final var id = "imNotARealUUID";
 
 		// Act
-		final var response = webTestClient.put()
+		final var response = webTestClient.post()
 			.uri(PATH + "/{id}", id)
 			.exchange()
 			.expectStatus()
@@ -593,7 +593,7 @@ class AssetResourceTest {
 		final var uuid = randomUUID().toString();
 
 		// Act
-		final var response = webTestClient.put()
+		final var response = webTestClient.post()
 			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid).build())
 			.exchange()
 			.expectStatus().isBadRequest()

@@ -273,6 +273,55 @@ class AssetsIT extends AbstractAppTest {
 	}
 
 	@Test
+	void test20_copyActiveAsset() {
+		final var originalId = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
+
+		final var location = setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH + "/" + originalId)
+			.withExpectedResponseStatus(CREATED)
+			.withExpectedResponseHeader(LOCATION, List.of("^" + PATH + "(.*)$"))
+			.sendRequest()
+			.getResponseHeaders().getLocation();
+
+		assertThat(location).isNotNull();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(location.getPath())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse("draft_response.json")
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + originalId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse("original_response.json")
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test21_copyNonActiveAsset() {
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH + "/" + "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884")
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test22_copyNonExistingAsset() {
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH + "/" + "00000000-0000-0000-0000-000000000000")
+			.withExpectedResponseStatus(NOT_FOUND)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
 	void test19_createAssetPrivatePartyAndSourceReference() {
 		final var location = setupCall()
 			.withHttpMethod(POST)
