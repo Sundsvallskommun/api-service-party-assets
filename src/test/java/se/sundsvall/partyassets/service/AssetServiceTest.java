@@ -331,4 +331,34 @@ class AssetServiceTest {
 		verify(repositoryMock).findByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
 		verify(repositoryMock, never()).save(any());
 	}
+
+	@Test
+	void updateDraftAsset() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId).withStatus(DRAFT);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest());
+
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
+		verify(repositoryMock).save(any(AssetEntity.class));
+	}
+
+	@Test
+	void updateNonDraftAssetViaDraftEndpointThrowsBadRequest() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId); // status ACTIVE
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest()))
+			.withMessage("Invalid asset status: Only DRAFT assets can be updated via this endpoint");
+
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
+		verify(repositoryMock, never()).save(any());
+	}
 }

@@ -100,7 +100,15 @@ public class AssetService {
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
-		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
+		final var entity = getAssetEntity(municipalityId, id);
+		if (entity.getStatus() != DRAFT) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Invalid asset status")
+				.withDetail("Only DRAFT assets can be updated via this endpoint")
+				.build();
+		}
+		repository.save(updateEntity(entity, request));
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
