@@ -14,6 +14,7 @@ import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -32,8 +33,7 @@ public class AssetService {
 	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
 	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
 	private static final String INVALID_SOURCE_REFERENCE_TITLE = "Invalid source reference";
-	private static final String INVALID_SOURCE_REFERENCE_DETAIL = "Provided source reference '%s' is invalid. Expected format: '|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'";
-	private static final String RELATION_TYPE = "LINK";
+	private static final String INVALID_SOURCE_REFERENCE_DETAIL = "Provided source reference '%s' is invalid. Expected format: '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'";
 
 	private final AssetRepository repository;
 	private final PartyTypeProvider partyTypeProvider;
@@ -125,15 +125,15 @@ public class AssetService {
 	}
 
 	private void createRelation(String municipalityId, String sourceReference, String assetId) {
-		final var relation = toRelation(RELATION_TYPE, Relation.parseRelation(sourceReference), assetId);
+		final var parsedRelation = Relation.parseRelation(sourceReference);
 
-		if (Objects.isNull(relation)) {
+		if (Objects.isNull(parsedRelation) || Objects.isNull(parsedRelation.getSource()) || isBlank(parsedRelation.getType())) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
 				.withTitle(INVALID_SOURCE_REFERENCE_TITLE)
 				.withDetail(INVALID_SOURCE_REFERENCE_DETAIL.formatted(sourceReference))
 				.build();
 		}
-		relationClient.createRelation(municipalityId, relation);
+		relationClient.createRelation(municipalityId, toRelation(parsedRelation.getType(), parsedRelation, assetId));
 	}
 }
