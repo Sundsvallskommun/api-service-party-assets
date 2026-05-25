@@ -89,7 +89,7 @@ class AssetResource {
 	ResponseEntity<Void> createAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "sourceReference",
-			description = "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'",
+			description = "Relation reference in format (target part is ignored): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'",
 			example = "LINK|1234;case;service;MY_NAMESPACE|") @RequestParam(required = false) final String sourceReference,
 		@Valid @RequestBody final AssetCreateRequest asset) {
 
@@ -118,6 +118,21 @@ class AssetResource {
 
 		service.updateAsset(municipalityId, id, asset);
 		return noContent().build();
+	}
+
+	@PostMapping(path = "{id}", produces = ALL_VALUE)
+	@Operation(summary = "Copy an active asset as a draft", responses = {
+		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	ResponseEntity<Void> copyAsset(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable @ValidUuid final String id) {
+
+		final var newId = service.copyAsset(municipalityId, id);
+		return created(fromPath("/{municipalityId}/assets/{id}").buildAndExpand(municipalityId, newId).toUri())
+			.header(CONTENT_TYPE, ALL_VALUE)
+			.build();
 	}
 
 	@DeleteMapping(path = "{id}", produces = ALL_VALUE)

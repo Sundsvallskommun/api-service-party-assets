@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,13 +15,15 @@ class AssetMapperTest {
 	@Test
 	void toAsset() {
 
-		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+			.withReplacesId("replacesId");
 		final var asset = AssetMapper.toAsset(entity);
 
 		assertThat(asset)
 			.usingRecursiveComparison()
 			.ignoringFields("jsonParameters")
 			.isEqualTo(entity);
+		assertThat(asset.getReplacesId()).isEqualTo(entity.getReplacesId());
 
 		// Json params
 		assertThat(asset.getJsonParameters()).hasSize(1);
@@ -102,8 +105,9 @@ class AssetMapperTest {
 
 		assertThat(entity.getAdditionalParameters()).isEqualTo(request.getAdditionalParameters());
 		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
+		assertThat(entity.getStatus()).isEqualTo(request.getStatus());
 		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
-		assertThat(entity.getValidTo()).isEqualTo(LocalDate.of(2010, 1, 1));
+		assertThat(entity.getValidTo()).isEqualTo(LocalDate.of(2010, 1, 1)); // validTo not in request, unchanged
 
 		// Json params
 		assertThat(entity.getJsonParameters()).hasSize(1);
@@ -169,6 +173,36 @@ class AssetMapperTest {
 		AssetMapper.updateEntity(entity, request);
 
 		assertThat(entity.getValidTo()).isEqualTo(newValidTo);
+	}
+
+	@Test
+	void toCopyEntity() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var original = TestFactory.getAssetEntity(id, partyId);
+
+		final var copy = AssetMapper.toCopyEntity(original);
+
+		assertThat(copy.getId()).isNull();
+		assertThat(copy.getReplacesId()).isEqualTo(id);
+		assertThat(copy.getStatus()).isEqualTo(Status.DRAFT);
+		assertThat(copy.getAdditionalParameters()).isEqualTo(original.getAdditionalParameters());
+		assertThat(copy.getAssetId()).isEqualTo(original.getAssetId());
+		assertThat(copy.getCaseReferenceIds()).isEqualTo(original.getCaseReferenceIds());
+		assertThat(copy.getDescription()).isEqualTo(original.getDescription());
+		assertThat(copy.getIssued()).isEqualTo(original.getIssued());
+		assertThat(copy.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
+		assertThat(copy.getOrigin()).isEqualTo(original.getOrigin());
+		assertThat(copy.getPartyId()).isEqualTo(original.getPartyId());
+		assertThat(copy.getPartyType()).isEqualTo(original.getPartyType());
+		assertThat(copy.getType()).isEqualTo(original.getType());
+		assertThat(copy.getValidTo()).isEqualTo(original.getValidTo());
+		assertThat(copy.getJsonParameters()).hasSize(1);
+		assertThat(copy.getJsonParameters().getFirst().getKey()).isEqualTo(original.getJsonParameters().getFirst().getKey());
+		assertThat(copy.getJsonParameters().getFirst().getSchemaId()).isEqualTo(original.getJsonParameters().getFirst().getSchemaId());
+		assertThat(copy.getStatusReason()).isNull();
+		assertThat(copy.getCreated()).isNull();
+		assertThat(copy.getUpdated()).isNull();
 	}
 
 	@Test

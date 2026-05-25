@@ -17,10 +17,11 @@
         municipality_id varchar(255),
         origin varchar(255),
         party_id varchar(255) not null,
+        replaces_id varchar(255),
         status_reason varchar(255),
         `type` varchar(255) not null,
         party_type enum ('ENTERPRISE','PRIVATE'),
-        status enum ('ACTIVE','BLOCKED','DRAFT','EXPIRED','TEMPORARY'),
+        status enum ('ACTIVE','BLOCKED','DRAFT','EXPIRED','REPLACED','TEMPORARY'),
         primary key (id)
     ) engine=InnoDB;
 

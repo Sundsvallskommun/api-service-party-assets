@@ -1,0 +1,5 @@
+{
+	"title": "Invalid validTo date",
+	"status": 400,
+	"detail": "validTo must be in the future when activating an asset"
+}

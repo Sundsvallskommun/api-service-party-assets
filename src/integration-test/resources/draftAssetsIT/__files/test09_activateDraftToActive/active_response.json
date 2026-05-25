@@ -1,0 +1,13 @@
+{
+	"id": "a0000000-0000-0000-0000-000000000002",
+	"assetId": "CON-TEST-0001",
+	"origin": "TESTDATA",
+	"partyId": "a0000000-0000-0000-0000-000000000099",
+	"type": "PERMIT",
+	"issued": "2026-01-01",
+	"status": "ACTIVE",
+	"description": "Test asset",
+	"additionalParameters": {},
+	"jsonParameters": [],
+	"replacesId": "a0000000-0000-0000-0000-000000000001"
+}

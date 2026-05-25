@@ -74,6 +74,9 @@ public class AssetEntity {
 
 	private LocalDate validTo;
 
+	@Column(name = "replaces_id")
+	private String replacesId;
+
 	@Enumerated(STRING)
 	private Status status;
 
@@ -244,6 +247,19 @@ public class AssetEntity {
 		return this;
 	}
 
+	public String getReplacesId() {
+		return replacesId;
+	}
+
+	public void setReplacesId(final String replacesId) {
+		this.replacesId = replacesId;
+	}
+
+	public AssetEntity withReplacesId(final String replacesId) {
+		this.replacesId = replacesId;
+		return this;
+	}
+
 	public Status getStatus() {
 		return status;
 	}
@@ -351,7 +367,7 @@ public class AssetEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, status, statusReason, type, updated, validTo);
+		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, status, statusReason, type, updated, validTo);
 	}
 
 	@Override
@@ -368,14 +384,15 @@ public class AssetEntity {
 		AssetEntity other = (AssetEntity) obj;
 		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created, other.created) && Objects.equals(description,
 			other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(origin, other.origin)
-			&& Objects.equals(partyId, other.partyId) && partyType == other.partyType && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects
-				.equals(validTo, other.validTo);
+			&& Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type)
+			&& Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		return "AssetEntity [id=" + id + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType + ", caseReferenceIds=" + caseReferenceIds + ", type=" + type + ", issued="
-			+ issued + ", validTo=" + validTo + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", created=" + created
-			+ ", updated=" + updated + "]";
+			+ issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters="
+			+ jsonParameters
+			+ ", created=" + created + ", updated=" + updated + "]";
 	}
 }

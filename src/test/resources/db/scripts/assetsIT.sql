@@ -51,7 +51,14 @@ insert into status_reason (status_name, municipality_id, reason)
 values ('BLOCKED', '2281', 'IRREGULARITY'),
        ('BLOCKED', '2281', 'LOST');
 
-insert into asset_json_parameter 
+insert into asset_json_parameter
     (id, asset_id, parameter_key, parameter_value, schema_id)
 values
     ('d401c0b0-14a6-4cee-ab20-786e57691928', '5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'theKey', '{"productId":666, "productName":"A product name", "price":42}', '2281_schema_1.0');
+
+-- Draft activation test data (unique partyId, does not affect other tests)
+insert into asset (id, asset_id, description, municipality_id, origin, party_id, party_type, status,
+                   status_reason, `type`, issued, valid_to, replaces_id, created, updated)
+values
+    ('a0000000-0000-0000-0000-000000000001', 'CON-TEST-0001', 'Test asset', '2281', 'TESTDATA', 'a0000000-0000-0000-0000-000000000099', 'PRIVATE', 'ACTIVE', null, 'PERMIT', '2026-01-01', null, null, '2026-01-01', null),
+    ('a0000000-0000-0000-0000-000000000002', 'CON-TEST-0001', 'Test asset', '2281', 'TESTDATA', 'a0000000-0000-0000-0000-000000000099', 'PRIVATE', 'DRAFT', null, 'PERMIT', '2026-01-01', null, 'a0000000-0000-0000-0000-000000000001', '2026-01-01', null);
