@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
   title: api-partyassets
-  contact: { }
+  contact: {}
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.1"
+  version: "6.3"
 servers:
-- url: http://localhost:61683
+- url: http://localhost:62110
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -359,26 +359,18 @@ paths:
       summary: Copy an active asset as a draft
       operationId: copyAsset
       parameters:
-        - name: municipalityId
-          in: path
-          description: Municipality ID
-          required: true
-          schema:
-            type: string
-          example: 2281
-        - name: sourceReference
-          in: query
-          description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
-          required: false
-          schema:
-            type: string
-          example: LINK|1234;case;service;MY_NAMESPACE|
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AssetCreateRequest"
+      - name: municipalityId
+        in: path
+        description: Municipality ID
         required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
       responses:
         "201":
           description: Created - Successful operation
@@ -630,7 +622,7 @@ paths:
         example: 2281
       - name: sourceReference
         in: query
-        description: "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
+        description: "Relation reference in format (target part is ignored): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'"
         required: false
         schema:
           type: string
@@ -833,7 +825,7 @@ components:
         instance:
           type: string
           format: uri
-        causeAsProblem: { }
+        causeAsProblem: {}
     Violation:
       type: object
       properties:
@@ -938,8 +930,6 @@ components:
     JsonNode:
       type: object
       properties:
-        floatingPointNumber:
-          type: boolean
         container:
           type: boolean
         number:
@@ -984,6 +974,8 @@ components:
         boolean:
           type: boolean
         binary:
+          type: boolean
+        floatingPointNumber:
           type: boolean
         empty:
           type: boolean
@@ -1030,7 +1022,7 @@ components:
           description: "If true, validTo will be cleared (asset becomes indefinite).\
             \ Takes precedence over validTo when both are supplied."
           examples:
-            - "true"
+          - "true"
         status:
           $ref: "#/components/schemas/Status"
           description: Asset status
@@ -1126,4 +1118,4 @@ components:
           description: Id of the asset this asset replaces
           examples:
           - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
-  securitySchemes: { }
+  securitySchemes: {}

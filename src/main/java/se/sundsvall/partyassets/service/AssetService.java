@@ -127,6 +127,10 @@ public class AssetService {
 				.withDetail("Only DRAFT assets can be updated via this endpoint")
 				.build();
 		}
+		if (request.getStatus() == ACTIVE) {
+			validateValidTo(entity);
+			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
+		}
 		repository.save(updateEntity(entity, request));
 	}
 
