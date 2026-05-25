@@ -20,5 +20,5 @@ public interface AssetRepository extends JpaRepository<AssetEntity, String>, Jpa
 
 	void deleteByIdAndMunicipalityId(String id, String municipalityId);
 
-	List<AssetEntity> findByStatusAndValidToBefore(Status status, LocalDate date);
+	List<AssetEntity> findByStatusInAndValidToBefore(List<Status> statuses, LocalDate date);
 }

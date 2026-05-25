@@ -20,7 +20,11 @@ values
      'c5d21b57-c785-4d3c-8361-940cae999ff7', 'ENTERPRISE', 'ACTIVE', null, 'PERMIT', '2281'),
     ('2023-02-01', '2024-01-31', '2023-02-01', null, 'CON-0000000013', 'MAZEDATA', 'Bygglov',
      '647e3062-62dc-499f-9faa-e54cb97aa214', 'c5d21b57-c785-4d3c-8361-940cae999ff7', 'ENTERPRISE',
-     'ACTIVE', null, 'PERMIT', '2281');
+     'ACTIVE', null, 'PERMIT', '2281'),
+    -- Temporary asset with past validTo
+    ('2023-01-01', '2023-06-30', '2023-01-01', null, 'TMP-0000000001', 'CASEDATA', 'Temporary permit',
+     'b0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 'PRIVATE',
+     'TEMPORARY', null, 'PERMIT', '2281');
 
 insert into additional_parameter (asset_id, parameter_key, parameter_value)
 values

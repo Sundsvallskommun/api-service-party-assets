@@ -30,11 +30,11 @@ class AssetExpirationWorkerTest {
 
 	@Test
 	void expireAssets_withNoAssets() {
-		when(assetRepositoryMock.findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.now())).thenReturn(List.of());
+		when(assetRepositoryMock.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.now())).thenReturn(List.of());
 
 		worker.expireAssets();
 
-		verify(assetRepositoryMock).findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.now());
+		verify(assetRepositoryMock).findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.now());
 		verifyNoMoreInteractions(assetRepositoryMock);
 	}
 
@@ -42,7 +42,7 @@ class AssetExpirationWorkerTest {
 	void expireAssets_setsStatusAndSavesEachAsset() {
 		final var asset1 = AssetEntity.create().withId("asset-1").withStatus(Status.ACTIVE).withValidTo(VALID_TO);
 		final var asset2 = AssetEntity.create().withId("asset-2").withStatus(Status.ACTIVE).withValidTo(VALID_TO);
-		when(assetRepositoryMock.findByStatusAndValidToBefore(Status.ACTIVE, LocalDate.now())).thenReturn(List.of(asset1, asset2));
+		when(assetRepositoryMock.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.now())).thenReturn(List.of(asset1, asset2));
 
 		worker.expireAssets();
 
