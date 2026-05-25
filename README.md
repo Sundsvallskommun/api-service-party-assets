@@ -111,6 +111,15 @@ spring:
     password: your_db_password
 ```
 
+- **Scheduler:**
+
+```yaml
+scheduler:
+  asset-expiration:
+    cron: '0 0 0 * * *'       # When to run (default: midnight every day)
+    lock-at-most-for: 'PT1H'  # Max distributed lock duration
+```
+
 - **External Service URLs:**
 
 ```yaml

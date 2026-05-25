@@ -1,3 +1,7 @@
+scheduler:
+  asset-expiration:
+    cron: '0 0 0 * * *'
+    lock-at-most-for: 'PT1H'
 integration:
   json-schema:
     connectTimeout: 5

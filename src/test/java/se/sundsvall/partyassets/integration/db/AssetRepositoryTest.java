@@ -2,6 +2,7 @@ package se.sundsvall.partyassets.integration.db;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -142,5 +143,39 @@ class AssetRepositoryTest {
 		repository.deleteById(ENTERPRISE_PARTY_ASSET_ID_3);
 
 		assertThat(repository.findById(ENTERPRISE_PARTY_ASSET_ID_3)).isNotPresent();
+	}
+
+	@Test
+	void findByStatusInAndValidToBefore_returnsActiveAndTemporaryAssetsWithPastValidTo() {
+		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.now());
+
+		assertThat(result).hasSize(4)
+			.extracting(AssetEntity::getAssetId)
+			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_3, "PRH-0000000012", "CON-0000000013", "TMP-0000000001");
+	}
+
+	@Test
+	void findByStatusInAndValidToBefore_excludesAssetsWithFutureValidTo() {
+		// valid_to for PRH-0000000012 and CON-0000000013 is 2024-01-31; TMP-0000000001 is 2023-06-30
+		// so only CON-0000000003 (2023-12-31) and TMP-0000000001 (2023-06-30) are before 2024-01-01
+		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.of(2024, 1, 1));
+
+		assertThat(result).hasSize(2)
+			.extracting(AssetEntity::getAssetId)
+			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_3, "TMP-0000000001");
+	}
+
+	@Test
+	void findByStatusInAndValidToBefore_returnsEmptyWhenNoMatchingStatus() {
+		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.DRAFT), LocalDate.now());
+
+		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void findByStatusInAndValidToBefore_returnsEmptyWhenDateIsBeforeAllValidTos() {
+		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.of(2022, 1, 1));
+
+		assertThat(result).isEmpty();
 	}
 }
