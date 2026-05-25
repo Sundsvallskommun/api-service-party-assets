@@ -44,6 +44,9 @@ public class Asset {
 	@Schema(description = "JSON parameters")
 	private List<AssetJsonParameter> jsonParameters;
 
+	@Schema(description = "Id of the asset this asset replaces", examples = "1c8f38a6-b492-4037-b7dc-de5bc6c629f0")
+	private String replacesId;
+
 	public static Asset create() {
 		return new Asset();
 	}
@@ -204,9 +207,22 @@ public class Asset {
 		return this;
 	}
 
+	public String getReplacesId() {
+		return replacesId;
+	}
+
+	public void setReplacesId(String replacesId) {
+		this.replacesId = replacesId;
+	}
+
+	public Asset withReplacesId(String replacesId) {
+		this.replacesId = replacesId;
+		return this;
+	}
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, description, id, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, description, id, issued, jsonParameters, origin, partyId, replacesId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -222,13 +238,14 @@ public class Asset {
 		}
 		Asset other = (Asset) obj;
 		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(id,
-			other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(
-				statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
+			other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId)
+			&& Objects.equals(replacesId, other.replacesId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type)
+			&& Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		return "Asset [id=" + id + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status
-			+ ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
+			+ ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId + "]";
 	}
 }

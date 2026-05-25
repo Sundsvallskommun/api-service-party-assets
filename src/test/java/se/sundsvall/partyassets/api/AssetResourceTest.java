@@ -544,6 +544,74 @@ class AssetResourceTest {
 	}
 
 	@Test
+	void copyAsset() {
+		// Arrange
+		final var id = randomUUID().toString();
+		final var newId = randomUUID().toString();
+
+		when(assetServiceMock.copyAsset(MUNICIPALITY_ID, id)).thenReturn(newId);
+
+		// Act
+		webTestClient.post()
+			.uri(PATH + "/{id}", id)
+			.exchange()
+			.expectStatus()
+			.isCreated()
+			.expectHeader().location("/" + MUNICIPALITY_ID + "/assets/" + newId);
+
+		// Assert
+		verify(assetServiceMock).copyAsset(MUNICIPALITY_ID, id);
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@Test
+	void copyAssetFaultyUUID() {
+		// Arrange
+		final var id = "imNotARealUUID";
+
+		// Act
+		final var response = webTestClient.post()
+			.uri(PATH + "/{id}", id)
+			.exchange()
+			.expectStatus()
+			.is4xxClientError()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getStatus().value()).isEqualTo(400);
+		assertThat(response.getViolations().getFirst().field()).isEqualTo("copyAsset.id");
+		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void copyAssetInvalidMunicipalityId() {
+		// Arrange
+		final var uuid = randomUUID().toString();
+
+		// Act
+		final var response = webTestClient.post()
+			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/" + uuid).build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getTitle()).isEqualTo("Constraint Violation");
+		assertThat(response.getStatus()).isEqualTo(BAD_REQUEST);
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("copyAsset.municipalityId", "not a valid municipality ID"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void deleteAsset() {
 
 		// Arrange

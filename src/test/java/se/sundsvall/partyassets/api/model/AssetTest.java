@@ -47,6 +47,7 @@ class AssetTest {
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
 		final var type = "type";
+		final var replacesId = "replacesId";
 		final var validTo = LocalDate.now();
 
 		final var bean = Asset.create()
@@ -58,6 +59,7 @@ class AssetTest {
 			.withIssued(issued)
 			.withOrigin(origin)
 			.withPartyId(partyId)
+			.withReplacesId(replacesId)
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withType(type)
@@ -72,6 +74,7 @@ class AssetTest {
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getOrigin()).isEqualTo(origin);
 		assertThat(bean.getPartyId()).isEqualTo(partyId);
+		assertThat(bean.getReplacesId()).isEqualTo(replacesId);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getType()).isEqualTo(type);

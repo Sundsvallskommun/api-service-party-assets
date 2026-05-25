@@ -1,0 +1,5 @@
+{
+	"title": "Asset cannot be copied",
+	"status": 400,
+	"detail": "Only ACTIVE assets can be copied, but asset 5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884 has status EXPIRED"
+}

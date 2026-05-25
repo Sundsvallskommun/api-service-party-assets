@@ -7,12 +7,13 @@ import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.BLOCKED;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.EXPIRED;
+import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 
 class StatusTest {
 
 	@Test
 	void testEnumValues() {
-		assertThat(Status.values()).containsExactlyInAnyOrder(ACTIVE, EXPIRED, BLOCKED, TEMPORARY, DRAFT);
+		assertThat(Status.values()).containsExactlyInAnyOrder(ACTIVE, EXPIRED, BLOCKED, TEMPORARY, DRAFT, REPLACED);
 	}
 }
