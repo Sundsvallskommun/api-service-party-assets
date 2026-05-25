@@ -325,7 +325,7 @@ class AssetsIT extends AbstractAppTest {
 	void test19_createAssetPrivatePartyAndSourceReference() {
 		final var location = setupCall()
 			.withHttpMethod(POST)
-			.withServicePath(PATH + "?sourceReference=|1234;case;service;MY_NAMESPACE|")
+			.withServicePath(PATH + "?sourceReference=LINK|1234;case;service;MY_NAMESPACE|")
 			.withRequest(REQUEST_FILE)
 			.withExpectedResponseStatus(CREATED)
 			.withExpectedResponseHeader(CONTENT_TYPE, List.of(ALL_VALUE))

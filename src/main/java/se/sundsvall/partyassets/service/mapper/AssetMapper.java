@@ -97,8 +97,12 @@ public final class AssetMapper {
 		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
 		Optional.ofNullable(request.getIssued()).ifPresent(entity::setIssued);
 		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
+		if (Boolean.TRUE.equals(request.getIndefinitely())) {
+			entity.setValidTo(null);
+		} else {
+			Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+		}
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
-		Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
 		return entity;
 	}

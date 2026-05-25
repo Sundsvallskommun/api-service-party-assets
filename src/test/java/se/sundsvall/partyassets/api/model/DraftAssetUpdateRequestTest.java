@@ -42,6 +42,7 @@ class DraftAssetUpdateRequestTest {
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
 		final var validTo = LocalDate.now();
+		final var indefinitely = true;
 
 		final var bean = DraftAssetUpdateRequest.create()
 			.withAdditionalParameters(additionalParameters)
@@ -49,7 +50,8 @@ class DraftAssetUpdateRequestTest {
 			.withJsonParameters(jsonParameters)
 			.withStatus(status)
 			.withStatusReason(statusReason)
-			.withValidTo(validTo);
+			.withValidTo(validTo)
+			.withIndefinitely(indefinitely);
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
@@ -58,6 +60,7 @@ class DraftAssetUpdateRequestTest {
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getValidTo()).isEqualTo(validTo);
+		assertThat(bean.getIndefinitely()).isEqualTo(indefinitely);
 	}
 
 	@Test

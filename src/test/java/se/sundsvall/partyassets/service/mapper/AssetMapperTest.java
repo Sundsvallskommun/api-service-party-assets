@@ -116,6 +116,66 @@ class AssetMapperTest {
 	}
 
 	@Test
+	void updateEntityWithIndefinitelyTrueClearsValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = DraftAssetUpdateRequest.create().withIndefinitely(true);
+
+		assertThat(entity.getValidTo()).isNotNull();
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isNull();
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyTrueOverridesSuppliedValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = DraftAssetUpdateRequest.create()
+			.withValidTo(LocalDate.of(2030, 1, 1))
+			.withIndefinitely(true);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isNull();
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyFalseKeepsExistingValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var original = TestFactory.getAssetEntity(id, partyId);
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var request = DraftAssetUpdateRequest.create().withIndefinitely(false);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isEqualTo(original.getValidTo());
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyFalseAndSuppliedValidToUpdatesValidTo() {
+
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = TestFactory.getAssetEntity(id, partyId);
+		final var newValidTo = LocalDate.of(2030, 1, 1);
+		final var request = DraftAssetUpdateRequest.create()
+			.withValidTo(newValidTo)
+			.withIndefinitely(false);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isEqualTo(newValidTo);
+	}
+
+	@Test
 	void toCopyEntity() {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();

@@ -89,7 +89,7 @@ class AssetResource {
 	ResponseEntity<Void> createAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@Parameter(name = "sourceReference",
-			description = "Relation reference in format (only source is used): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'",
+			description = "Relation reference in format (target part is ignored): '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|{targetResourceId};{targetType};{targetService};{targetNamespace}'",
 			example = "LINK|1234;case;service;MY_NAMESPACE|") @RequestParam(required = false) final String sourceReference,
 		@Valid @RequestBody final AssetCreateRequest asset) {
 
