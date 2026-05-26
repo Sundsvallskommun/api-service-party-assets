@@ -53,7 +53,7 @@ class DraftAssetsIT extends AbstractAppTest {
 
 		setupCall()
 			.withHttpMethod(GET)
-			.withServicePath(location.getPath().replace("asset-drafts", "assets"))
+			.withServicePath(location.getPath())
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
@@ -94,7 +94,7 @@ class DraftAssetsIT extends AbstractAppTest {
 
 		setupCall()
 			.withHttpMethod(GET)
-			.withServicePath(PATH.replace("asset-drafts", "assets") + "/" + id)
+			.withServicePath(PATH + "/" + id)
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
@@ -186,7 +186,7 @@ class DraftAssetsIT extends AbstractAppTest {
 
 		setupCall()
 			.withHttpMethod(GET)
-			.withServicePath(PATH.replace("asset-drafts", "assets") + "/" + id)
+			.withServicePath(PATH + "/" + id)
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
@@ -208,7 +208,7 @@ class DraftAssetsIT extends AbstractAppTest {
 
 		setupCall()
 			.withHttpMethod(GET)
-			.withServicePath(location.getPath().replace("asset-drafts", "assets"))
+			.withServicePath(location.getPath())
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();

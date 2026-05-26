@@ -69,6 +69,18 @@ class DraftAssetResource {
 		return ok(service.getDraftAssets(municipalityId, request));
 	}
 
+	@GetMapping(path = "{id}", produces = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Get a draft asset by ID", responses = {
+		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+	})
+	ResponseEntity<Asset> getDraftAsset(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		@PathVariable @ValidUuid final String id) {
+
+		return ok(service.getAsset(municipalityId, id));
+	}
+
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
 	@Operation(summary = "Create a draft asset", responses = {
 		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)

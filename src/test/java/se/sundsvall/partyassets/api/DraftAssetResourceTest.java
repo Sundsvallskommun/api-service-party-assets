@@ -155,6 +155,66 @@ class DraftAssetResourceTest {
 	}
 
 	@Test
+	void getDraftAsset() {
+		// Arrange
+		final var id = randomUUID().toString();
+		final var asset = TestFactory.getDraftAsset();
+
+		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id)).thenReturn(asset);
+
+		// Act & Assert
+		final var result = webTestClient.get()
+			.uri("/" + PATH + "/" + id)
+			.exchange()
+			.expectStatus().isOk()
+			.expectHeader().contentType(APPLICATION_JSON)
+			.expectBody(Asset.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(result).usingRecursiveComparison().isEqualTo(asset);
+		verify(assetServiceMock).getAsset(MUNICIPALITY_ID, id);
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@Test
+	void getDraftAssetNotFound() {
+		// Arrange
+		final var id = randomUUID().toString();
+
+		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id))
+			.thenThrow(Problem.builder().withStatus(org.springframework.http.HttpStatus.NOT_FOUND).withTitle("Asset not found").build());
+
+		// Act & Assert
+		webTestClient.get()
+			.uri("/" + PATH + "/" + id)
+			.exchange()
+			.expectStatus().isNotFound();
+
+		verify(assetServiceMock).getAsset(MUNICIPALITY_ID, id);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"imNotARealUUID", "1", "1234-1234-1234-1234"
+	})
+	void getDraftAssetFaultyUUID(final String id) {
+		// Act & Assert
+		final var response = webTestClient.get()
+			.uri("/" + PATH + "/" + id)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations().getFirst().field()).isEqualTo("getDraftAsset.id");
+		assertThat(response.getViolations().getFirst().message()).isEqualTo("not a valid UUID");
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void createDraftAsset() {
 		// Arrange
 		final var uuid = randomUUID().toString();

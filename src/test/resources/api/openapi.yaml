@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.4"
 servers:
-- url: http://localhost:62110
+- url: http://localhost:54510
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -657,6 +657,51 @@ paths:
               schema:
                 $ref: "#/components/schemas/Problem"
   /{municipalityId}/asset-drafts/{id}:
+    get:
+      tags:
+      - Draft Assets
+      summary: Get a draft asset by ID
+      operationId: getDraftAsset
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
     patch:
       tags:
       - Draft Assets
