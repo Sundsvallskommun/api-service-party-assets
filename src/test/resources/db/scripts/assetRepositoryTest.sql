@@ -24,7 +24,11 @@ values
     -- Temporary asset with past validTo
     ('2023-01-01', '2023-06-30', '2023-01-01', null, 'TMP-0000000001', 'CASEDATA', 'Temporary permit',
      'b0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000001', 'PRIVATE',
-     'TEMPORARY', null, 'PERMIT', '2281');
+     'TEMPORARY', null, 'PERMIT', '2281'),
+    -- Draft asset
+    ('2026-01-01', '2027-12-31', '2026-01-01', null, 'DFT-0000000001', 'CASEDATA', 'Draft permit',
+     'd0000000-0000-0000-0000-000000000001', 'f0000000-0000-0000-0000-000000000002', 'PRIVATE',
+     'DRAFT', null, 'PERMIT', '2281');
 
 insert into additional_parameter (asset_id, parameter_key, parameter_value)
 values
