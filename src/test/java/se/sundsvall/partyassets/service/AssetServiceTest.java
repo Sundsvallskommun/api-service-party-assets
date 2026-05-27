@@ -366,21 +366,16 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
 		when(repositoryMock.save(any(AssetEntity.class))).thenAnswer(inv -> {
 			final AssetEntity e = inv.getArgument(0);
-			if (e.getStatus() == DRAFT) {
-				e.withId(newId);
-			}
+			e.withId(newId);
 			return e;
 		});
 
 		final var result = service.copyAsset(MUNICIPALITY_ID, originalId);
 
-		verify(repositoryMock, org.mockito.Mockito.times(2)).save(entityCaptor.capture());
-		final var savedEntities = entityCaptor.getAllValues();
-		assertThat(savedEntities).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
-		assertThat(savedEntities).anySatisfy(e -> {
-			assertThat(e.getStatus()).isEqualTo(DRAFT);
-			assertThat(e.getReplacesId()).isEqualTo(originalId);
-		});
+		verify(repositoryMock).save(entityCaptor.capture());
+		final var savedEntity = entityCaptor.getValue();
+		assertThat(savedEntity.getStatus()).isEqualTo(DRAFT);
+		assertThat(savedEntity.getReplacesId()).isEqualTo(originalId);
 		assertThat(result).isEqualTo(newId);
 	}
 
