@@ -112,9 +112,6 @@ public class AssetService {
 				.withDetail("Only ACTIVE assets can be copied, but asset %s has status %s".formatted(id, original.getStatus()))
 				.build();
 		}
-
-		original.setStatus(REPLACED);
-		repository.save(original);
 		return repository.save(toCopyEntity(original)).getId();
 	}
 
