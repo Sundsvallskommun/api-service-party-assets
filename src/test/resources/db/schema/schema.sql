@@ -80,7 +80,7 @@
        foreign key (asset_id) 
        references asset (id);
 
-    alter table if exists status_reason
-       add constraint fk_status_reason_status
-       foreign key (municipality_id, status_name)
+    alter table if exists status_reason 
+       add constraint fk_status_reason_status 
+       foreign key (municipality_id, status_name) 
        references status (municipality_id, name);
