@@ -80,7 +80,15 @@
        foreign key (asset_id) 
        references asset (id);
 
-    alter table if exists status_reason 
-       add constraint fk_status_reason_status 
-       foreign key (municipality_id, status_name) 
+    alter table if exists status_reason
+       add constraint fk_status_reason_status
+       foreign key (municipality_id, status_name)
        references status (municipality_id, name);
+
+    create table shedlock (
+        name        varchar(64)  not null,
+        lock_until  timestamp(3) not null,
+        locked_at   timestamp(3) not null default current_timestamp(3),
+        locked_by   varchar(255) not null,
+        primary key (name)
+    ) engine=InnoDB;
