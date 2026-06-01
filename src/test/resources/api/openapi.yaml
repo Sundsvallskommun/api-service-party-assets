@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.5"
 servers:
-- url: http://localhost:54510
+- url: http://localhost:63868
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -847,10 +847,10 @@ components:
             $ref: "#/components/schemas/Violation"
         title:
           type: string
-        detail:
-          type: string
         causeAsProblem:
           $ref: "#/components/schemas/ThrowableProblem"
+        detail:
+          type: string
         instance:
           type: string
           format: uri
@@ -936,7 +936,7 @@ components:
             type: string
           description: Additional parameters
           examples:
-          - "{\"foo\":\"bar\"}"
+          - foo: bar
         jsonParameters:
           type: array
           description: JSON parameters
@@ -975,8 +975,6 @@ components:
     JsonNode:
       type: object
       properties:
-        container:
-          type: boolean
         number:
           type: boolean
         nodeType:
@@ -1019,6 +1017,8 @@ components:
         boolean:
           type: boolean
         binary:
+          type: boolean
+        container:
           type: boolean
         floatingPointNumber:
           type: boolean
@@ -1084,7 +1084,7 @@ components:
             type: string
           description: Additional parameters
           examples:
-          - "{\"foo\":\"bar\"}"
+          - foo: bar
         jsonParameters:
           type: array
           description: JSON parameters
@@ -1152,7 +1152,7 @@ components:
             type: string
           description: Additional parameters
           examples:
-          - "{\"foo\":\"bar\"}"
+          - foo: bar
         jsonParameters:
           type: array
           description: JSON parameters
