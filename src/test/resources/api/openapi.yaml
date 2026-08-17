@@ -1067,7 +1067,7 @@ components:
           description: "If true, validTo will be cleared (asset becomes indefinite).\
             \ Takes precedence over validTo when both are supplied."
           examples:
-          - "true"
+          - true
         status:
           $ref: "#/components/schemas/Status"
           description: Asset status
