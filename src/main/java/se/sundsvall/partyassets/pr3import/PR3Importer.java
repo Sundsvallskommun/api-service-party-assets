@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -391,7 +392,7 @@ class PR3Importer {
 	 */
 	Optional<Status> extractStatus(final Row row) {
 		return extractValidToDate(row)
-			.map(validToDate -> validToDate.isAfter(LocalDate.now()) ? Status.ACTIVE : Status.EXPIRED);
+			.map(validToDate -> validToDate.isAfter(LocalDate.now(ZoneId.systemDefault())) ? Status.ACTIVE : Status.EXPIRED);
 	}
 
 	/**
