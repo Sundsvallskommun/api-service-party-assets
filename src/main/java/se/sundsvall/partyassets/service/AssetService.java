@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
@@ -136,7 +137,7 @@ public class AssetService {
 	}
 
 	private void validateValidTo(final AssetEntity entity) {
-		if (entity.getValidTo() != null && !entity.getValidTo().isAfter(LocalDate.now())) {
+		if (entity.getValidTo() != null && !entity.getValidTo().isAfter(LocalDate.now(ZoneId.systemDefault()))) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
 				.withTitle("Invalid validTo date")
