@@ -1,6 +1,6 @@
 package se.sundsvall.partyassets.service.mapper;
 
-import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
@@ -16,28 +16,25 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
 public final class AssetAttachmentMapper {
 
 	private AssetAttachmentMapper() {}
 
-	public static AssetAttachmentEntity toAssetAttachmentEntity(final AssetEntity asset, final MultipartFile file, final String category, final String description) {
-		try {
-			return AssetAttachmentEntity.create()
-				.withAsset(asset)
-				.withAttachmentData(AssetAttachmentDataEntity.create()
-					.withFile(Hibernate.getLobHelper().createBlob(file.getInputStream(), file.getSize())))
-				.withMunicipalityId(asset.getMunicipalityId())
-				.withFileName(StringUtils.getFilename(file.getOriginalFilename()))
-				.withMimeType(file.getContentType())
-				.withFileSize(Math.toIntExact(file.getSize()))
-				.withCategory(category)
-				.withDescription(description);
-		} catch (final IOException e) {
-			throw Problem.valueOf(BAD_REQUEST, "Could not read uploaded file %s: %s".formatted(file.getOriginalFilename(), e.getMessage()));
-		}
+	// The content stream is passed in rather than opened here: the blob only wraps it, so whoever opened it has to keep
+	// it open until the insert is flushed and close it afterwards.
+	public static AssetAttachmentEntity toAssetAttachmentEntity(final AssetEntity asset, final MultipartFile file, final InputStream content, final String category, final String description) {
+		return AssetAttachmentEntity.create()
+			.withAsset(asset)
+			.withAttachmentData(AssetAttachmentDataEntity.create()
+				.withFile(Hibernate.getLobHelper().createBlob(content, file.getSize())))
+			.withMunicipalityId(asset.getMunicipalityId())
+			.withFileName(StringUtils.getFilename(file.getOriginalFilename()))
+			.withMimeType(file.getContentType())
+			.withFileSize(Math.toIntExact(file.getSize()))
+			.withCategory(category)
+			.withDescription(description);
 	}
 
 	// The MariaDB driver materializes a blob in memory, so copying one costs its full size in heap for the duration of

@@ -1,6 +1,5 @@
 package se.sundsvall.partyassets.service.mapper;
 
-import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Stream;
@@ -10,19 +9,13 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mariadb.jdbc.MariaDbBlob;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
-import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentDataEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.copyAssetAttachmentData;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
@@ -39,7 +32,7 @@ class AssetAttachmentMapperTest {
 		final var asset = AssetEntity.create().withId("assetId").withMunicipalityId(MUNICIPALITY_ID);
 		final var file = new MockMultipartFile("attachment", "lokalritning.pdf", "application/pdf", CONTENT);
 
-		final var result = toAssetAttachmentEntity(asset, file, "LOKALRITNING", "description");
+		final var result = toAssetAttachmentEntity(asset, file, file.getInputStream(), "LOKALRITNING", "description");
 
 		assertThat(result).isNotNull();
 		assertThat(result.getAsset()).isSameAs(asset);
@@ -58,21 +51,12 @@ class AssetAttachmentMapperTest {
 		final var content = new byte[2048];
 		content[2047] = 42;
 
-		final var result = toAssetAttachmentEntity(asset, new MockMultipartFile("attachment", "big.pdf", "application/pdf", content), null, null);
+		final var file = new MockMultipartFile("attachment", "big.pdf", "application/pdf", content);
+
+		final var result = toAssetAttachmentEntity(asset, file, file.getInputStream(), null, null);
 
 		assertThat(result.getFileSize()).isEqualTo(content.length);
 		assertThat(result.getAttachmentData().getFile().getBinaryStream().readAllBytes()).isEqualTo(content);
-	}
-
-	@Test
-	void toEntityWhenFileCannotBeRead() throws IOException {
-		final var asset = AssetEntity.create().withId("assetId");
-		final var file = mock(MultipartFile.class);
-		when(file.getInputStream()).thenThrow(new IOException("boom"));
-
-		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> toAssetAttachmentEntity(asset, file, null, null))
-			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 	}
 
 	@Test

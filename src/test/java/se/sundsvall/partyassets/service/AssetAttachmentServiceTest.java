@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
@@ -24,6 +26,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -32,6 +35,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @ExtendWith(MockitoExtension.class)
@@ -76,13 +80,13 @@ class AssetAttachmentServiceTest {
 	@Test
 	void createAttachment() {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
-		when(attachmentRepositoryMock.save(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.ACTIVE));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.ACTIVE));
 
 		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
 
 		assertThat(result).isEqualTo(ATTACHMENT_ID);
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock).save(attachmentCaptor.capture());
+		verify(attachmentRepositoryMock).saveAndFlush(attachmentCaptor.capture());
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 
 		assertThat(attachmentCaptor.getValue()).satisfies(saved -> {
@@ -106,7 +110,7 @@ class AssetAttachmentServiceTest {
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
 
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock, never()).save(any());
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 	}
 
@@ -119,7 +123,7 @@ class AssetAttachmentServiceTest {
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock, never()).save(any());
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 	}
 
@@ -132,7 +136,7 @@ class AssetAttachmentServiceTest {
 			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, new MockMultipartFile("attachment", fileName, MIME_TYPE, CONTENT), null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
-		verify(attachmentRepositoryMock, never()).save(any());
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
 	}
 
 	@Test
@@ -143,7 +147,22 @@ class AssetAttachmentServiceTest {
 			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, new MockMultipartFile("attachment", FILE_NAME, MIME_TYPE, new byte[0]), null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
-		verify(attachmentRepositoryMock, never()).save(any());
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void createAttachmentWhenTheUploadCannotBeRead() throws IOException {
+		final var file = mock(MultipartFile.class);
+		when(file.isEmpty()).thenReturn(false);
+		when(file.getOriginalFilename()).thenReturn(FILE_NAME);
+		when(file.getInputStream()).thenThrow(new IOException("boom"));
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file, null, null))
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(INTERNAL_SERVER_ERROR));
+
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
 	}
 
 	@Test

@@ -50,12 +50,18 @@ public class AssetAttachmentService {
 		this.attachmentRepository = attachmentRepository;
 	}
 
+	// The blob only wraps the upload stream and the driver reads it when the row is inserted, so the insert is flushed
+	// while the stream is still open. A plain save would leave the read to happen after try-with-resources closed it.
 	public String createAttachment(final String municipalityId, final String assetId, final MultipartFile file, final String category, final String description) {
 		final var asset = getAssetEntity(municipalityId, assetId);
 		validateAssetIsModifiable(asset);
 		validateFile(file);
 
-		return attachmentRepository.save(toAssetAttachmentEntity(asset, file, category, description)).getId();
+		try (final var content = file.getInputStream()) {
+			return attachmentRepository.saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description)).getId();
+		} catch (final IOException e) {
+			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Could not read uploaded file %s: %s".formatted(file.getOriginalFilename(), e.getMessage()));
+		}
 	}
 
 	@Transactional(readOnly = true)
