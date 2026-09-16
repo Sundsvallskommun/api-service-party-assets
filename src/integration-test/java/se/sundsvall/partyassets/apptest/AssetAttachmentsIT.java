@@ -199,6 +199,26 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.isEqualTo(attachmentBytes(originalAttachments.getFirst().getId()));
 	}
 
+	// The README promises that deleting an asset takes its attachments with it. The cascade runs through a derived
+	// delete on a LAZY collection, so it is worth proving end to end rather than assuming.
+	@Test
+	void test09_deleteAssetWithAttachments() throws Exception {
+		createAttachmentOnActiveAsset();
+
+		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID)).hasSize(1);
+		final var dataRowsBeforeDelete = countAttachmentDataRows();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath("/" + MUNICIPALITY_ID + "/assets/" + ACTIVE_ASSET_ID)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID)).isEmpty();
+		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeDelete - 1);
+	}
+
 	private byte[] attachmentBytes(final String attachmentId) {
 		return jdbcTemplate.queryForObject("""
 			select d.file from asset_attachment_data d
