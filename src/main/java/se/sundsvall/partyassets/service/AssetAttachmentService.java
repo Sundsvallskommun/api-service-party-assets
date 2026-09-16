@@ -1,13 +1,10 @@
 package se.sundsvall.partyassets.service;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import org.springframework.http.ContentDisposition;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.ThrowableProblem;
@@ -18,9 +15,6 @@ import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
-import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -71,17 +65,14 @@ public class AssetAttachmentService {
 		return toAssetAttachments(attachmentRepository.findAllForAsset(assetId, municipalityId));
 	}
 
+	// The content is read here rather than streamed to the response: the driver already holds every byte in memory, so
+	// writing inside the transaction would keep a database connection checked out for the whole network transfer.
 	@Transactional(readOnly = true)
-	public void readAttachment(final String municipalityId, final String assetId, final String attachmentId, final HttpServletResponse response) {
+	public AssetAttachmentContent readAttachment(final String municipalityId, final String assetId, final String attachmentId) {
 		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
 
-		try {
-			final var file = attachment.getAttachmentData().getFile();
-
-			response.addHeader(CONTENT_TYPE, attachment.getMimeType());
-			response.addHeader(CONTENT_DISPOSITION, ContentDisposition.attachment().filename(attachment.getFileName(), UTF_8).build().toString());
-			response.setContentLengthLong(file.length());
-			StreamUtils.copy(file.getBinaryStream(), response.getOutputStream());
+		try (final var content = attachment.getAttachmentData().getFile().getBinaryStream()) {
+			return new AssetAttachmentContent(attachment.getFileName(), attachment.getMimeType(), content.readAllBytes());
 		} catch (final IOException | SQLException e) {
 			throw Problem.valueOf(INTERNAL_SERVER_ERROR, READ_FAILED_DETAIL.formatted(attachmentId, e.getMessage()));
 		}

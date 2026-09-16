@@ -800,6 +800,11 @@ paths:
       responses:
         "200":
           description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         "400":
           description: Bad Request
           content:
@@ -1091,9 +1096,9 @@ components:
         type:
           type: string
           format: uri
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
         status:
           type: integer
@@ -1116,10 +1121,10 @@ components:
         instance:
           type: string
           format: uri
-        detail:
-          type: string
         causeAsProblem:
           $ref: "#/components/schemas/ThrowableProblem"
+        detail:
+          type: string
     ThrowableProblem:
       type: object
       properties:
@@ -1253,26 +1258,15 @@ components:
           type: boolean
         container:
           type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        boolean:
-          type: boolean
-        double:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        string:
-          type: boolean
-        binary:
-          type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
         number:
+          type: boolean
+        integralNumber:
+          type: boolean
+        valueNode:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        bigInteger:
           type: boolean
         nodeType:
           type: string
@@ -1286,17 +1280,28 @@ components:
           - OBJECT
           - POJO
           - STRING
-        bigInteger:
-          type: boolean
-        integralNumber:
-          type: boolean
         bigDecimal:
           type: boolean
-        floatingPointNumber:
-          type: boolean
-        valueNode:
-          type: boolean
         missingNode:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
+        int:
+          type: boolean
+        double:
+          type: boolean
+        boolean:
+          type: boolean
+        pojo:
+          type: boolean
+        string:
+          type: boolean
+        binary:
+          type: boolean
+        short:
+          type: boolean
+        long:
           type: boolean
         embeddedValue:
           type: boolean

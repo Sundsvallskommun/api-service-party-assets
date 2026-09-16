@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.api.model.AssetAttachment;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
+import se.sundsvall.partyassets.service.AssetAttachmentContent;
 import se.sundsvall.partyassets.service.AssetAttachmentService;
 
 import static java.util.UUID.randomUUID;
@@ -23,8 +24,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PDF;
+import static org.springframework.http.MediaType.APPLICATION_PDF_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
 
 @ActiveProfiles("junit")
@@ -109,12 +113,21 @@ class AssetAttachmentResourceTest {
 
 	@Test
 	void readAttachment() {
-		webTestClient.get()
+		when(serviceMock.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID))
+			.thenReturn(new AssetAttachmentContent("lokalritning.pdf", APPLICATION_PDF_VALUE, "content".getBytes()));
+
+		final var response = webTestClient.get()
 			.uri(PATH + "/" + ATTACHMENT_ID)
 			.exchange()
-			.expectStatus().isOk();
+			.expectStatus().isOk()
+			.expectHeader().valueEquals(CONTENT_TYPE, APPLICATION_PDF_VALUE)
+			.expectHeader().value(CONTENT_DISPOSITION, disposition -> assertThat(disposition).startsWith("attachment; filename=\"lokalritning.pdf\""))
+			.expectBody(byte[].class)
+			.returnResult()
+			.getResponseBody();
 
-		verify(serviceMock).readAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), eq(ATTACHMENT_ID), any());
+		assertThat(response).isEqualTo("content".getBytes());
+		verify(serviceMock).readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
 	}
 
 	@Test

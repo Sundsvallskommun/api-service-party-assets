@@ -7,11 +7,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,10 +33,13 @@ import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.validation.ValidAttachmentContentType;
 import se.sundsvall.partyassets.service.AssetAttachmentService;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 import static org.springframework.http.ResponseEntity.created;
@@ -90,17 +93,22 @@ class AssetAttachmentResource {
 		return ok(service.readAttachments(municipalityId, assetId));
 	}
 
-	@GetMapping(path = "{attachmentId}", produces = ALL_VALUE)
+	@GetMapping(path = "{attachmentId}", produces = APPLICATION_OCTET_STREAM_VALUE)
 	@Operation(summary = "Download an asset attachment", responses = {
-		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+		@ApiResponse(responseCode = "200", description = "OK", content = @Content(mediaType = APPLICATION_OCTET_STREAM_VALUE, schema = @Schema(type = "string", format = "binary")))
 	})
-	void readAttachment(
+	ResponseEntity<byte[]> readAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable @ValidUuid final String assetId,
-		@PathVariable @ValidUuid final String attachmentId,
-		final HttpServletResponse response) {
+		@PathVariable @ValidUuid final String attachmentId) {
 
-		service.readAttachment(municipalityId, assetId, attachmentId, response);
+		final var attachment = service.readAttachment(municipalityId, assetId, attachmentId);
+
+		return ok()
+			.header(CONTENT_TYPE, attachment.mimeType())
+			.header(CONTENT_DISPOSITION, ContentDisposition.attachment().filename(attachment.fileName(), UTF_8).build().toString())
+			.contentLength(attachment.content().length)
+			.body(attachment.content());
 	}
 
 	@PatchMapping(path = "{attachmentId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

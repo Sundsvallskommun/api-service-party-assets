@@ -11,7 +11,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.ThrowableProblem;
@@ -32,8 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
-import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -194,42 +191,26 @@ class AssetAttachmentServiceTest {
 
 	@Test
 	void readAttachment() {
-		final var response = new MockHttpServletResponse();
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
 		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(Status.EXPIRED)));
 
-		service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, response);
+		final var result = service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
 
-		assertThat(response.getHeader(CONTENT_TYPE)).isEqualTo(MIME_TYPE);
-		assertThat(response.getHeader(CONTENT_DISPOSITION)).startsWith("attachment; filename=\"" + FILE_NAME + "\"");
-		assertThat(response.getContentAsByteArray()).isEqualTo(CONTENT);
+		assertThat(result.fileName()).isEqualTo(FILE_NAME);
+		assertThat(result.mimeType()).isEqualTo(MIME_TYPE);
+		assertThat(result.content()).isEqualTo(CONTENT);
 		verify(assetRepositoryMock).existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
 		verify(attachmentRepositoryMock).findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 	}
 
 	@Test
-	void readAttachmentEscapesTheFileNameInTheHeader() {
-		final var response = new MockHttpServletResponse();
-		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
-		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID))
-			.thenReturn(Optional.of(attachment(Status.ACTIVE).withFileName("ritning \"över\" lokalen.pdf")));
-
-		service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, response);
-
-		assertThat(response.getHeader(CONTENT_DISPOSITION))
-			.doesNotContain("\"ritning \"över\"")
-			.contains("filename*=UTF-8''");
-	}
-
-	@Test
 	void readNonExistingAttachment() {
-		final var response = new MockHttpServletResponse();
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
 		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, response))
+			.isThrownBy(() -> service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
 
 		verify(assetRepositoryMock).existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
