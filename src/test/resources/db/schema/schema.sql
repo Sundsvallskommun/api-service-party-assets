@@ -42,7 +42,7 @@
 
     create table asset_attachment_data (
         id bigint not null auto_increment,
-        file longblob,
+        file longblob not null,
         primary key (id)
     ) engine=InnoDB;
 

@@ -19,7 +19,7 @@ public class AssetAttachmentDataEntity {
 	@Column(name = "id")
 	private Long id;
 
-	@Column(name = "file", columnDefinition = "longblob")
+	@Column(name = "file", columnDefinition = "longblob", nullable = false)
 	private Blob file;
 
 	public static AssetAttachmentDataEntity create() {
