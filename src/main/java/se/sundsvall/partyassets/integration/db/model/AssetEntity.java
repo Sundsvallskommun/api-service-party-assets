@@ -27,6 +27,7 @@ import se.sundsvall.partyassets.api.model.Status;
 
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 import static java.time.OffsetDateTime.now;
 import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -96,6 +97,9 @@ public class AssetEntity {
 
 	@OneToMany(fetch = EAGER, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<AssetJsonParameterEntity> jsonParameters;
+
+	@OneToMany(fetch = LAZY, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<AssetAttachmentEntity> attachments;
 
 	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
@@ -322,6 +326,19 @@ public class AssetEntity {
 
 	public AssetEntity withJsonParameters(List<AssetJsonParameterEntity> jsonParameters) {
 		this.jsonParameters = jsonParameters;
+		return this;
+	}
+
+	public List<AssetAttachmentEntity> getAttachments() {
+		return attachments;
+	}
+
+	public void setAttachments(List<AssetAttachmentEntity> attachments) {
+		this.attachments = attachments;
+	}
+
+	public AssetEntity withAttachments(List<AssetAttachmentEntity> attachments) {
+		this.attachments = attachments;
 		return this;
 	}
 
