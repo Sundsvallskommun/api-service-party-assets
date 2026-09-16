@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.5"
+  version: "6.6"
 servers:
 - url: http://localhost:55420
   description: Generated server url
@@ -1091,9 +1091,9 @@ components:
         type:
           type: string
           format: uri
-        detail:
-          type: string
         title:
+          type: string
+        detail:
           type: string
         status:
           type: integer
@@ -1116,10 +1116,10 @@ components:
         instance:
           type: string
           format: uri
-        causeAsProblem:
-          $ref: "#/components/schemas/ThrowableProblem"
         detail:
           type: string
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
     ThrowableProblem:
       type: object
       properties:
@@ -1253,7 +1253,26 @@ components:
           type: boolean
         container:
           type: boolean
-        valueNode:
+        textual:
+          type: boolean
+          deprecated: true
+        boolean:
+          type: boolean
+        double:
+          type: boolean
+        pojo:
+          type: boolean
+        short:
+          type: boolean
+        string:
+          type: boolean
+        binary:
+          type: boolean
+        int:
+          type: boolean
+        long:
+          type: boolean
+        number:
           type: boolean
         nodeType:
           type: string
@@ -1267,36 +1286,17 @@ components:
           - OBJECT
           - POJO
           - STRING
-        missingNode:
-          type: boolean
-        floatingPointNumber:
-          type: boolean
-        bigDecimal:
+        bigInteger:
           type: boolean
         integralNumber:
           type: boolean
-        bigInteger:
+        bigDecimal:
           type: boolean
-        boolean:
+        floatingPointNumber:
           type: boolean
-        double:
+        valueNode:
           type: boolean
-        short:
-          type: boolean
-        binary:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        pojo:
-          type: boolean
-        long:
-          type: boolean
-        string:
-          type: boolean
-        int:
-          type: boolean
-        number:
+        missingNode:
           type: boolean
         embeddedValue:
           type: boolean
