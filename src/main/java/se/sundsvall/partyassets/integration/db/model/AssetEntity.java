@@ -368,6 +368,20 @@ public class AssetEntity {
 		return this;
 	}
 
+	public AssetEntity addOrReplaceAttachments(List<AssetAttachmentEntity> attachments) {
+		if (this.attachments == null) {
+			this.attachments = new ArrayList<>();
+		}
+
+		final var safeList = ofNullable(attachments).orElse(emptyList());
+		safeList.forEach(a -> a.setAsset(this));
+
+		this.attachments.clear();
+		this.attachments.addAll(safeList);
+
+		return this;
+	}
+
 	public AssetEntity addOrReplaceJsonParameters(List<AssetJsonParameterEntity> jsonParameters) {
 		if (this.jsonParameters == null) {
 			this.jsonParameters = new ArrayList<>();

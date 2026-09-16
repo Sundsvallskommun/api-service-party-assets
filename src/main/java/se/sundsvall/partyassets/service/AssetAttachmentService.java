@@ -1,0 +1,158 @@
+package se.sundsvall.partyassets.service;
+
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.multipart.MultipartFile;
+import se.sundsvall.dept44.problem.Problem;
+import se.sundsvall.dept44.problem.ThrowableProblem;
+import se.sundsvall.partyassets.api.model.AssetAttachment;
+import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
+import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
+import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.springframework.http.HttpHeaders.CONTENT_DISPOSITION;
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
+import static se.sundsvall.partyassets.api.model.Status.DRAFT;
+import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
+import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
+import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
+import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.updateEntity;
+
+@Service
+@Transactional
+public class AssetAttachmentService {
+
+	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
+	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
+	private static final String ATTACHMENT_NOT_FOUND_TITLE = "Attachment not found";
+	private static final String ATTACHMENT_NOT_FOUND_DETAIL = "Attachment with id %s not found on asset %s for municipalityId %s";
+	private static final String READ_FAILED_DETAIL = "Could not read data for attachment %s: %s";
+	private static final int MAX_FILE_NAME_LENGTH = 255;
+
+	private final AssetRepository assetRepository;
+	private final AssetAttachmentRepository attachmentRepository;
+
+	public AssetAttachmentService(final AssetRepository assetRepository, final AssetAttachmentRepository attachmentRepository) {
+		this.assetRepository = assetRepository;
+		this.attachmentRepository = attachmentRepository;
+	}
+
+	public String createAttachment(final String municipalityId, final String assetId, final MultipartFile file, final String category, final String description) {
+		final var asset = getAssetEntity(municipalityId, assetId);
+		validateAssetIsModifiable(asset);
+		validateFile(file);
+
+		return attachmentRepository.save(toAssetAttachmentEntity(asset, file, category, description)).getId();
+	}
+
+	@Transactional(readOnly = true)
+	public List<AssetAttachment> readAttachments(final String municipalityId, final String assetId) {
+		verifyAssetExists(municipalityId, assetId);
+
+		return toAssetAttachments(attachmentRepository.findAllForAsset(assetId, municipalityId));
+	}
+
+	@Transactional(readOnly = true)
+	public void readAttachment(final String municipalityId, final String assetId, final String attachmentId, final HttpServletResponse response) {
+		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
+
+		try {
+			final var file = attachment.getAttachmentData().getFile();
+
+			response.addHeader(CONTENT_TYPE, attachment.getMimeType());
+			response.addHeader(CONTENT_DISPOSITION, ContentDisposition.attachment().filename(attachment.getFileName(), UTF_8).build().toString());
+			response.setContentLengthLong(file.length());
+			StreamUtils.copy(file.getBinaryStream(), response.getOutputStream());
+		} catch (final IOException | SQLException e) {
+			throw Problem.valueOf(INTERNAL_SERVER_ERROR, READ_FAILED_DETAIL.formatted(attachmentId, e.getMessage()));
+		}
+	}
+
+	// saveAndFlush, not save: the entity is already managed, so a plain save would let @PreUpdate fire at commit - after
+	// the response has been mapped - and the caller would get back the timestamp from before the update.
+	public AssetAttachment updateAttachment(final String municipalityId, final String assetId, final String attachmentId, final AssetAttachmentUpdateRequest request) {
+		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
+		validateAssetIsModifiable(attachment.getAsset());
+
+		return toAssetAttachment(attachmentRepository.saveAndFlush(updateEntity(attachment, request)));
+	}
+
+	public void deleteAttachment(final String municipalityId, final String assetId, final String attachmentId) {
+		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
+		validateAssetIsModifiable(attachment.getAsset());
+
+		attachmentRepository.delete(attachment);
+	}
+
+	private void validateAssetIsModifiable(final AssetEntity asset) {
+		if (asset.getStatus() != DRAFT && asset.getStatus() != ACTIVE) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Attachments cannot be modified")
+				.withDetail("Attachments can only be modified on assets with status %s or %s, but asset %s has status %s".formatted(DRAFT, ACTIVE, asset.getId(), asset.getStatus()))
+				.build();
+		}
+	}
+
+	private void validateFile(final MultipartFile file) {
+		if (file.isEmpty()) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Invalid file")
+				.withDetail("The uploaded file is empty")
+				.build();
+		}
+
+		final var fileName = file.getOriginalFilename();
+		if (fileName != null && fileName.length() > MAX_FILE_NAME_LENGTH) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Invalid file name")
+				.withDetail("File name must not exceed %s characters".formatted(MAX_FILE_NAME_LENGTH))
+				.build();
+		}
+	}
+
+	private void verifyAssetExists(final String municipalityId, final String assetId) {
+		if (!assetRepository.existsByIdAndMunicipalityId(assetId, municipalityId)) {
+			throw assetNotFound(municipalityId, assetId);
+		}
+	}
+
+	private AssetEntity getAssetEntity(final String municipalityId, final String assetId) {
+		return assetRepository.findByIdAndMunicipalityId(assetId, municipalityId)
+			.orElseThrow(() -> assetNotFound(municipalityId, assetId));
+	}
+
+	private AssetAttachmentEntity getAttachmentEntity(final String municipalityId, final String assetId, final String attachmentId) {
+		verifyAssetExists(municipalityId, assetId);
+
+		return attachmentRepository.findByIdForAsset(attachmentId, assetId, municipalityId)
+			.orElseThrow(() -> Problem.builder()
+				.withStatus(NOT_FOUND)
+				.withTitle(ATTACHMENT_NOT_FOUND_TITLE)
+				.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, assetId, municipalityId))
+				.build());
+	}
+
+	private ThrowableProblem assetNotFound(final String municipalityId, final String assetId) {
+		return Problem.builder()
+			.withStatus(NOT_FOUND)
+			.withTitle(ASSET_NOT_FOUND_TITLE)
+			.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(assetId, municipalityId))
+			.build();
+	}
+}
