@@ -87,6 +87,25 @@ Alternatively, see the `openapi.yml` file located in directory `src/test/resourc
 curl -X 'GET' 'http://localhost:8080/2281/assets?assetId=PRH-123456789' -H 'accept: application/json'
 ```
 
+### Attachments
+
+An asset can carry the files that belong to the permit itself — the drawing of the premises where alcohol may be served,
+for instance. They are stored with the asset rather than beside it, since the permit is not valid without them, and they
+follow the asset through its life: a draft made from an active asset gets its own copy of every file, and deleting an
+asset deletes them.
+
+Uploads are `multipart/form-data` with the file in the `attachment` part, at most 50 MB per file. Allowed types are PDF,
+PNG, JPEG, TIFF and Word (`.docx`), checked against the `Content-Type` the client declares for the part — so the type
+has to be spelled out for anything curl does not recognise from the extension. Files can be added, changed and removed
+while the asset is `DRAFT` or `ACTIVE`; once it has expired or been replaced, its attachments can still be listed and
+downloaded but no longer changed.
+
+```bash
+curl -X 'POST' 'http://localhost:8080/2281/assets/{assetId}/attachments' \
+  -F 'attachment=@lokalritning.pdf;type=application/pdf' \
+  -F 'category=LOKALRITNING'
+```
+
 ## Configuration
 
 Configuration is crucial for the application to run successfully. Ensure all necessary settings are configured in

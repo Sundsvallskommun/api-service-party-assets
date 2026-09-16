@@ -1,0 +1,11 @@
+[
+	{
+		"id": "7c145278-da81-49b0-a011-0f8f6821e3a0",
+		"fileName": "gammal-ritning.pdf",
+		"mimeType": "application/pdf",
+		"fileSize": 9,
+		"category": "LOKALRITNING",
+		"description": "Ritning över serveringslokal",
+		"created": "${json-unit.any-string}"
+	}
+]
