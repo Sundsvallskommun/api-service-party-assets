@@ -125,6 +125,32 @@ class AssetAttachmentServiceTest {
 	}
 
 	@Test
+	void createAttachmentOnTemporaryAsset() {
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.TEMPORARY)));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.TEMPORARY));
+
+		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null);
+
+		assertThat(result).isEqualTo(ATTACHMENT_ID);
+		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
+		verify(attachmentRepositoryMock).saveAndFlush(any(AssetAttachmentEntity.class));
+		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
+	}
+
+	@Test
+	void createAttachmentOnBlockedAsset() {
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.BLOCKED)));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null))
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
+
+		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
+		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
+	}
+
+	@Test
 	void createAttachmentWithTooLongFileName() {
 		final var fileName = "a".repeat(256) + ".pdf";
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));

@@ -2,7 +2,9 @@ package se.sundsvall.partyassets.service;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +12,7 @@ import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.partyassets.api.model.AssetAttachment;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
@@ -20,6 +23,7 @@ import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
+import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
@@ -35,6 +39,8 @@ public class AssetAttachmentService {
 	private static final String ATTACHMENT_NOT_FOUND_DETAIL = "Attachment with id %s not found on asset %s for municipalityId %s";
 	private static final String READ_FAILED_DETAIL = "Could not read data for attachment %s: %s";
 	private static final int MAX_FILE_NAME_LENGTH = 255;
+
+	private static final Set<Status> MODIFIABLE_STATUSES = EnumSet.of(DRAFT, ACTIVE, TEMPORARY);
 
 	private final AssetRepository assetRepository;
 	private final AssetAttachmentRepository attachmentRepository;
@@ -95,11 +101,11 @@ public class AssetAttachmentService {
 	}
 
 	private void validateAssetIsModifiable(final AssetEntity asset) {
-		if (asset.getStatus() != DRAFT && asset.getStatus() != ACTIVE) {
+		if (!MODIFIABLE_STATUSES.contains(asset.getStatus())) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
 				.withTitle("Attachments cannot be modified")
-				.withDetail("Attachments can only be modified on assets with status %s or %s, but asset %s has status %s".formatted(DRAFT, ACTIVE, asset.getId(), asset.getStatus()))
+				.withDetail("Attachments can only be modified on assets with status %s, but asset %s has status %s".formatted(MODIFIABLE_STATUSES, asset.getId(), asset.getStatus()))
 				.build();
 		}
 	}

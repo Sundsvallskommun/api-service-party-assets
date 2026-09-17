@@ -97,8 +97,8 @@ asset deletes them.
 Uploads are `multipart/form-data` with the file in the `attachment` part, at most 50 MB per file. Allowed types are PDF,
 PNG, JPEG, TIFF and Word (`.docx`), checked against the `Content-Type` the client declares for the part — so the type
 has to be spelled out for anything curl does not recognise from the extension. Files can be added, changed and removed
-while the asset is `DRAFT` or `ACTIVE`; once it has expired or been replaced, its attachments can still be listed and
-downloaded but no longer changed.
+while the asset is `DRAFT`, `ACTIVE` or `TEMPORARY`; once it is blocked, has expired or been replaced, its attachments
+can still be listed and downloaded but no longer changed.
 
 ```bash
 curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
