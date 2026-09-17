@@ -115,7 +115,7 @@ class AssetAttachmentResourceFailureTest {
 		assertThat(response).isNotNull();
 		assertThat(response.getViolations())
 			.extracting(Violation::field, Violation::message)
-			.containsExactly(tuple("readAttachments.assetId", "not a valid UUID"));
+			.containsExactly(tuple("readAttachments.id", "not a valid UUID"));
 
 		verifyNoInteractions(serviceMock);
 	}

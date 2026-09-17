@@ -49,7 +49,7 @@ import static org.springframework.web.util.UriComponentsBuilder.fromPath;
 
 @RestController
 @Validated
-@RequestMapping(value = "/{municipalityId}/assets/{assetId}/attachments")
+@RequestMapping(value = "/{municipalityId}/assets/{id}/attachments")
 @Tag(name = "Asset attachments")
 @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(oneOf = {
 	Problem.class, ConstraintViolationProblem.class
@@ -70,14 +70,14 @@ class AssetAttachmentResource {
 	})
 	ResponseEntity<Void> createAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String assetId,
+		@PathVariable @ValidUuid final String id,
 		@NotNull @ValidAttachmentContentType @RequestPart("attachment") final MultipartFile attachment,
 		@Parameter(name = "category", description = "What the attachment depicts", example = "LOKALRITNING") @Size(max = 255) @RequestPart(name = "category", required = false) final String category,
 		@Parameter(name = "description", description = "Attachment description") @Size(max = 255) @RequestPart(name = "description", required = false) final String description) {
 
-		final var attachmentId = service.createAttachment(municipalityId, assetId, attachment, category, description);
+		final var attachmentId = service.createAttachment(municipalityId, id, attachment, category, description);
 
-		return created(fromPath("/{municipalityId}/assets/{assetId}/attachments/{attachmentId}").buildAndExpand(municipalityId, assetId, attachmentId).toUri())
+		return created(fromPath("/{municipalityId}/assets/{id}/attachments/{attachmentId}").buildAndExpand(municipalityId, id, attachmentId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
 			.build();
 	}
@@ -88,9 +88,9 @@ class AssetAttachmentResource {
 	})
 	ResponseEntity<List<AssetAttachment>> readAttachments(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String assetId) {
+		@PathVariable @ValidUuid final String id) {
 
-		return ok(service.readAttachments(municipalityId, assetId));
+		return ok(service.readAttachments(municipalityId, id));
 	}
 
 	@GetMapping(path = "{attachmentId}", produces = APPLICATION_OCTET_STREAM_VALUE)
@@ -99,10 +99,10 @@ class AssetAttachmentResource {
 	})
 	ResponseEntity<byte[]> readAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String assetId,
+		@PathVariable @ValidUuid final String id,
 		@PathVariable @ValidUuid final String attachmentId) {
 
-		final var attachment = service.readAttachment(municipalityId, assetId, attachmentId);
+		final var attachment = service.readAttachment(municipalityId, id, attachmentId);
 
 		return ok()
 			.header(CONTENT_TYPE, attachment.mimeType())
@@ -117,11 +117,11 @@ class AssetAttachmentResource {
 	})
 	ResponseEntity<AssetAttachment> updateAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String assetId,
+		@PathVariable @ValidUuid final String id,
 		@PathVariable @ValidUuid final String attachmentId,
 		@Valid @RequestBody final AssetAttachmentUpdateRequest request) {
 
-		return ok(service.updateAttachment(municipalityId, assetId, attachmentId, request));
+		return ok(service.updateAttachment(municipalityId, id, attachmentId, request));
 	}
 
 	@DeleteMapping(path = "{attachmentId}", produces = ALL_VALUE)
@@ -130,10 +130,10 @@ class AssetAttachmentResource {
 	})
 	ResponseEntity<Void> deleteAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String assetId,
+		@PathVariable @ValidUuid final String id,
 		@PathVariable @ValidUuid final String attachmentId) {
 
-		service.deleteAttachment(municipalityId, assetId, attachmentId);
+		service.deleteAttachment(municipalityId, id, attachmentId);
 		return noContent().build();
 	}
 }

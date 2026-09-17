@@ -101,7 +101,7 @@ while the asset is `DRAFT` or `ACTIVE`; once it has expired or been replaced, it
 downloaded but no longer changed.
 
 ```bash
-curl -X 'POST' 'http://localhost:8080/2281/assets/{assetId}/attachments' \
+curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
   -F 'attachment=@lokalritning.pdf;type=application/pdf' \
   -F 'category=LOKALRITNING'
 ```

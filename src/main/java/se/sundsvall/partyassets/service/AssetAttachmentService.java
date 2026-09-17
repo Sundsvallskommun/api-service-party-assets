@@ -46,8 +46,8 @@ public class AssetAttachmentService {
 
 	// The blob only wraps the upload stream and the driver reads it when the row is inserted, so the insert is flushed
 	// while the stream is still open. A plain save would leave the read to happen after try-with-resources closed it.
-	public String createAttachment(final String municipalityId, final String assetId, final MultipartFile file, final String category, final String description) {
-		final var asset = getAssetEntity(municipalityId, assetId);
+	public String createAttachment(final String municipalityId, final String id, final MultipartFile file, final String category, final String description) {
+		final var asset = getAssetEntity(municipalityId, id);
 		validateAssetIsModifiable(asset);
 		validateFile(file);
 
@@ -59,17 +59,17 @@ public class AssetAttachmentService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<AssetAttachment> readAttachments(final String municipalityId, final String assetId) {
-		verifyAssetExists(municipalityId, assetId);
+	public List<AssetAttachment> readAttachments(final String municipalityId, final String id) {
+		verifyAssetExists(municipalityId, id);
 
-		return toAssetAttachments(attachmentRepository.findAllForAsset(assetId, municipalityId));
+		return toAssetAttachments(attachmentRepository.findAllForAsset(id, municipalityId));
 	}
 
 	// The content is read here rather than streamed to the response: the driver already holds every byte in memory, so
 	// writing inside the transaction would keep a database connection checked out for the whole network transfer.
 	@Transactional(readOnly = true)
-	public AssetAttachmentContent readAttachment(final String municipalityId, final String assetId, final String attachmentId) {
-		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
+	public AssetAttachmentContent readAttachment(final String municipalityId, final String id, final String attachmentId) {
+		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 
 		try (final var content = attachment.getAttachmentData().getFile().getBinaryStream()) {
 			return new AssetAttachmentContent(attachment.getFileName(), attachment.getMimeType(), content.readAllBytes());
@@ -80,15 +80,15 @@ public class AssetAttachmentService {
 
 	// saveAndFlush, not save: the entity is already managed, so a plain save would let @PreUpdate fire at commit - after
 	// the response has been mapped - and the caller would get back the timestamp from before the update.
-	public AssetAttachment updateAttachment(final String municipalityId, final String assetId, final String attachmentId, final AssetAttachmentUpdateRequest request) {
-		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
+	public AssetAttachment updateAttachment(final String municipalityId, final String id, final String attachmentId, final AssetAttachmentUpdateRequest request) {
+		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
 
 		return toAssetAttachment(attachmentRepository.saveAndFlush(updateEntity(attachment, request)));
 	}
 
-	public void deleteAttachment(final String municipalityId, final String assetId, final String attachmentId) {
-		final var attachment = getAttachmentEntity(municipalityId, assetId, attachmentId);
+	public void deleteAttachment(final String municipalityId, final String id, final String attachmentId) {
+		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
 
 		attachmentRepository.delete(attachment);
@@ -123,33 +123,33 @@ public class AssetAttachmentService {
 		}
 	}
 
-	private void verifyAssetExists(final String municipalityId, final String assetId) {
-		if (!assetRepository.existsByIdAndMunicipalityId(assetId, municipalityId)) {
-			throw assetNotFound(municipalityId, assetId);
+	private void verifyAssetExists(final String municipalityId, final String id) {
+		if (!assetRepository.existsByIdAndMunicipalityId(id, municipalityId)) {
+			throw assetNotFound(municipalityId, id);
 		}
 	}
 
-	private AssetEntity getAssetEntity(final String municipalityId, final String assetId) {
-		return assetRepository.findByIdAndMunicipalityId(assetId, municipalityId)
-			.orElseThrow(() -> assetNotFound(municipalityId, assetId));
+	private AssetEntity getAssetEntity(final String municipalityId, final String id) {
+		return assetRepository.findByIdAndMunicipalityId(id, municipalityId)
+			.orElseThrow(() -> assetNotFound(municipalityId, id));
 	}
 
-	private AssetAttachmentEntity getAttachmentEntity(final String municipalityId, final String assetId, final String attachmentId) {
-		verifyAssetExists(municipalityId, assetId);
+	private AssetAttachmentEntity getAttachmentEntity(final String municipalityId, final String id, final String attachmentId) {
+		verifyAssetExists(municipalityId, id);
 
-		return attachmentRepository.findByIdForAsset(attachmentId, assetId, municipalityId)
+		return attachmentRepository.findByIdForAsset(attachmentId, id, municipalityId)
 			.orElseThrow(() -> Problem.builder()
 				.withStatus(NOT_FOUND)
 				.withTitle(ATTACHMENT_NOT_FOUND_TITLE)
-				.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, assetId, municipalityId))
+				.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, id, municipalityId))
 				.build());
 	}
 
-	private ThrowableProblem assetNotFound(final String municipalityId, final String assetId) {
+	private ThrowableProblem assetNotFound(final String municipalityId, final String id) {
 		return Problem.builder()
 			.withStatus(NOT_FOUND)
 			.withTitle(ASSET_NOT_FOUND_TITLE)
-			.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(assetId, municipalityId))
+			.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
 			.build();
 	}
 }

@@ -488,7 +488,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/assets/{assetId}/attachments:
+  /{municipalityId}/assets/{id}/attachments:
     get:
       tags:
       - Asset attachments
@@ -502,7 +502,7 @@ paths:
         schema:
           type: string
         example: 2281
-      - name: assetId
+      - name: id
         in: path
         required: true
         schema:
@@ -549,7 +549,7 @@ paths:
         schema:
           type: string
         example: 2281
-      - name: assetId
+      - name: id
         in: path
         required: true
         schema:
@@ -773,7 +773,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-  /{municipalityId}/assets/{assetId}/attachments/{attachmentId}:
+  /{municipalityId}/assets/{id}/attachments/{attachmentId}:
     get:
       tags:
       - Asset attachments
@@ -787,7 +787,7 @@ paths:
         schema:
           type: string
         example: 2281
-      - name: assetId
+      - name: id
         in: path
         required: true
         schema:
@@ -838,7 +838,7 @@ paths:
         schema:
           type: string
         example: 2281
-      - name: assetId
+      - name: id
         in: path
         required: true
         schema:
@@ -884,7 +884,7 @@ paths:
         schema:
           type: string
         example: 2281
-      - name: assetId
+      - name: id
         in: path
         required: true
         schema:
