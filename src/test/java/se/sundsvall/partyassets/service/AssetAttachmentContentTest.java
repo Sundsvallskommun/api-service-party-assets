@@ -15,8 +15,7 @@ class AssetAttachmentContentTest {
 		final var equalContent = new AssetAttachmentContent(FILE_NAME, MIME_TYPE, "content".getBytes());
 		final var otherContent = new AssetAttachmentContent(FILE_NAME, MIME_TYPE, "other".getBytes());
 
-		assertThat(content).isEqualTo(content).isEqualTo(equalContent).isNotEqualTo(otherContent).isNotEqualTo(null).isNotEqualTo(FILE_NAME);
-		assertThat(content).hasSameHashCodeAs(equalContent);
+		assertThat(content).isEqualTo(content).isEqualTo(equalContent).isNotEqualTo(otherContent).isNotEqualTo(null).isNotEqualTo(FILE_NAME).hasSameHashCodeAs(equalContent);
 		assertThat(content.hashCode()).isNotEqualTo(otherContent.hashCode());
 	}
 
