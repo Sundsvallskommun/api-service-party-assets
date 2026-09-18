@@ -27,6 +27,7 @@ import se.sundsvall.partyassets.api.model.Status;
 
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.EAGER;
+import static jakarta.persistence.FetchType.LAZY;
 import static java.time.OffsetDateTime.now;
 import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -96,6 +97,9 @@ public class AssetEntity {
 
 	@OneToMany(fetch = EAGER, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<AssetJsonParameterEntity> jsonParameters;
+
+	@OneToMany(fetch = LAZY, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<AssetAttachmentEntity> attachments;
 
 	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
@@ -325,6 +329,19 @@ public class AssetEntity {
 		return this;
 	}
 
+	public List<AssetAttachmentEntity> getAttachments() {
+		return attachments;
+	}
+
+	public void setAttachments(List<AssetAttachmentEntity> attachments) {
+		this.attachments = attachments;
+	}
+
+	public AssetEntity withAttachments(List<AssetAttachmentEntity> attachments) {
+		this.attachments = attachments;
+		return this;
+	}
+
 	public OffsetDateTime getCreated() {
 		return created;
 	}
@@ -348,6 +365,20 @@ public class AssetEntity {
 
 	public AssetEntity withUpdated(final OffsetDateTime updated) {
 		this.updated = updated;
+		return this;
+	}
+
+	public AssetEntity addOrReplaceAttachments(List<AssetAttachmentEntity> attachments) {
+		if (this.attachments == null) {
+			this.attachments = new ArrayList<>();
+		}
+
+		final var safeList = ofNullable(attachments).orElse(emptyList());
+		safeList.forEach(a -> a.setAsset(this));
+
+		this.attachments.clear();
+		this.attachments.addAll(safeList);
+
 		return this;
 	}
 

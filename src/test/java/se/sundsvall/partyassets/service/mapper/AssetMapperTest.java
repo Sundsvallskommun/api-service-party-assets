@@ -1,11 +1,15 @@
 package se.sundsvall.partyassets.service.mapper;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.mariadb.jdbc.MariaDbBlob;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
+import se.sundsvall.partyassets.integration.db.model.AssetAttachmentDataEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -203,6 +207,39 @@ class AssetMapperTest {
 		assertThat(copy.getStatusReason()).isNull();
 		assertThat(copy.getCreated()).isNull();
 		assertThat(copy.getUpdated()).isNull();
+		assertThat(copy.getAttachments()).isEmpty();
+	}
+
+	@Test
+	void toCopyEntityCopiesAttachments() throws Exception {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var original = TestFactory.getAssetEntity(id, partyId);
+		final var attachmentData = AssetAttachmentDataEntity.create().withFile(new MariaDbBlob("content".getBytes()));
+		original.addOrReplaceAttachments(List.of(AssetAttachmentEntity.create()
+			.withId("attachmentId")
+			.withMunicipalityId(original.getMunicipalityId())
+			.withFileName("lokalritning.pdf")
+			.withMimeType("application/pdf")
+			.withFileSize(7)
+			.withCategory("LOKALRITNING")
+			.withDescription("description")
+			.withAttachmentData(attachmentData)));
+
+		final var copy = AssetMapper.toCopyEntity(original);
+
+		assertThat(copy.getAttachments()).hasSize(1);
+		final var copiedAttachment = copy.getAttachments().getFirst();
+		assertThat(copiedAttachment.getId()).isNull();
+		assertThat(copiedAttachment.getAsset()).isSameAs(copy);
+		assertThat(copiedAttachment.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
+		assertThat(copiedAttachment.getFileName()).isEqualTo("lokalritning.pdf");
+		assertThat(copiedAttachment.getMimeType()).isEqualTo("application/pdf");
+		assertThat(copiedAttachment.getFileSize()).isEqualTo(7);
+		assertThat(copiedAttachment.getCategory()).isEqualTo("LOKALRITNING");
+		assertThat(copiedAttachment.getDescription()).isEqualTo("description");
+		assertThat(copiedAttachment.getAttachmentData()).isNotSameAs(attachmentData);
+		assertThat(copiedAttachment.getAttachmentData().getFile().getBinaryStream().readAllBytes()).isEqualTo("content".getBytes());
 	}
 
 	@Test

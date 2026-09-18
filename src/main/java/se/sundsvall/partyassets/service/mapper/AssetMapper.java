@@ -11,6 +11,7 @@ import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
+import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetJsonParameterEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
@@ -19,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
+import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.copyAssetAttachmentData;
 
 public final class AssetMapper {
 
@@ -51,6 +53,7 @@ public final class AssetMapper {
 			.withDescription(original.getDescription())
 			.withIssued(original.getIssued())
 			.addOrReplaceJsonParameters(copyJsonParameters(original.getJsonParameters()))
+			.addOrReplaceAttachments(copyAttachments(original.getAttachments()))
 			.withMunicipalityId(original.getMunicipalityId())
 			.withOrigin(original.getOrigin())
 			.withPartyId(original.getPartyId())
@@ -59,6 +62,21 @@ public final class AssetMapper {
 			.withStatus(Status.DRAFT)
 			.withType(original.getType())
 			.withValidTo(original.getValidTo());
+	}
+
+	// The file is copied rather than shared with the original asset. A shared data row would need reference counting to
+	// keep deletion of one asset from taking the file of another with it (DRAKEN-4910).
+	private static List<AssetAttachmentEntity> copyAttachments(final List<AssetAttachmentEntity> attachments) {
+		return ofNullable(attachments).orElse(emptyList()).stream()
+			.map(a -> AssetAttachmentEntity.create()
+				.withAttachmentData(copyAssetAttachmentData(a.getAttachmentData()))
+				.withMunicipalityId(a.getMunicipalityId())
+				.withFileName(a.getFileName())
+				.withMimeType(a.getMimeType())
+				.withFileSize(a.getFileSize())
+				.withCategory(a.getCategory())
+				.withDescription(a.getDescription()))
+			.toList();
 	}
 
 	private static List<AssetJsonParameterEntity> copyJsonParameters(final List<AssetJsonParameterEntity> parameters) {

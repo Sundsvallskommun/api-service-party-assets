@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test;
 import se.sundsvall.partyassets.api.model.Status;
 
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanConstructor;
-import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanEquals;
-import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
-import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
+import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanEqualsExcluding;
+import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCodeExcluding;
+import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToStringExcluding;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static com.google.code.beanmatchers.BeanMatchers.registerValueGenerator;
 import static java.time.OffsetDateTime.now;
@@ -23,6 +23,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 
 class AssetEntityTest {
+
+	// Attachments are lazily loaded, and a lazy collection reached from equals, hashCode or toString initializes itself.
+	private static final String ATTACHMENTS = "attachments";
 
 	@BeforeAll
 	static void setup() {
@@ -35,14 +38,15 @@ class AssetEntityTest {
 		assertThat(AssetEntity.class, allOf(
 			hasValidBeanConstructor(),
 			hasValidGettersAndSetters(),
-			hasValidBeanHashCode(),
-			hasValidBeanEquals(),
-			hasValidBeanToString()));
+			hasValidBeanHashCodeExcluding(ATTACHMENTS),
+			hasValidBeanEqualsExcluding(ATTACHMENTS),
+			hasValidBeanToStringExcluding(ATTACHMENTS)));
 	}
 
 	@Test
 	void testBuilderMethods() {
 		final var additionParameters = Map.of("key", "value");
+		final var attachments = List.of(AssetAttachmentEntity.create());
 		final var assetId = "assetId";
 		final var municipalityId = "municipalityId";
 		final var caseReferenceIds = List.of("entry");
@@ -63,6 +67,7 @@ class AssetEntityTest {
 
 		final var bean = AssetEntity.create()
 			.withAdditionalParameters(additionParameters)
+			.withAttachments(attachments)
 			.withAssetId(assetId)
 			.withMunicipalityId(municipalityId)
 			.withCaseReferenceIds(caseReferenceIds)
@@ -83,6 +88,7 @@ class AssetEntityTest {
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionParameters);
+		assertThat(bean.getAttachments()).isEqualTo(attachments);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
 		assertThat(bean.getMunicipalityId()).isEqualTo(municipalityId);
 		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);

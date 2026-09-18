@@ -1,0 +1,5 @@
+{
+	"title": "Attachments cannot be modified",
+	"status": 400,
+	"detail": "Attachments can only be modified on assets with status [ACTIVE, DRAFT, TEMPORARY], but asset 5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884 has status EXPIRED"
+}

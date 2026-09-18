@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.5"
+  version: "6.6"
 servers:
-- url: http://localhost:63868
+- url: http://localhost:55420
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -488,6 +488,123 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/assets/{id}/attachments:
+    get:
+      tags:
+      - Asset attachments
+      summary: Get asset attachments
+      operationId: readAttachments
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssetAttachment"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    post:
+      tags:
+      - Asset attachments
+      summary: Create an asset attachment
+      operationId: createAttachment
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                attachment:
+                  type: string
+                  format: binary
+                category:
+                  type: string
+                  description: What the attachment depicts
+                  maxLength: 255
+                  minLength: 0
+                description:
+                  type: string
+                  description: Attachment description
+                  maxLength: 255
+                  minLength: 0
+              required:
+              - attachment
+        required: true
+      responses:
+        "201":
+          description: Created - Successful operation
+          headers:
+            Location:
+              description: Location of the created resource.
+              style: simple
+              schema:
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /{municipalityId}/asset-drafts:
     get:
       tags:
@@ -650,6 +767,160 @@ paths:
                 oneOf:
                 - $ref: "#/components/schemas/Problem"
                 - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/assets/{id}/attachments/{attachmentId}:
+    get:
+      tags:
+      - Asset attachments
+      summary: Download an asset attachment
+      operationId: readAttachment
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    delete:
+      tags:
+      - Asset attachments
+      summary: Delete an asset attachment
+      operationId: deleteAttachment
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No content - Successful operation
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+    patch:
+      tags:
+      - Asset attachments
+      summary: Update asset attachment metadata
+      operationId: updateAttachment
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: attachmentId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssetAttachmentUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetAttachment"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "500":
           description: Internal Server Error
           content:
@@ -819,16 +1090,16 @@ components:
     Problem:
       type: object
       properties:
-        title:
-          type: string
-        detail:
-          type: string
         instance:
           type: string
           format: uri
         type:
           type: string
           format: uri
+        detail:
+          type: string
+        title:
+          type: string
         status:
           type: integer
           format: int32
@@ -847,13 +1118,13 @@ components:
             $ref: "#/components/schemas/Violation"
         title:
           type: string
+        instance:
+          type: string
+          format: uri
         causeAsProblem:
           $ref: "#/components/schemas/ThrowableProblem"
         detail:
           type: string
-        instance:
-          type: string
-          format: uri
     ThrowableProblem:
       type: object
       properties:
@@ -975,7 +1246,27 @@ components:
     JsonNode:
       type: object
       properties:
+        empty:
+          type: boolean
+        array:
+          type: boolean
+        "null":
+          type: boolean
+        object:
+          type: boolean
+        float:
+          type: boolean
+        container:
+          type: boolean
         number:
+          type: boolean
+        integralNumber:
+          type: boolean
+        valueNode:
+          type: boolean
+        floatingPointNumber:
+          type: boolean
+        bigInteger:
           type: boolean
         nodeType:
           type: string
@@ -989,48 +1280,28 @@ components:
           - OBJECT
           - POJO
           - STRING
-        string:
-          type: boolean
-        integralNumber:
-          type: boolean
-        missingNode:
-          type: boolean
-        valueNode:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
-        double:
-          type: boolean
         bigDecimal:
           type: boolean
-        bigInteger:
+        missingNode:
           type: boolean
         textual:
           type: boolean
           deprecated: true
+        int:
+          type: boolean
+        double:
+          type: boolean
         boolean:
+          type: boolean
+        pojo:
+          type: boolean
+        string:
           type: boolean
         binary:
           type: boolean
-        container:
+        short:
           type: boolean
-        floatingPointNumber:
-          type: boolean
-        empty:
-          type: boolean
-        array:
-          type: boolean
-        "null":
-          type: boolean
-        object:
-          type: boolean
-        float:
+        long:
           type: boolean
         embeddedValue:
           type: boolean
@@ -1047,6 +1318,83 @@ components:
           description: Status reason
           examples:
           - Status reason
+    AssetAttachmentUpdateRequest:
+      type: object
+      description: Attachment update request. Null values are left untouched
+      properties:
+        fileName:
+          type: string
+          description: Name of the file
+          examples:
+          - lokalritning.pdf
+          maxLength: 255
+          minLength: 0
+        category:
+          type: string
+          description: What the attachment depicts
+          examples:
+          - LOKALRITNING
+          maxLength: 255
+          minLength: 0
+        description:
+          type: string
+          description: Attachment description
+          examples:
+          - "Ritning over serveringslokal, plan 2"
+          maxLength: 255
+          minLength: 0
+    AssetAttachment:
+      type: object
+      description: Metadata for a file attached to an asset
+      properties:
+        id:
+          type: string
+          description: Unique id of attachment
+          examples:
+          - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+          readOnly: true
+        fileName:
+          type: string
+          description: Name of the file
+          examples:
+          - lokalritning.pdf
+        mimeType:
+          type: string
+          description: Mime type of the file
+          examples:
+          - application/pdf
+          readOnly: true
+        fileSize:
+          type: integer
+          format: int32
+          description: Size of the file in bytes
+          examples:
+          - 1024
+          readOnly: true
+        category:
+          type: string
+          description: What the attachment depicts
+          examples:
+          - LOKALRITNING
+        description:
+          type: string
+          description: Attachment description
+          examples:
+          - "Ritning over serveringslokal, plan 2"
+        created:
+          type: string
+          format: date-time
+          description: Timestamp when the attachment was created
+          examples:
+          - 2023-01-01T12:00:00+01:00
+          readOnly: true
+        updated:
+          type: string
+          format: date-time
+          description: Timestamp when the attachment was last updated
+          examples:
+          - 2023-01-02T12:00:00+01:00
+          readOnly: true
     DraftAssetUpdateRequest:
       type: object
       properties:
