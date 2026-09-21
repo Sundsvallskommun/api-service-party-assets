@@ -133,7 +133,19 @@ public class AssetService {
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
-		repository.save(updateEntity(getAssetEntity(municipalityId, id), request));
+		final var entity = getAssetEntity(municipalityId, id);
+		validateNotDraft(entity);
+		repository.save(updateEntity(entity, request));
+	}
+
+	private void validateNotDraft(final AssetEntity entity) {
+		if (entity.getStatus() == DRAFT) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Invalid asset status")
+				.withDetail("DRAFT assets must be updated via the asset drafts resource")
+				.build();
+		}
 	}
 
 	private void validateValidTo(final AssetEntity entity) {

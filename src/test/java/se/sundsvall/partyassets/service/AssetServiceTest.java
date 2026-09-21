@@ -504,4 +504,21 @@ class AssetServiceTest {
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock, never()).save(any());
 	}
+
+	@Test
+	void updateDraftAssetViaRegularEndpointThrowsBadRequest() {
+		final var id = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, partyId).withStatus(DRAFT);
+		final var assetUpdateRequest = getAssetUpdateRequest();
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, assetUpdateRequest))
+			.withMessage("Invalid asset status: DRAFT assets must be updated via the asset drafts resource");
+
+		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
+		verify(repositoryMock, never()).save(any());
+	}
 }
