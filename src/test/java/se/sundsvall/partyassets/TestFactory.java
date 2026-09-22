@@ -23,7 +23,10 @@ public final class TestFactory {
 	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	public static AssetEntity getAssetEntity(final String id, final String partyId) {
+		// Deliberately no revision: a non-null @Version makes Hibernate treat a new entity as detached, so save() would
+		// merge instead of persist and the id would stay null. Tests that need a known revision set it themselves.
 		final var assetEntity = AssetEntity.create()
+			.withActor("previous.actor")
 			.withAdditionalParameters(new HashMap<>(Map.of("key", "value")))
 			.withAssetId("assetId")
 			.withMunicipalityId("municipalityId")

@@ -125,7 +125,9 @@ public final class AssetMapper {
 		return entity;
 	}
 
-	private static List<AssetJsonParameter> toAssetJsonParameterList(List<AssetJsonParameterEntity> assetJsonParameterEntityList) {
+	// Package-private rather than private: AssetRevisionMapper snapshots the parameters in their API shape, so the
+	// revision can be mapped straight back without a second set of types.
+	static List<AssetJsonParameter> toAssetJsonParameterList(List<AssetJsonParameterEntity> assetJsonParameterEntityList) {
 		return ofNullable(assetJsonParameterEntityList).orElse(emptyList()).stream()
 			.map(AssetMapper::toAssetJsonParameter)
 			.filter(Objects::nonNull)

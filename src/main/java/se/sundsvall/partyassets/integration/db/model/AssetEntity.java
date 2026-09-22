@@ -136,6 +136,14 @@ public class AssetEntity {
 		updated = now(systemDefault()).truncatedTo(MILLIS);
 	}
 
+	// preUpdate only fires once Hibernate already considers the row dirty. A write path that changes nothing else - a
+	// PATCH to the status the asset already had, or a rename of one of its attachments - has to mark the row itself, or
+	// @Version is not bumped and the next snapshot collides with the one just written.
+	public AssetEntity markUpdated() {
+		preUpdate();
+		return this;
+	}
+
 	public String getId() {
 		return id;
 	}

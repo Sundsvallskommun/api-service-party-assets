@@ -5,12 +5,14 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.NonNull;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Relation;
 import se.sundsvall.partyassets.api.model.*;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
@@ -29,6 +31,8 @@ import static se.sundsvall.partyassets.integration.db.specification.AssetSpecifi
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
 
 @Service
@@ -41,13 +45,23 @@ public class AssetService {
 	private static final String INVALID_SOURCE_REFERENCE_DETAIL = "Provided source reference '%s' is invalid. Expected format: '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'";
 
 	private final AssetRepository repository;
+	private final AssetRevisionRepository assetRevisionRepository;
 	private final PartyTypeProvider partyTypeProvider;
 	private final RelationClient relationClient;
 
-	public AssetService(final AssetRepository repository, final PartyTypeProvider partyTypeProvider, final RelationClient relationClient) {
+	public AssetService(final AssetRepository repository, final AssetRevisionRepository assetRevisionRepository, final PartyTypeProvider partyTypeProvider, final RelationClient relationClient) {
 		this.repository = repository;
+		this.assetRevisionRepository = assetRevisionRepository;
 		this.partyTypeProvider = partyTypeProvider;
 		this.relationClient = relationClient;
+	}
+
+	// The snapshot is the state as it was, carrying the old revision number and the old actor. Only afterwards does the
+	// row take on the new actor, so revision N always names whoever created revision N. The order is not interchangeable.
+	private void recordRevision(final AssetEntity entity) {
+		assetRevisionRepository.save(toRevision(entity));
+		entity.setActor(currentActor());
+		entity.markUpdated();
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
@@ -84,7 +98,8 @@ public class AssetService {
 				.build();
 		}
 
-		final var createdAssetId = repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)).getId();
+		final var createdAssetId = repository.save(toEntity(request, partyTypeProvider.calculatePartyType(municipalityId, request.getPartyId()), municipalityId)
+			.withActor(currentActor())).getId();
 
 		if (isNotBlank(sourceReference)) {
 			createRelation(municipalityId, sourceReference, createdAssetId);
@@ -113,7 +128,7 @@ public class AssetService {
 				.withDetail("Only ACTIVE assets can be copied, but asset %s has status %s".formatted(id, original.getStatus()))
 				.build();
 		}
-		return repository.save(toCopyEntity(original)).getId();
+		return repository.save(toCopyEntity(original).withActor(currentActor())).getId();
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
@@ -129,13 +144,29 @@ public class AssetService {
 			validateValidTo(entity);
 			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
 		}
-		repository.save(updateEntity(entity, request));
+		recordRevision(entity);
+		save(updateEntity(entity, request), id);
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 		final var entity = getAssetEntity(municipalityId, id);
 		validateNotDraft(entity);
-		repository.save(updateEntity(entity, request));
+		recordRevision(entity);
+		save(updateEntity(entity, request), id);
+	}
+
+	// saveAndFlush, not save: with save the version check happens at commit, after this method has returned, and the
+	// catch below would never see it.
+	private void save(final AssetEntity entity, final String id) {
+		try {
+			repository.saveAndFlush(entity);
+		} catch (final OptimisticLockingFailureException e) {
+			throw Problem.builder()
+				.withStatus(CONFLICT)
+				.withTitle("Asset was updated by someone else")
+				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
+				.build();
+		}
 	}
 
 	private void validateNotDraft(final AssetEntity entity) {
@@ -165,8 +196,9 @@ public class AssetService {
 		repository.findByIdAndMunicipalityId(replacesId, municipalityId)
 			.filter(original -> original.getStatus() == ACTIVE)
 			.ifPresent(original -> {
+				recordRevision(original);
 				original.setStatus(REPLACED);
-				repository.save(original);
+				save(original, original.getId());
 			});
 	}
 
