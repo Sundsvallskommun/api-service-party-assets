@@ -39,6 +39,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static se.sundsvall.partyassets.TestFactory.getAssetCreateRequest;
 import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
 import static se.sundsvall.partyassets.TestFactory.getAssetUpdateRequest;
@@ -151,7 +152,7 @@ class AssetServiceTest {
 		final var result = service.getAsset(MUNICIPALITY_ID, id);
 
 		assertThat(result).isNotNull();
-		assertThat(result.getId()).isEqualTo(id);
+		assertThat(result.asset().getId()).isEqualTo(id);
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 	}
@@ -355,7 +356,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, asssetUpdateRequest);
+		service.updateAsset(MUNICIPALITY_ID, id, asssetUpdateRequest, null);
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).saveAndFlush(any(AssetEntity.class));
@@ -371,7 +372,7 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(uuid, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, uuid, assetUpdaterequest))
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, uuid, assetUpdaterequest, null))
 			.withMessage("Asset not found: Asset with id " + uuid + " not found for municipalityId " + MUNICIPALITY_ID);
 
 		verify(repositoryMock).findByIdAndMunicipalityId(uuid, MUNICIPALITY_ID);
@@ -431,7 +432,7 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(draftId, MUNICIPALITY_ID)).thenReturn(Optional.of(draft));
 		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
 
-		service.updateAsset(MUNICIPALITY_ID, draftId, request);
+		service.updateAsset(MUNICIPALITY_ID, draftId, request, null);
 
 		verify(repositoryMock, times(2)).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
@@ -451,7 +452,7 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, request))
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, request, null))
 			.withMessage("Invalid validTo date: validTo must be in the future when activating an asset");
 
 		verify(repositoryMock, never()).save(any());
@@ -468,7 +469,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, request);
+		service.updateAsset(MUNICIPALITY_ID, id, request, null);
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).saveAndFlush(entityCaptor.capture());
@@ -492,7 +493,7 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(draftId, MUNICIPALITY_ID)).thenReturn(Optional.of(draft));
 		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
 
-		service.updateAsset(MUNICIPALITY_ID, draftId, request);
+		service.updateAsset(MUNICIPALITY_ID, draftId, request, null);
 
 		verify(repositoryMock).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getStatus()).isEqualTo(ACTIVE);
@@ -507,7 +508,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest());
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest(), null);
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).saveAndFlush(any(AssetEntity.class));
@@ -523,11 +524,51 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest()))
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest(), null))
 			.withMessage("Invalid asset status: Only DRAFT assets can be updated via this endpoint");
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock, never()).save(any());
+	}
+
+	@Test
+	void updateAssetWithAMatchingIfMatch() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(2).withVersion(7L);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), "\"7\"");
+
+		verify(repositoryMock).saveAndFlush(entity);
+		verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
+	}
+
+	@Test
+	void updateAssetWithAStaleIfMatch() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(2).withVersion(7L);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), "\"6\""))
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(PRECONDITION_FAILED));
+
+		verify(repositoryMock, never()).saveAndFlush(any());
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateAssetWithoutAnIfMatchSkipsThePrecondition() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(2).withVersion(7L);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), null);
+
+		verify(repositoryMock).saveAndFlush(entity);
 	}
 
 	@Test
@@ -540,7 +581,7 @@ class AssetServiceTest {
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, assetUpdateRequest))
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, assetUpdateRequest, null))
 			.withMessage("Invalid asset status: DRAFT assets must be updated via the asset drafts resource");
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
@@ -555,7 +596,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest());
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), null);
 
 		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
 		assertThat(revisionCaptor.getValue()).satisfies(revision -> {
@@ -575,7 +616,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest());
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), null);
 
 		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
 		assertThat(revisionCaptor.getValue().getActor()).isEqualTo("previous.actor");
@@ -589,7 +630,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest());
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), null);
 
 		assertThat(entity.getActor()).isNull();
 	}
@@ -603,7 +644,7 @@ class AssetServiceTest {
 		when(repositoryMock.saveAndFlush(any(AssetEntity.class))).thenThrow(new OptimisticLockingFailureException("conflict"));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest()))
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(CONFLICT));
 
 		verifyNoInteractions(assetRevisionRepositoryMock);
@@ -616,7 +657,7 @@ class AssetServiceTest {
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
-		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest());
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest(), null);
 
 		final var inOrder = inOrder(repositoryMock, assetRevisionRepositoryMock);
 		inOrder.verify(repositoryMock).saveAndFlush(entity);

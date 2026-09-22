@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
@@ -79,14 +80,9 @@ public class AssetService {
 			.toList();
 	}
 
-	public Asset getAsset(final String municipalityId, final String id) {
-		return repository.findByIdAndMunicipalityId(id, municipalityId)
-			.map(AssetMapper::toAsset)
-			.orElseThrow(() -> Problem.builder()
-				.withStatus(NOT_FOUND)
-				.withTitle(ASSET_NOT_FOUND_TITLE)
-				.withDetail(ASSET_NOT_FOUND_DETAIL.formatted(id, municipalityId))
-				.build());
+	public VersionedAsset getAsset(final String municipalityId, final String id) {
+		final var entity = getAssetEntity(municipalityId, id);
+		return new VersionedAsset(AssetMapper.toAsset(entity), entity.getVersion());
 	}
 
 	public String createAsset(final String municipalityId, final AssetCreateRequest request, final String sourceReference) {
@@ -131,8 +127,9 @@ public class AssetService {
 		return repository.save(toCopyEntity(original).withActor(currentActor())).getId();
 	}
 
-	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request) {
+	public void updateAsset(final String municipalityId, final String id, final DraftAssetUpdateRequest request, final String ifMatch) {
 		final var entity = getAssetEntity(municipalityId, id);
+		validatePrecondition(entity, ifMatch);
 		if (entity.getStatus() != DRAFT) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
@@ -148,11 +145,25 @@ public class AssetService {
 		save(updateEntity(entity, request), revision, id);
 	}
 
-	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
+	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request, final String ifMatch) {
 		final var entity = getAssetEntity(municipalityId, id);
 		validateNotDraft(entity);
+		validatePrecondition(entity, ifMatch);
 		final var revision = snapshot(entity);
 		save(updateEntity(entity, request), revision, id);
+	}
+
+	private void validatePrecondition(final AssetEntity entity, final String ifMatch) {
+		if (isBlank(ifMatch)) {
+			return;
+		}
+		if (!ifMatch.trim().equals("\"%d\"".formatted(entity.getVersion()))) {
+			throw Problem.builder()
+				.withStatus(PRECONDITION_FAILED)
+				.withTitle("Asset has changed")
+				.withDetail("Asset with id %s does not match the supplied If-Match, please reload it and try again".formatted(entity.getId()))
+				.build();
+		}
 	}
 
 	private void save(final AssetEntity entity, final AssetRevisionEntity revision, final String id) {

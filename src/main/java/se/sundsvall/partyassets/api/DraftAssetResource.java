@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +32,7 @@ import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.service.AssetService;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpHeaders.IF_MATCH;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -71,14 +73,15 @@ class DraftAssetResource {
 
 	@GetMapping(path = "{id}", produces = APPLICATION_JSON_VALUE)
 	@Operation(summary = "Get a draft asset by ID", responses = {
-		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "200", description = "OK", headers = @Header(name = "ETag", description = "Version of the asset, to be sent back as If-Match when updating it."), useReturnTypeSchema = true),
 		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
 	ResponseEntity<Asset> getDraftAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable @ValidUuid final String id) {
 
-		return ok(service.getAsset(municipalityId, id));
+		final var asset = service.getAsset(municipalityId, id);
+		return ok().eTag("\"%d\"".formatted(asset.version())).body(asset.asset());
 	}
 
 	@PostMapping(consumes = APPLICATION_JSON_VALUE, produces = ALL_VALUE)
@@ -107,13 +110,15 @@ class DraftAssetResource {
 	@Operation(summary = "Update a draft asset", responses = {
 		@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true),
 		@ApiResponse(responseCode = "404", description = "Not Found", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class))),
-		@ApiResponse(responseCode = "409", description = "Conflict - The asset was updated by someone else", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
+		@ApiResponse(responseCode = "409", description = "Conflict - The asset was updated by someone else", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class))),
+		@ApiResponse(responseCode = "412", description = "Precondition Failed - The asset does not match the supplied If-Match", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
 	ResponseEntity<Void> updateDraftAsset(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
-		@PathVariable @ValidUuid final String id, @Valid @RequestBody final DraftAssetUpdateRequest asset) {
+		@PathVariable @ValidUuid final String id, @Valid @RequestBody final DraftAssetUpdateRequest asset,
+		@Parameter(name = "If-Match", description = "Optional. The ETag from an earlier read of the asset. The update is rejected if the asset has changed since.") @RequestHeader(name = IF_MATCH, required = false) final String ifMatch) {
 
-		service.updateAsset(municipalityId, id, asset);
+		service.updateAsset(municipalityId, id, asset, ifMatch);
 		return noContent().build();
 	}
 }

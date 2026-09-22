@@ -26,6 +26,7 @@ import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.service.AssetService;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 import se.sundsvall.partyassets.service.StatusService;
+import se.sundsvall.partyassets.service.VersionedAsset;
 import tools.jackson.databind.JsonNode;
 
 import static java.util.UUID.randomUUID;
@@ -160,7 +161,7 @@ class DraftAssetResourceTest {
 		final var id = randomUUID().toString();
 		final var asset = TestFactory.getDraftAsset();
 
-		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id)).thenReturn(asset);
+		when(assetServiceMock.getAsset(MUNICIPALITY_ID, id)).thenReturn(new VersionedAsset(asset, 3L));
 
 		// Act & Assert
 		final var result = webTestClient.get()
@@ -426,7 +427,7 @@ class DraftAssetResourceTest {
 			.isNoContent();
 
 		// Assert
-		verify(assetServiceMock).updateAsset(MUNICIPALITY_ID, id, assetRequest);
+		verify(assetServiceMock).updateAsset(MUNICIPALITY_ID, id, assetRequest, null);
 		verifyNoMoreInteractions(assetServiceMock);
 	}
 

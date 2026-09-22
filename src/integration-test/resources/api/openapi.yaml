@@ -329,6 +329,13 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            ETag:
+              description: "Version of the asset, to be sent back as If-Match when\
+                \ updating it."
+              style: simple
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -459,6 +466,13 @@ paths:
         required: true
         schema:
           type: string
+      - name: If-Match
+        in: header
+        description: Optional. The ETag from an earlier read of the asset. The update
+          is rejected if the asset has changed since.
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -476,6 +490,13 @@ paths:
                 $ref: "#/components/schemas/Problem"
         "409":
           description: Conflict - The asset was updated by someone else
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "412":
+          description: Precondition Failed - The asset does not match the supplied
+            If-Match
           content:
             application/problem+json:
               schema:
@@ -973,6 +994,13 @@ paths:
       responses:
         "200":
           description: OK
+          headers:
+            ETag:
+              description: "Version of the asset, to be sent back as If-Match when\
+                \ updating it."
+              style: simple
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -1015,6 +1043,13 @@ paths:
         required: true
         schema:
           type: string
+      - name: If-Match
+        in: header
+        description: Optional. The ETag from an earlier read of the asset. The update
+          is rejected if the asset has changed since.
+        required: false
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -1032,6 +1067,13 @@ paths:
                 $ref: "#/components/schemas/Problem"
         "409":
           description: Conflict - The asset was updated by someone else
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "412":
+          description: Precondition Failed - The asset does not match the supplied
+            If-Match
           content:
             application/problem+json:
               schema:
@@ -1229,9 +1271,9 @@ components:
         type:
           type: string
           format: uri
-        detail:
-          type: string
         title:
+          type: string
+        detail:
           type: string
         status:
           type: integer
@@ -1254,10 +1296,10 @@ components:
         instance:
           type: string
           format: uri
-        detail:
-          type: string
         causeAsProblem:
           $ref: "#/components/schemas/ThrowableProblem"
+        detail:
+          type: string
     ThrowableProblem:
       type: object
       properties:
@@ -1391,36 +1433,32 @@ components:
           type: boolean
         container:
           type: boolean
-        string:
-          type: boolean
-        short:
-          type: boolean
-        binary:
-          type: boolean
-        int:
-          type: boolean
         long:
           type: boolean
         boolean:
           type: boolean
-        pojo:
+        int:
+          type: boolean
+        binary:
+          type: boolean
+        string:
           type: boolean
         double:
+          type: boolean
+        pojo:
+          type: boolean
+        short:
           type: boolean
         textual:
           type: boolean
           deprecated: true
-        number:
-          type: boolean
-        valueNode:
-          type: boolean
-        floatingPointNumber:
+        bigInteger:
           type: boolean
         integralNumber:
           type: boolean
-        missingNode:
+        floatingPointNumber:
           type: boolean
-        bigDecimal:
+        missingNode:
           type: boolean
         nodeType:
           type: string
@@ -1434,7 +1472,11 @@ components:
           - OBJECT
           - POJO
           - STRING
-        bigInteger:
+        valueNode:
+          type: boolean
+        bigDecimal:
+          type: boolean
+        number:
           type: boolean
         embeddedValue:
           type: boolean
