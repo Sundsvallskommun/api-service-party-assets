@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.AssetRepository.AssetIdProjection;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
-import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
@@ -34,7 +34,7 @@ public class AssetExpirationWorker {
 	public List<String> findExpirableAssetIds() {
 		final var ids = assetRepository.findByStatusInAndValidToBefore(EXPIRABLE_STATUSES, LocalDate.now(ZoneId.systemDefault()))
 			.stream()
-			.map(AssetEntity::getId)
+			.map(AssetIdProjection::getId)
 			.toList();
 
 		LOG.info("Found {} asset(s) to expire", ids.size());

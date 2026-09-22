@@ -5,6 +5,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
@@ -14,6 +15,8 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 import static java.util.UUID.randomUUID;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toAssetRevision;
@@ -173,5 +176,21 @@ class AssetRevisionMapperTest {
 		Identifier.set(Identifier.parse("joe01doe"));
 
 		assertThat(currentActor()).isNull();
+	}
+
+	@Test
+	void currentActorAtTheColumnLimitIsAccepted() {
+		Identifier.set(Identifier.parse("a".repeat(255) + "; type=adAccount"));
+
+		assertThat(currentActor()).hasSize(255);
+	}
+
+	@Test
+	void currentActorLongerThanTheColumnIsRejected() {
+		Identifier.set(Identifier.parse("a".repeat(256) + "; type=adAccount"));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(AssetRevisionMapper::currentActor)
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 	}
 }

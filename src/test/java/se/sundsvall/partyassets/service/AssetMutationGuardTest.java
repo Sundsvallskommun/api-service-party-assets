@@ -38,7 +38,7 @@ class AssetMutationGuardTest {
 	private static final String MESSAGE = """
 		The public API of %s has changed. Every method that changes an asset has to snapshot it before it mutates, or \
 		that change is missing from the history and nothing reveals it. Decide whether the new method mutates, take a \
-		snapshot if it does, then list its signature here. See docs/design-revisionshantering.md.""";
+		snapshot if it does, then list its signature here.""";
 
 	@Test
 	void assetServiceHasNoUnreviewedMethods() {

@@ -2,6 +2,7 @@ package se.sundsvall.partyassets.service.mapper;
 
 import java.util.List;
 import java.util.Map;
+import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.partyassets.api.model.AssetAttachment;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
@@ -17,6 +18,7 @@ import tools.jackson.databind.json.JsonMapper;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toAssetJsonParameterList;
 import static tools.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -28,6 +30,8 @@ public final class AssetRevisionMapper {
 		.disable(FAIL_ON_UNKNOWN_PROPERTIES)
 		.disable(ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
 		.build();
+
+	private static final int MAX_ACTOR_LENGTH = 255;
 
 	private AssetRevisionMapper() {}
 
@@ -55,7 +59,21 @@ public final class AssetRevisionMapper {
 	}
 
 	public static String currentActor() {
-		return ofNullable(Identifier.get()).map(Identifier::getValue).orElse(null);
+		return ofNullable(Identifier.get())
+			.map(Identifier::getValue)
+			.map(AssetRevisionMapper::validateActorLength)
+			.orElse(null);
+	}
+
+	private static String validateActorLength(final String actor) {
+		if (actor.length() > MAX_ACTOR_LENGTH) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Invalid actor")
+				.withDetail("The value of the %s header must be at most %d characters".formatted(Identifier.HEADER_NAME, MAX_ACTOR_LENGTH))
+				.build();
+		}
+		return actor;
 	}
 
 	private static List<AssetAttachmentEntity> presentAttachments(final List<AssetAttachmentEntity> attachments) {

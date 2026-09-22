@@ -14,6 +14,7 @@ import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.Status;
+import se.sundsvall.partyassets.integration.db.AssetRepository.AssetIdProjection;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
 import se.sundsvall.partyassets.integration.db.specification.AssetSpecification;
@@ -45,6 +46,8 @@ class AssetRepositoryTest {
 	private static final String PRIVATE_PARTY_ASSET_2 = "PRH-0000000002";
 	private static final String PRIVATE_PARTY_ASSET_3 = "CON-0000000003";
 	private static final String ENTERPRISE_PARTY_ASSET_ID_3 = "647e3062-62dc-499f-9faa-e54cb97aa214";
+	private static final String PRIVATE_PARTY_ASSET_ID_3 = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
+	private static final String TEMPORARY_ASSET_ID = "b0000000-0000-0000-0000-000000000001";
 	private static final String MUNICIPALITY_ID = "2281";
 
 	@Autowired
@@ -150,8 +153,8 @@ class AssetRepositoryTest {
 		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.now());
 
 		assertThat(result).hasSize(4)
-			.extracting(AssetEntity::getAssetId)
-			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_3, "PRH-0000000012", "CON-0000000013", "TMP-0000000001");
+			.extracting(AssetIdProjection::getId)
+			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_ID_3, "cba6f0e5-e826-4690-8776-37c69d981a2a", ENTERPRISE_PARTY_ASSET_ID_3, TEMPORARY_ASSET_ID);
 	}
 
 	@Test
@@ -161,8 +164,8 @@ class AssetRepositoryTest {
 		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.of(2024, 1, 1));
 
 		assertThat(result).hasSize(2)
-			.extracting(AssetEntity::getAssetId)
-			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_3, "TMP-0000000001");
+			.extracting(AssetIdProjection::getId)
+			.containsExactlyInAnyOrder(PRIVATE_PARTY_ASSET_ID_3, TEMPORARY_ASSET_ID);
 	}
 
 	@Test
