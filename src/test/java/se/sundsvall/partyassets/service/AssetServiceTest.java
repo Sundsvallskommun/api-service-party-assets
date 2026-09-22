@@ -33,6 +33,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -432,10 +433,10 @@ class AssetServiceTest {
 
 		service.updateAsset(MUNICIPALITY_ID, draftId, request);
 
-		verify(repositoryMock, org.mockito.Mockito.times(2)).saveAndFlush(entityCaptor.capture());
+		verify(repositoryMock, times(2)).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(ACTIVE));
-		verify(assetRevisionRepositoryMock, org.mockito.Mockito.times(2)).save(any(AssetRevisionEntity.class));
+		verify(assetRevisionRepositoryMock, times(2)).save(any(AssetRevisionEntity.class));
 	}
 
 	@Test
