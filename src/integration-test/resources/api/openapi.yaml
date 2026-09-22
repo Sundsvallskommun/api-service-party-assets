@@ -5,9 +5,9 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.6"
+  version: "6.7"
 servers:
-- url: http://localhost:51534
+- url: http://localhost:51822
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -470,6 +470,12 @@ paths:
           description: No content - Successful operation
         "404":
           description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict - The asset was updated by someone else
           content:
             application/problem+json:
               schema:
@@ -1024,6 +1030,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict - The asset was updated by someone else
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "400":
           description: Bad Request
           content:
@@ -1242,10 +1254,10 @@ components:
         instance:
           type: string
           format: uri
-        causeAsProblem:
-          $ref: "#/components/schemas/ThrowableProblem"
         detail:
           type: string
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
     ThrowableProblem:
       type: object
       properties:
@@ -1379,9 +1391,34 @@ components:
           type: boolean
         container:
           type: boolean
+        string:
+          type: boolean
+        short:
+          type: boolean
+        binary:
+          type: boolean
+        int:
+          type: boolean
+        long:
+          type: boolean
+        boolean:
+          type: boolean
+        pojo:
+          type: boolean
+        double:
+          type: boolean
+        textual:
+          type: boolean
+          deprecated: true
         number:
           type: boolean
+        valueNode:
+          type: boolean
         floatingPointNumber:
+          type: boolean
+        integralNumber:
+          type: boolean
+        missingNode:
           type: boolean
         bigDecimal:
           type: boolean
@@ -1397,32 +1434,7 @@ components:
           - OBJECT
           - POJO
           - STRING
-        integralNumber:
-          type: boolean
-        valueNode:
-          type: boolean
         bigInteger:
-          type: boolean
-        missingNode:
-          type: boolean
-        string:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
-        int:
-          type: boolean
-        long:
-          type: boolean
-        double:
-          type: boolean
-        boolean:
-          type: boolean
-        textual:
-          type: boolean
-          deprecated: true
-        binary:
           type: boolean
         embeddedValue:
           type: boolean
