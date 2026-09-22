@@ -129,7 +129,10 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
 
-		assertThat(attachmentRepository.findById(attachmentId)).isEmpty();
+		// Soft deleted: the row and its data survive so older revisions still resolve to the file.
+		assertThat(attachmentRepository.findById(attachmentId)).hasValueSatisfying(attachment -> assertThat(attachment.isDeleted()).isTrue());
+		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID))
+			.noneSatisfy(attachment -> assertThat(attachment.getId()).isEqualTo(attachmentId));
 	}
 
 	@Test
@@ -217,6 +220,78 @@ class AssetAttachmentsIT extends AbstractAppTest {
 
 		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID)).isEmpty();
 		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeDelete - 1);
+	}
+
+	// The invariant the whole feature rests on: deleting an attachment must not put its bytes out of reach, or the
+	// history lies about the part of a permit that carries the most legal weight.
+	@Test
+	void test10_deletedAttachmentIsStillDownloadable() throws Exception {
+		final var attachmentId = createAttachmentOnActiveAsset();
+		final var bytesBeforeDelete = attachmentBytes(attachmentId);
+		final var dataRowsBeforeDelete = countAttachmentDataRows();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedBinaryResponse(FILE)
+			.sendRequestAndVerifyResponse();
+
+		assertThat(attachmentBytes(attachmentId)).isEqualTo(bytesBeforeDelete);
+		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeDelete);
+	}
+
+	@Test
+	void test11_deletingAnAlreadyDeletedAttachmentReturnsNotFound() throws Exception {
+		final var attachmentId = createAttachmentOnActiveAsset();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NOT_FOUND)
+			.sendRequest();
+	}
+
+	@Test
+	void test12_attachmentChangesRecordRevisions() throws Exception {
+		final var revisionsBefore = countRevisions(ACTIVE_ASSET_ID);
+		final var attachmentId = createAttachmentOnActiveAsset();
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"fileName\":\"omdopt.pdf\"}")
+			.withExpectedResponseStatus(OK)
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		// One per write path: the upload, the rename and the deletion.
+		assertThat(countRevisions(ACTIVE_ASSET_ID)).isEqualTo(revisionsBefore + 3);
+	}
+
+	private long countRevisions(final String assetId) {
+		return jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, assetId);
 	}
 
 	private byte[] attachmentBytes(final String attachmentId) {

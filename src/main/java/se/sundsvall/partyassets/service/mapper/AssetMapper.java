@@ -66,8 +66,10 @@ public final class AssetMapper {
 
 	// The file is copied rather than shared with the original asset. A shared data row would need reference counting to
 	// keep deletion of one asset from taking the file of another with it (DRAKEN-4910).
+	// Soft-deleted attachments are left behind: copying them would resurrect a file the caller had removed.
 	private static List<AssetAttachmentEntity> copyAttachments(final List<AssetAttachmentEntity> attachments) {
 		return ofNullable(attachments).orElse(emptyList()).stream()
+			.filter(a -> !a.isDeleted())
 			.map(a -> AssetAttachmentEntity.create()
 				.withAttachmentData(copyAssetAttachmentData(a.getAttachmentData()))
 				.withMunicipalityId(a.getMunicipalityId())

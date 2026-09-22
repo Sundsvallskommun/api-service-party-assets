@@ -15,6 +15,7 @@ import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
@@ -28,6 +29,8 @@ import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAs
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.updateEntity;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 
 @Service
 @Transactional
@@ -44,10 +47,22 @@ public class AssetAttachmentService {
 
 	private final AssetRepository assetRepository;
 	private final AssetAttachmentRepository attachmentRepository;
+	private final AssetRevisionRepository assetRevisionRepository;
 
-	public AssetAttachmentService(final AssetRepository assetRepository, final AssetAttachmentRepository attachmentRepository) {
+	public AssetAttachmentService(final AssetRepository assetRepository, final AssetAttachmentRepository attachmentRepository, final AssetRevisionRepository assetRevisionRepository) {
 		this.assetRepository = assetRepository;
 		this.attachmentRepository = attachmentRepository;
+		this.assetRevisionRepository = assetRevisionRepository;
+	}
+
+	// The same four lines as in AssetService, deliberately duplicated rather than extracted: a shared recorder bean
+	// would be a third mutating component outside the two AssetMutationGuardTest watches.
+	// markUpdated is what dirties the asset row - renaming an attachment changes nothing on the asset itself, so
+	// @Version would not be bumped and the next snapshot would collide on uq_asset_revision_asset_id_revision.
+	private void recordRevision(final AssetEntity asset) {
+		assetRevisionRepository.save(toRevision(asset));
+		asset.setActor(currentActor());
+		asset.markUpdated();
 	}
 
 	// The blob only wraps the upload stream and the driver reads it when the row is inserted, so the insert is flushed
@@ -56,6 +71,11 @@ public class AssetAttachmentService {
 		final var asset = getAssetEntity(municipalityId, id);
 		validateAssetIsModifiable(asset);
 		validateFile(file);
+
+		// Before the attachment entity exists, not merely before the flush. AssetAttachmentEntity.prePersist calls
+		// asset.preUpdate(), and toRevision reads asset.getAttachments() - a snapshot taken any later would carry the
+		// new revision number and already list the file being added.
+		recordRevision(asset);
 
 		try (final var content = file.getInputStream()) {
 			return attachmentRepository.saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description)).getId();
@@ -75,7 +95,7 @@ public class AssetAttachmentService {
 	// writing inside the transaction would keep a database connection checked out for the whole network transfer.
 	@Transactional(readOnly = true)
 	public AssetAttachmentContent readAttachment(final String municipalityId, final String id, final String attachmentId) {
-		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
+		final var attachment = getAnyAttachmentEntity(municipalityId, id, attachmentId);
 
 		try (final var content = attachment.getAttachmentData().getFile().getBinaryStream()) {
 			return new AssetAttachmentContent(attachment.getFileName(), attachment.getMimeType(), content.readAllBytes());
@@ -89,15 +109,19 @@ public class AssetAttachmentService {
 	public AssetAttachment updateAttachment(final String municipalityId, final String id, final String attachmentId, final AssetAttachmentUpdateRequest request) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
+		recordRevision(attachment.getAsset());
 
 		return toAssetAttachment(attachmentRepository.saveAndFlush(updateEntity(attachment, request)));
 	}
 
+	// The row and its asset_attachment_data are kept: an older revision lists this file, and the history would lie
+	// about the part that carries the most legal weight if the bytes went away.
 	public void deleteAttachment(final String municipalityId, final String id, final String attachmentId) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
+		recordRevision(attachment.getAsset());
 
-		attachmentRepository.delete(attachment);
+		attachmentRepository.saveAndFlush(attachment.withDeleted(true));
 	}
 
 	private void validateAssetIsModifiable(final AssetEntity asset) {
@@ -144,11 +168,23 @@ public class AssetAttachmentService {
 		verifyAssetExists(municipalityId, id);
 
 		return attachmentRepository.findByIdForAsset(attachmentId, id, municipalityId)
-			.orElseThrow(() -> Problem.builder()
-				.withStatus(NOT_FOUND)
-				.withTitle(ATTACHMENT_NOT_FOUND_TITLE)
-				.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, id, municipalityId))
-				.build());
+			.orElseThrow(() -> attachmentNotFound(municipalityId, id, attachmentId));
+	}
+
+	// Download reaches a soft-deleted attachment; listing it, changing it and deleting it again do not.
+	private AssetAttachmentEntity getAnyAttachmentEntity(final String municipalityId, final String id, final String attachmentId) {
+		verifyAssetExists(municipalityId, id);
+
+		return attachmentRepository.findByIdForAssetIncludingDeleted(attachmentId, id, municipalityId)
+			.orElseThrow(() -> attachmentNotFound(municipalityId, id, attachmentId));
+	}
+
+	private ThrowableProblem attachmentNotFound(final String municipalityId, final String id, final String attachmentId) {
+		return Problem.builder()
+			.withStatus(NOT_FOUND)
+			.withTitle(ATTACHMENT_NOT_FOUND_TITLE)
+			.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, id, municipalityId))
+			.build();
 	}
 
 	private ThrowableProblem assetNotFound(final String municipalityId, final String id) {

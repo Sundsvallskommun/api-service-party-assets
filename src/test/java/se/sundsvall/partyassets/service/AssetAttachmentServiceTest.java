@@ -18,13 +18,16 @@ import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentDataEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,11 +54,17 @@ class AssetAttachmentServiceTest {
 	@Mock
 	private AssetAttachmentRepository attachmentRepositoryMock;
 
+	@Mock
+	private AssetRevisionRepository assetRevisionRepositoryMock;
+
 	@InjectMocks
 	private AssetAttachmentService service;
 
 	@Captor
 	private ArgumentCaptor<AssetAttachmentEntity> attachmentCaptor;
+
+	@Captor
+	private ArgumentCaptor<AssetRevisionEntity> revisionCaptor;
 
 	private static AssetEntity asset(final Status status) {
 		return AssetEntity.create().withId(ASSET_ID).withMunicipalityId(MUNICIPALITY_ID).withStatus(status);
@@ -74,6 +83,22 @@ class AssetAttachmentServiceTest {
 		return new MockMultipartFile("attachment", FILE_NAME, MIME_TYPE, CONTENT);
 	}
 
+	// The snapshot has to be written before the attachment entity exists. prePersist marks the asset as updated and
+	// toRevision reads its attachments, so a later snapshot would already list the file being added.
+	@Test
+	void createAttachmentRecordsTheRevisionBeforeTheAttachmentExists() {
+		final var asset = asset(Status.ACTIVE);
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.ACTIVE));
+
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+
+		final var inOrder = inOrder(assetRevisionRepositoryMock, attachmentRepositoryMock);
+		inOrder.verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
+		inOrder.verify(attachmentRepositoryMock).saveAndFlush(any(AssetAttachmentEntity.class));
+		assertThat(revisionCaptor.getValue().getAttachments()).isEqualTo("[]");
+	}
+
 	@Test
 	void createAttachment() {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
@@ -84,7 +109,8 @@ class AssetAttachmentServiceTest {
 		assertThat(result).isEqualTo(ATTACHMENT_ID);
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
 		verify(attachmentRepositoryMock).saveAndFlush(attachmentCaptor.capture());
-		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
+		verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
+		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock, assetRevisionRepositoryMock);
 
 		assertThat(attachmentCaptor.getValue()).satisfies(saved -> {
 			assertThat(saved.getAsset().getId()).isEqualTo(ASSET_ID);
@@ -218,7 +244,7 @@ class AssetAttachmentServiceTest {
 	@Test
 	void readAttachment() {
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
-		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(Status.EXPIRED)));
+		when(attachmentRepositoryMock.findByIdForAssetIncludingDeleted(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(Status.EXPIRED)));
 
 		final var result = service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
 
@@ -226,21 +252,34 @@ class AssetAttachmentServiceTest {
 		assertThat(result.mimeType()).isEqualTo(MIME_TYPE);
 		assertThat(result.content()).isEqualTo(CONTENT);
 		verify(assetRepositoryMock).existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock).findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
+		verify(attachmentRepositoryMock).findByIdForAssetIncludingDeleted(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
+	}
+
+	// Download is the one path that reaches a soft-deleted attachment, so it must not use the filtered lookup.
+	@Test
+	void readAttachmentReachesASoftDeletedAttachment() {
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAssetIncludingDeleted(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID))
+			.thenReturn(Optional.of(attachment(Status.ACTIVE).withDeleted(true)));
+
+		final var result = service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
+
+		assertThat(result.content()).isEqualTo(CONTENT);
+		verify(attachmentRepositoryMock, never()).findByIdForAsset(any(), any(), any());
 	}
 
 	@Test
 	void readNonExistingAttachment() {
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
-		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
+		when(attachmentRepositoryMock.findByIdForAssetIncludingDeleted(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.readAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
 
 		verify(assetRepositoryMock).existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock).findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
+		verify(attachmentRepositoryMock).findByIdForAssetIncludingDeleted(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 	}
 
@@ -257,7 +296,26 @@ class AssetAttachmentServiceTest {
 		verify(assetRepositoryMock).existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
 		verify(attachmentRepositoryMock).findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
 		verify(attachmentRepositoryMock).saveAndFlush(entity);
-		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
+		verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
+		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock, assetRevisionRepositoryMock);
+	}
+
+	// The snapshot has to carry the file name as it was, or the revision reports the rename that came after it.
+	@Test
+	void updateAttachmentRecordsTheMetadataAsItWas() {
+		final var entity = attachment(Status.DRAFT);
+		entity.getAsset().withAttachments(List.of(entity));
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+		when(attachmentRepositoryMock.saveAndFlush(entity)).thenReturn(entity);
+
+		service.updateAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, AssetAttachmentUpdateRequest.create().withFileName("omdopt.pdf"));
+
+		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
+		assertThat(revisionCaptor.getValue().getAttachments()).contains(FILE_NAME).doesNotContain("omdopt.pdf");
+		assertThat(entity.getFileName()).isEqualTo("omdopt.pdf");
+		// Renaming an attachment changes nothing on the asset row itself, so it has to be marked explicitly.
+		assertThat(entity.getAsset().getUpdated()).isNotNull();
 	}
 
 	@Test
@@ -283,10 +341,38 @@ class AssetAttachmentServiceTest {
 
 		service.deleteAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
 
+		assertThat(entity.isDeleted()).isTrue();
 		verify(assetRepositoryMock).existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
 		verify(attachmentRepositoryMock).findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock).delete(entity);
-		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
+		verify(attachmentRepositoryMock).saveAndFlush(entity);
+		// The row and its data have to survive, or older revisions point at bytes that are gone.
+		verify(attachmentRepositoryMock, never()).delete(any());
+		verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
+		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock, assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void deleteAttachmentThatIsAlreadyDeleted() {
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.deleteAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID))
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
+
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateAttachmentThatIsAlreadyDeleted() {
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, AssetAttachmentUpdateRequest.create()))
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
+
+		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
 	@Test

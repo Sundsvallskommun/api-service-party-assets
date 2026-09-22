@@ -100,6 +100,10 @@ has to be spelled out for anything curl does not recognise from the extension. F
 while the asset is `DRAFT`, `ACTIVE` or `TEMPORARY`; once it is blocked, has expired or been replaced, its attachments
 can still be listed and downloaded but no longer changed.
 
+Removing a file marks it rather than erasing it. It disappears from the listing and can no longer be changed or removed
+again, but it stays downloadable at its own URL, because an earlier revision of the permit still refers to it and that
+history would otherwise point at a file that no longer exists. Deleting the whole asset does erase them.
+
 ```bash
 curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
   -F 'attachment=@lokalritning.pdf;type=application/pdf' \

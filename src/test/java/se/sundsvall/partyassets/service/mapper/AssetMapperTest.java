@@ -242,6 +242,28 @@ class AssetMapperTest {
 		assertThat(copiedAttachment.getAttachmentData().getFile().getBinaryStream().readAllBytes()).isEqualTo("content".getBytes());
 	}
 
+	// Copying a deleted attachment into the draft would resurrect a file the caller had removed.
+	@Test
+	void toCopyEntitySkipsSoftDeletedAttachments() {
+		final var original = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		original.addOrReplaceAttachments(List.of(
+			AssetAttachmentEntity.create()
+				.withId("kept")
+				.withFileName("kvar.pdf")
+				.withAttachmentData(AssetAttachmentDataEntity.create().withFile(new MariaDbBlob("content".getBytes()))),
+			AssetAttachmentEntity.create()
+				.withId("gone")
+				.withFileName("raderad.pdf")
+				.withDeleted(true)
+				.withAttachmentData(AssetAttachmentDataEntity.create().withFile(new MariaDbBlob("content".getBytes())))));
+
+		final var copy = AssetMapper.toCopyEntity(original);
+
+		assertThat(copy.getAttachments())
+			.extracting(AssetAttachmentEntity::getFileName)
+			.containsExactly("kvar.pdf");
+	}
+
 	@Test
 	void updateEntityWithEmptyValues() {
 
