@@ -1,0 +1,56 @@
+[
+	{
+		"id": "e84b72ee-1a34-44b5-b8f6-2e0e42e99010",
+		"revision": 2,
+		"actor": "third.actor",
+		"recordedAt": "2023-04-01T10:00:00+02:00",
+		"assetId": "PRH-0000000001",
+		"origin": "CASEDATA",
+		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+		"type": "PERMIT",
+		"issued": "2023-01-01",
+		"validTo": "2033-12-31",
+		"status": "BLOCKED",
+		"statusReason": "Stöldanmäld",
+		"description": "Serveringstillstånd",
+		"additionalParameters": {},
+		"jsonParameters": [],
+		"attachments": []
+	},
+	{
+		"id": "e84b72ee-1a34-44b5-b8f6-2e0e42e99010",
+		"revision": 1,
+		"actor": "second.actor",
+		"recordedAt": "2023-03-01T10:00:00+01:00",
+		"assetId": "PRH-0000000001",
+		"origin": "CASEDATA",
+		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+		"type": "PERMIT",
+		"issued": "2023-01-01",
+		"validTo": "2033-12-31",
+		"status": "ACTIVE",
+		"statusReason": "Förnyad",
+		"description": "Serveringstillstånd",
+		"additionalParameters": {
+			"key": "value"
+		},
+		"jsonParameters": [],
+		"attachments": []
+	},
+	{
+		"id": "e84b72ee-1a34-44b5-b8f6-2e0e42e99010",
+		"revision": 0,
+		"recordedAt": "2023-02-01T10:00:00+01:00",
+		"assetId": "PRH-0000000001",
+		"origin": "CASEDATA",
+		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
+		"type": "PERMIT",
+		"issued": "2023-01-01",
+		"validTo": "2033-12-31",
+		"status": "ACTIVE",
+		"description": "Serveringstillstånd",
+		"additionalParameters": {},
+		"jsonParameters": [],
+		"attachments": []
+	}
+]

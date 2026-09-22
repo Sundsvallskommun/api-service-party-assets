@@ -1,10 +1,16 @@
 package se.sundsvall.partyassets.service.mapper;
 
 import java.util.List;
+import java.util.Map;
 import se.sundsvall.dept44.support.Identifier;
+import se.sundsvall.partyassets.api.model.AssetAttachment;
+import se.sundsvall.partyassets.api.model.AssetJsonParameter;
+import se.sundsvall.partyassets.api.model.AssetRevision;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -14,13 +20,17 @@ import static java.util.Optional.ofNullable;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toAssetJsonParameterList;
 import static tools.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static tools.jackson.databind.cfg.DateTimeFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE;
 
 public final class AssetRevisionMapper {
 
 	// Unknown properties are ignored on the way in: a field removed from the API models later must not make every older
 	// snapshot unreadable.
+	// Offsets are left alone: with the default, reading a snapshot back rewrites 12:00+02:00 as 10:00Z, and a revision
+	// would then differ from the live asset on a value that never actually changed.
 	private static final ObjectMapper OBJECT_MAPPER = JsonMapper.builder()
 		.disable(FAIL_ON_UNKNOWN_PROPERTIES)
+		.disable(ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
 		.build();
 
 	private AssetRevisionMapper() {}
@@ -65,11 +75,74 @@ public final class AssetRevisionMapper {
 			.toList();
 	}
 
+	/**
+	 * Maps a historical revision. Fields that did not exist when the snapshot was written read as null.
+	 */
+	public static AssetRevision toAssetRevision(final AssetRevisionEntity entity) {
+		return AssetRevision.create()
+			.withId(entity.getAssetId())
+			.withRevision(entity.getRevision())
+			.withActor(entity.getActor())
+			.withRecordedAt(entity.getRecordedAt())
+			.withAssetId(entity.getExternalAssetId())
+			.withOrigin(entity.getOrigin())
+			.withPartyId(entity.getPartyId())
+			.withType(entity.getType())
+			.withIssued(entity.getIssued())
+			.withValidTo(entity.getValidTo())
+			.withStatus(toStatus(entity.getStatus()))
+			.withStatusReason(entity.getStatusReason())
+			.withDescription(entity.getDescription())
+			.withReplacesId(entity.getReplacesId())
+			.withAdditionalParameters(fromJson(entity.getAdditionalParameters(), new TypeReference<Map<String, String>>() {}))
+			.withJsonParameters(fromJson(entity.getJsonParameters(), new TypeReference<List<AssetJsonParameter>>() {}))
+			.withAttachments(fromJson(entity.getAttachments(), new TypeReference<List<AssetAttachment>>() {}));
+	}
+
+	/**
+	 * Maps the asset row, which is always the newest revision. No JSON is involved; the children are read directly.
+	 */
+	public static AssetRevision toAssetRevision(final AssetEntity asset) {
+		return AssetRevision.create()
+			.withId(asset.getId())
+			.withRevision(asset.getRevision())
+			.withActor(asset.getActor())
+			// updated is null until the asset is first changed, and then created is the only honest answer.
+			.withRecordedAt(ofNullable(asset.getUpdated()).orElse(asset.getCreated()))
+			.withAssetId(asset.getAssetId())
+			.withOrigin(asset.getOrigin())
+			.withPartyId(asset.getPartyId())
+			.withType(asset.getType())
+			.withIssued(asset.getIssued())
+			.withValidTo(asset.getValidTo())
+			.withStatus(asset.getStatus())
+			.withStatusReason(asset.getStatusReason())
+			.withDescription(asset.getDescription())
+			.withReplacesId(asset.getReplacesId())
+			.withAdditionalParameters(asset.getAdditionalParameters())
+			.withJsonParameters(toAssetJsonParameterList(asset.getJsonParameters()))
+			.withAttachments(toAssetAttachments(presentAttachments(asset.getAttachments())));
+	}
+
 	private static String toJson(final Object value) {
 		return OBJECT_MAPPER.writeValueAsString(value);
 	}
 
+	private static <T> T fromJson(final String json, final TypeReference<T> type) {
+		return ofNullable(json).map(value -> OBJECT_MAPPER.<T>readValue(value, type)).orElse(null);
+	}
+
 	private static String name(final Enum<?> value) {
 		return ofNullable(value).map(Enum::name).orElse(null);
+	}
+
+	// A status dropped from the enum would otherwise make every snapshot that used it unreadable. That is why the column
+	// is a varchar rather than an enum in the first place.
+	private static Status toStatus(final String value) {
+		try {
+			return ofNullable(value).map(Status::valueOf).orElse(null);
+		} catch (final IllegalArgumentException e) {
+			return null;
+		}
 	}
 }

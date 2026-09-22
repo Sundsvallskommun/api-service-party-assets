@@ -1,0 +1,18 @@
+[
+	{
+		"id": "cba6f0e5-e826-4690-8776-37c69d981a2a",
+		"revision": 0,
+		"recordedAt": "2023-02-01T10:00:00+01:00",
+		"assetId": "PRH-0000000002",
+		"origin": "CASEDATA",
+		"partyId": "c5d21b57-c785-4d3c-8361-940cae999ff7",
+		"type": "PERMIT",
+		"issued": "2023-02-01",
+		"validTo": "2034-01-31",
+		"status": "ACTIVE",
+		"description": "Parkeringstillstånd",
+		"additionalParameters": {},
+		"jsonParameters": [],
+		"attachments": []
+	}
+]

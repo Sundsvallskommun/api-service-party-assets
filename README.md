@@ -104,6 +104,27 @@ Removing a file marks it rather than erasing it. It disappears from the listing 
 again, but it stays downloadable at its own URL, because an earlier revision of the permit still refers to it and that
 history would otherwise point at a file that no longer exists. Deleting the whole asset does erase them.
 
+### Revision history
+
+Every change to an asset first writes a snapshot of what it looked like beforehand. The asset row itself is always the
+newest revision, and the older ones are read back through two endpoints:
+
+```bash
+curl -X 'GET' 'http://localhost:8080/2281/assets/{id}/revisions'
+curl -X 'GET' 'http://localhost:8080/2281/assets/{id}/revisions/0'
+```
+
+Numbering starts at 0, which is the asset as it was created, and the listing returns the newest revision first. A gap in
+the sequence is deliberate and means some write path changed the asset without recording a snapshot; it is meant to be
+visible rather than papered over.
+
+Each revision records who created it, taken from the `X-Sent-By` header. That header needs both a value and a type to be
+read at all, so `X-Sent-By: joe01doe` is silently ignored while `X-Sent-By: joe01doe; type=adAccount` is not. Requests
+without the header, and the nightly job that expires permits, leave the actor empty.
+
+Two changes at once are rejected rather than merged: the second writer gets `409 Conflict` and has to reload. Deleting
+an asset deletes its history with it, so nothing is readable afterwards through any endpoint.
+
 ```bash
 curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
   -F 'attachment=@lokalritning.pdf;type=application/pdf' \

@@ -7,7 +7,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: "6.6"
 servers:
-- url: http://localhost:55420
+- url: http://localhost:51534
   description: Generated server url
 tags:
 - name: Metadata - Statusreasons
@@ -1059,6 +1059,109 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/assets/{id}/revisions:
+    get:
+      tags:
+      - Asset revisions
+      summary: "Get the history of an asset, newest revision first"
+      operationId: getRevisions
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssetRevision"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/assets/{id}/revisions/{revision}:
+    get:
+      tags:
+      - Asset revisions
+      summary: Get one revision of an asset
+      operationId: getRevision
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: revision
+        in: path
+        description: "Revision number, starting at 0"
+        required: true
+        schema:
+          type: integer
+          format: int32
+          minimum: 0
+        example: 2
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetRevision"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /api-docs:
     get:
       tags:
@@ -1260,13 +1363,9 @@ components:
           type: boolean
         number:
           type: boolean
-        integralNumber:
-          type: boolean
-        valueNode:
-          type: boolean
         floatingPointNumber:
           type: boolean
-        bigInteger:
+        bigDecimal:
           type: boolean
         nodeType:
           type: string
@@ -1280,28 +1379,32 @@ components:
           - OBJECT
           - POJO
           - STRING
-        bigDecimal:
+        integralNumber:
+          type: boolean
+        valueNode:
+          type: boolean
+        bigInteger:
           type: boolean
         missingNode:
           type: boolean
-        textual:
+        string:
           type: boolean
-          deprecated: true
+        pojo:
+          type: boolean
+        short:
+          type: boolean
         int:
+          type: boolean
+        long:
           type: boolean
         double:
           type: boolean
         boolean:
           type: boolean
-        pojo:
+        textual:
           type: boolean
-        string:
-          type: boolean
+          deprecated: true
         binary:
-          type: boolean
-        short:
-          type: boolean
-        long:
           type: boolean
         embeddedValue:
           type: boolean
@@ -1511,4 +1614,125 @@ components:
           description: Id of the asset this asset replaces
           examples:
           - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+    AssetRevision:
+      type: object
+      description: An asset as it looked at one point in its history. The newest revision
+        is the asset as it is now
+      properties:
+        id:
+          type: string
+          description: Unique id of the asset this revision belongs to
+          examples:
+          - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+          readOnly: true
+        revision:
+          type: integer
+          format: int32
+          description: "Revision number. Numbering starts at 0, which is the asset\
+            \ as it was created. A gap in the sequence means a write path changed\
+            \ the asset without recording a snapshot"
+          examples:
+          - 2
+          readOnly: true
+        actor:
+          type: string
+          description: "Who created this revision, taken from the X-Sent-By header.\
+            \ Null when the header was absent, and for revisions written by the nightly\
+            \ expiration job"
+          examples:
+          - joe01doe
+          readOnly: true
+        recordedAt:
+          type: string
+          format: date-time
+          description: "When this revision was superseded, or when the asset was last\
+            \ changed for the current revision"
+          examples:
+          - 2023-01-02T12:00:00+01:00
+          readOnly: true
+        assetId:
+          type: string
+          description: External asset id (e.g. PRH-123456789) used as an identifier
+            by external systems
+          examples:
+          - PRH-123456789
+          readOnly: true
+        origin:
+          type: string
+          description: Source of origin for the asset
+          examples:
+          - CASEDATA
+          readOnly: true
+        partyId:
+          type: string
+          description: PartyId
+          examples:
+          - 123e4567-e89b-12d3-a456-426614174000
+          readOnly: true
+        type:
+          type: string
+          description: Asset type
+          examples:
+          - PERMIT
+          readOnly: true
+        issued:
+          type: string
+          format: date
+          description: Issued date
+          examples:
+          - 2021-01-01
+          readOnly: true
+        validTo:
+          type: string
+          format: date
+          description: Valid to date
+          examples:
+          - 2021-12-31
+          readOnly: true
+        status:
+          $ref: "#/components/schemas/Status"
+          description: Asset status
+          examples:
+          - ACTIVE
+          readOnly: true
+        statusReason:
+          type: string
+          description: Status reason
+          examples:
+          - Status reason
+          readOnly: true
+        description:
+          type: string
+          description: Asset description
+          examples:
+          - Asset description
+          readOnly: true
+        additionalParameters:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional parameters
+          examples:
+          - foo: bar
+          readOnly: true
+        jsonParameters:
+          type: array
+          description: JSON parameters
+          items:
+            $ref: "#/components/schemas/AssetJsonParameter"
+          readOnly: true
+        replacesId:
+          type: string
+          description: Id of the asset this asset replaces
+          examples:
+          - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+          readOnly: true
+        attachments:
+          type: array
+          description: "Attachment metadata as it was at this revision. The files\
+            \ themselves never change, so each one is still downloadable by its id\
+            \ even if it has since been removed"
+          items:
+            $ref: "#/components/schemas/AssetAttachment"
+          readOnly: true
   securitySchemes: {}

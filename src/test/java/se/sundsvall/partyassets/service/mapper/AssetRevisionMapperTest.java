@@ -6,22 +6,20 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import se.sundsvall.dept44.support.Identifier;
-import se.sundsvall.partyassets.api.model.AssetAttachment;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
-import tools.jackson.databind.ObjectMapper;
 
 import static java.util.UUID.randomUUID;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static se.sundsvall.partyassets.TestFactory.getAssetEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toAssetRevision;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 
 class AssetRevisionMapperTest {
-
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 	@AfterEach
 	void clearIdentifier() {
@@ -76,14 +74,16 @@ class AssetRevisionMapperTest {
 				.withCategory("LOKALRITNING")
 				.withCreated(created)));
 
-		final var json = toRevision(entity).getAttachments();
-		final var readBack = OBJECT_MAPPER.readValue(json, new tools.jackson.core.type.TypeReference<List<AssetAttachment>>() {});
+		final var readBack = toAssetRevision(toRevision(entity)).getAttachments();
 
 		assertThat(readBack).singleElement().satisfies(attachment -> {
 			assertThat(attachment.getId()).isEqualTo("attachment-1");
 			assertThat(attachment.getFileName()).isEqualTo("lokalritning.pdf");
 			assertThat(attachment.getFileSize()).isEqualTo(1024);
+			// The offset has to survive too, not just the instant. AssertJ compares OffsetDateTime by instant, so
+			// asserting the offset separately is what catches a rewrite of 12:00+02:00 into 10:00Z.
 			assertThat(attachment.getCreated()).isEqualTo(created);
+			assertThat(attachment.getCreated().getOffset()).isEqualTo(created.getOffset());
 		});
 	}
 
@@ -110,6 +110,58 @@ class AssetRevisionMapperTest {
 		assertThat(revision.getAttachments()).isEqualTo("[]");
 		assertThat(revision.getStatus()).isNull();
 		assertThat(revision.getPartyType()).isNull();
+	}
+
+	// The point of the whole feature: an asset snapshotted and read back has to describe the same thing the live asset
+	// does. If this drifts, every revision in the database is quietly wrong.
+	@Test
+	void toAssetRevisionRoundTripsThroughToRevision() {
+		final var id = randomUUID().toString();
+		final var entity = getAssetEntity(id, randomUUID().toString())
+			.withPartyType(PartyType.PRIVATE)
+			.withRevision(2)
+			.withAttachments(List.of(AssetAttachmentEntity.create()
+				.withId("attachment-1")
+				.withFileName("lokalritning.pdf")
+				.withCreated(OffsetDateTime.of(2023, 1, 2, 12, 0, 0, 0, ZoneOffset.ofHours(2)))));
+
+		final var fromSnapshot = toAssetRevision(toRevision(entity));
+		final var fromAsset = toAssetRevision(entity);
+
+		assertThat(fromSnapshot)
+			.usingRecursiveComparison()
+			// recordedAt is when the snapshot was taken, which has no counterpart on the live asset.
+			.ignoringFields("recordedAt")
+			.isEqualTo(fromAsset);
+	}
+
+	@Test
+	void toAssetRevisionWithNullJsonColumns() {
+		final var revision = toAssetRevision(AssetRevisionEntity.create().withAssetId("asset-1").withRevision(0));
+
+		assertThat(revision.getAdditionalParameters()).isNull();
+		assertThat(revision.getJsonParameters()).isNull();
+		assertThat(revision.getAttachments()).isNull();
+		assertThat(revision.getStatus()).isNull();
+	}
+
+	// The column is a varchar precisely so a value dropped from the enum cannot make old snapshots unreadable.
+	@Test
+	void toAssetRevisionWithAnUnknownStatusYieldsNull() {
+		final var revision = toAssetRevision(AssetRevisionEntity.create()
+			.withAssetId("asset-1")
+			.withRevision(0)
+			.withStatus("A_STATUS_THAT_NO_LONGER_EXISTS"));
+
+		assertThat(revision.getStatus()).isNull();
+	}
+
+	@Test
+	void toAssetRevisionFromAnAssetUsesCreatedWhenUpdatedIsNull() {
+		final var created = OffsetDateTime.now().minusDays(5);
+		final var asset = AssetEntity.create().withId("asset-1").withRevision(0).withCreated(created).withUpdated(null);
+
+		assertThat(toAssetRevision(asset).getRecordedAt()).isEqualTo(created);
 	}
 
 	@Test
