@@ -81,8 +81,6 @@ class AssetAttachmentEntityTest {
 		assertThat(bean.getUpdated()).isEqualTo(updated);
 	}
 
-	// deleted is a primitive, so it is false rather than null on a fresh bean - a wrapper would have made soft deletion
-	// three-valued and forced every query predicate to handle null.
 	@Test
 	void testNoDirtOnCreatedBean() {
 		assertThat(AssetAttachmentEntity.create()).hasAllNullFieldsOrPropertiesExcept("deleted");

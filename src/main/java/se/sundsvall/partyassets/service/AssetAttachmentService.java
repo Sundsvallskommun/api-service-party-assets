@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,8 +19,10 @@ import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
@@ -55,14 +58,26 @@ public class AssetAttachmentService {
 		this.assetRevisionRepository = assetRevisionRepository;
 	}
 
-	// The same four lines as in AssetService, deliberately duplicated rather than extracted: a shared recorder bean
-	// would be a third mutating component outside the two AssetMutationGuardTest watches.
-	// markUpdated is what dirties the asset row - renaming an attachment changes nothing on the asset itself, so
-	// @Version would not be bumped and the next snapshot would collide on uq_asset_revision_asset_id_revision.
-	private void recordRevision(final AssetEntity asset) {
-		assetRevisionRepository.save(toRevision(asset));
+	private AssetRevisionEntity snapshot(final AssetEntity asset) {
+		final var revision = toRevision(asset);
 		asset.setActor(currentActor());
-		asset.markUpdated();
+		asset.setRevision(asset.getRevision() + 1);
+		return revision;
+	}
+
+	private AssetAttachmentEntity saveAndFlush(final AssetAttachmentEntity attachment, final AssetRevisionEntity revision, final String id) {
+		final AssetAttachmentEntity saved;
+		try {
+			saved = attachmentRepository.saveAndFlush(attachment);
+		} catch (final OptimisticLockingFailureException e) {
+			throw Problem.builder()
+				.withStatus(CONFLICT)
+				.withTitle("Asset was updated by someone else")
+				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
+				.build();
+		}
+		assetRevisionRepository.save(revision);
+		return saved;
 	}
 
 	// The blob only wraps the upload stream and the driver reads it when the row is inserted, so the insert is flushed
@@ -72,13 +87,10 @@ public class AssetAttachmentService {
 		validateAssetIsModifiable(asset);
 		validateFile(file);
 
-		// Before the attachment entity exists, not merely before the flush. AssetAttachmentEntity.prePersist calls
-		// asset.preUpdate(), and toRevision reads asset.getAttachments() - a snapshot taken any later would carry the
-		// new revision number and already list the file being added.
-		recordRevision(asset);
+		final var revision = snapshot(asset);
 
 		try (final var content = file.getInputStream()) {
-			return attachmentRepository.saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description)).getId();
+			return saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description), revision, id).getId();
 		} catch (final IOException e) {
 			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Could not read uploaded file %s: %s".formatted(file.getOriginalFilename(), e.getMessage()));
 		}
@@ -109,19 +121,17 @@ public class AssetAttachmentService {
 	public AssetAttachment updateAttachment(final String municipalityId, final String id, final String attachmentId, final AssetAttachmentUpdateRequest request) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
-		recordRevision(attachment.getAsset());
+		final var revision = snapshot(attachment.getAsset());
 
-		return toAssetAttachment(attachmentRepository.saveAndFlush(updateEntity(attachment, request)));
+		return toAssetAttachment(saveAndFlush(updateEntity(attachment, request), revision, id));
 	}
 
-	// The row and its asset_attachment_data are kept: an older revision lists this file, and the history would lie
-	// about the part that carries the most legal weight if the bytes went away.
 	public void deleteAttachment(final String municipalityId, final String id, final String attachmentId) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
-		recordRevision(attachment.getAsset());
+		final var revision = snapshot(attachment.getAsset());
 
-		attachmentRepository.saveAndFlush(attachment.withDeleted(true));
+		saveAndFlush(attachment.withDeleted(true), revision, id);
 	}
 
 	private void validateAssetIsModifiable(final AssetEntity asset) {
@@ -171,7 +181,6 @@ public class AssetAttachmentService {
 			.orElseThrow(() -> attachmentNotFound(municipalityId, id, attachmentId));
 	}
 
-	// Download reaches a soft-deleted attachment; listing it, changing it and deleting it again do not.
 	private AssetAttachmentEntity getAnyAttachmentEntity(final String municipalityId, final String id, final String attachmentId) {
 		verifyAssetExists(municipalityId, id);
 

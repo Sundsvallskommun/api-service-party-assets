@@ -14,6 +14,7 @@ import se.sundsvall.partyassets.api.model.*;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
@@ -56,12 +57,11 @@ public class AssetService {
 		this.relationClient = relationClient;
 	}
 
-	// The snapshot is the state as it was, carrying the old revision number and the old actor. Only afterwards does the
-	// row take on the new actor, so revision N always names whoever created revision N. The order is not interchangeable.
-	private void recordRevision(final AssetEntity entity) {
-		assetRevisionRepository.save(toRevision(entity));
+	private AssetRevisionEntity snapshot(final AssetEntity entity) {
+		final var revision = toRevision(entity);
 		entity.setActor(currentActor());
-		entity.markUpdated();
+		entity.setRevision(entity.getRevision() + 1);
+		return revision;
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
@@ -144,20 +144,18 @@ public class AssetService {
 			validateValidTo(entity);
 			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
 		}
-		recordRevision(entity);
-		save(updateEntity(entity, request), id);
+		final var revision = snapshot(entity);
+		save(updateEntity(entity, request), revision, id);
 	}
 
 	public void updateAsset(final String municipalityId, final String id, final AssetUpdateRequest request) {
 		final var entity = getAssetEntity(municipalityId, id);
 		validateNotDraft(entity);
-		recordRevision(entity);
-		save(updateEntity(entity, request), id);
+		final var revision = snapshot(entity);
+		save(updateEntity(entity, request), revision, id);
 	}
 
-	// saveAndFlush, not save: with save the version check happens at commit, after this method has returned, and the
-	// catch below would never see it.
-	private void save(final AssetEntity entity, final String id) {
+	private void save(final AssetEntity entity, final AssetRevisionEntity revision, final String id) {
 		try {
 			repository.saveAndFlush(entity);
 		} catch (final OptimisticLockingFailureException e) {
@@ -167,6 +165,7 @@ public class AssetService {
 				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
 				.build();
 		}
+		assetRevisionRepository.save(revision);
 	}
 
 	private void validateNotDraft(final AssetEntity entity) {
@@ -196,9 +195,9 @@ public class AssetService {
 		repository.findByIdAndMunicipalityId(replacesId, municipalityId)
 			.filter(original -> original.getStatus() == ACTIVE)
 			.ifPresent(original -> {
-				recordRevision(original);
+				final var revision = snapshot(original);
 				original.setStatus(REPLACED);
-				save(original, original.getId());
+				save(original, revision, original.getId());
 			});
 	}
 

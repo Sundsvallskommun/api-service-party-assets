@@ -14,11 +14,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace.NONE;
 
-/**
- * Asset revision repository tests.
- *
- * @see src/test/resources/db/scripts/assetRevisionRepositoryTest.sql for data setup.
- */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)
 @ActiveProfiles("junit")
@@ -29,7 +24,7 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 class AssetRevisionRepositoryTest {
 
 	private static final String ASSET_ID = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
-	private static final String ASSET_ID_WITH_GAP = "cba6f0e5-e826-4690-8776-37c69d981a2a";
+	private static final String OTHER_ASSET_ID = "cba6f0e5-e826-4690-8776-37c69d981a2a";
 
 	@Autowired
 	private AssetRevisionRepository repository;
@@ -63,11 +58,9 @@ class AssetRevisionRepositoryTest {
 		});
 	}
 
-	// A gap in the numbering is what a write path that mutated without snapshotting leaves behind. It has to read as a
-	// miss rather than silently resolve to a neighbouring revision.
 	@Test
-	void findByAssetIdAndRevisionForAGapInTheNumbering() {
-		assertThat(repository.findByAssetIdAndRevision(ASSET_ID_WITH_GAP, 1)).isEmpty();
+	void findByAssetIdAndRevisionForARevisionThatWasNeverRecorded() {
+		assertThat(repository.findByAssetIdAndRevision(OTHER_ASSET_ID, 7)).isEmpty();
 	}
 
 	@Test

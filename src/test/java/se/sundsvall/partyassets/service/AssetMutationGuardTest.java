@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import se.sundsvall.partyassets.scheduler.AssetExpirationWorker;
 
 import static java.lang.reflect.Modifier.isPublic;
 import static java.lang.reflect.Modifier.isStatic;
@@ -11,11 +12,6 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Freezes the public surface of the two services that may change an asset. Nothing enforces the snapshot rule at
- * runtime: it is written explicitly in the service, because a Hibernate event listener would hide it from whoever reads
- * the code (docs/design-revisionshantering.md). This test is the substitute.
- */
 class AssetMutationGuardTest {
 
 	private static final Set<String> ASSET_SERVICE_METHODS = Set.of(
@@ -35,11 +31,14 @@ class AssetMutationGuardTest {
 		"updateAttachment(String,String,String,AssetAttachmentUpdateRequest)",
 		"deleteAttachment(String,String,String)");
 
+	private static final Set<String> ASSET_EXPIRATION_WORKER_METHODS = Set.of(
+		"findExpirableAssetIds()",
+		"expire(String)");
+
 	private static final String MESSAGE = """
-		The public API of %s has changed. Every method that changes an asset has to record a revision before it mutates, \
-		or the revision number is bumped without a snapshot and the numbering gets a gap. Decide whether the new method \
-		mutates, call recordRevision(..) if it does, then list its signature here. \
-		See docs/design-revisionshantering.md.""";
+		The public API of %s has changed. Every method that changes an asset has to snapshot it before it mutates, or \
+		that change is missing from the history and nothing reveals it. Decide whether the new method mutates, take a \
+		snapshot if it does, then list its signature here. See docs/design-revisionshantering.md.""";
 
 	@Test
 	void assetServiceHasNoUnreviewedMethods() {
@@ -55,9 +54,13 @@ class AssetMutationGuardTest {
 			.isEqualTo(ASSET_ATTACHMENT_SERVICE_METHODS);
 	}
 
-	// Full signatures rather than bare names: with names alone a new overload of an existing method would slip past,
-	// which is the change this test exists to catch. Synthetic methods are skipped because JaCoCo adds one under
-	// coverage runs but not under a plain test run.
+	@Test
+	void assetExpirationWorkerHasNoUnreviewedMethods() {
+		assertThat(signaturesOf(AssetExpirationWorker.class))
+			.as(MESSAGE.formatted(AssetExpirationWorker.class.getSimpleName()))
+			.isEqualTo(ASSET_EXPIRATION_WORKER_METHODS);
+	}
+
 	private static Set<String> signaturesOf(final Class<?> type) {
 		return Arrays.stream(type.getDeclaredMethods())
 			.filter(method -> isPublic(method.getModifiers()))

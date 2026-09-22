@@ -18,11 +18,6 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-/**
- * Asset revision integration tests.
- *
- * @see src/test/resources/db/scripts/assetRevisionsIT.sql for data setup.
- */
 @WireMockAppTestSuite(files = "classpath:/assetRevisionsIT/", classes = Application.class)
 @Sql(scripts = {
 	"/db/scripts/truncate.sql",
@@ -92,8 +87,6 @@ class AssetRevisionsIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 	}
 
-	// A change made over HTTP has to show up as a new revision carrying the actor from the header, and the previous
-	// state has to be preserved untouched underneath it.
 	@Test
 	void test06_updatingAnAssetAddsARevision() {
 		setupCall()
@@ -108,13 +101,10 @@ class AssetRevisionsIT extends AbstractAppTest {
 
 		assertThat(revisionCount(ASSET_WITH_HISTORY)).isEqualTo(3);
 		assertThat(currentActor(ASSET_WITH_HISTORY)).isEqualTo("joe01doe");
-		// Revision 2 is the state from before this change, with the actor who created it.
 		assertThat(actorOfRevision(ASSET_WITH_HISTORY, 2)).isEqualTo("third.actor");
 		assertThat(statusOfRevision(ASSET_WITH_HISTORY, 2)).isEqualTo("BLOCKED");
 	}
 
-	// The story requires that deleting an asset leaves nothing readable behind. Only Flyway builds the cascading
-	// foreign key, so this is the one place the rule is actually exercised.
 	@Test
 	void test07_deletingTheAssetRemovesItsRevisions() {
 		assertThat(revisionCount(ASSET_WITH_HISTORY)).isPositive();

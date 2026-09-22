@@ -12,6 +12,7 @@
         valid_to date,
         created datetime(6),
         updated datetime(6),
+        version bigint default 0 not null,
         actor varchar(255),
         asset_id varchar(255),
         description varchar(255),

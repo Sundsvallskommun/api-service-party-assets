@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -50,7 +51,6 @@ class AssetServiceTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
 
-	// Identifier is a ThreadLocal, so an actor left behind by one test would leak into the next.
 	@AfterEach
 	void clearIdentifier() {
 		Identifier.remove();
@@ -435,7 +435,6 @@ class AssetServiceTest {
 		verify(repositoryMock, org.mockito.Mockito.times(2)).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(ACTIVE));
-		// Both the draft and the asset it replaces are changed, so both get a snapshot.
 		verify(assetRevisionRepositoryMock, org.mockito.Mockito.times(2)).save(any(AssetRevisionEntity.class));
 	}
 
@@ -560,7 +559,6 @@ class AssetServiceTest {
 		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
 		assertThat(revisionCaptor.getValue()).satisfies(revision -> {
 			assertThat(revision.getAssetId()).isEqualTo(id);
-			// The values the asset had before the change, not after it.
 			assertThat(revision.getRevision()).isEqualTo(2);
 			assertThat(revision.getActor()).isEqualTo("previous.actor");
 			assertThat(revision.getStatus()).isEqualTo("ACTIVE");
@@ -579,7 +577,6 @@ class AssetServiceTest {
 		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest());
 
 		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
-		// The snapshot keeps the old actor; the asset row takes the new one.
 		assertThat(revisionCaptor.getValue().getActor()).isEqualTo("previous.actor");
 		assertThat(entity.getActor()).isEqualTo("joe01doe");
 	}
@@ -607,6 +604,22 @@ class AssetServiceTest {
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest()))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(CONFLICT));
+
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateAssetWritesTheSnapshotOnlyAfterTheAssetUpdateHasFlushed() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(2);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, getAssetUpdateRequest());
+
+		final var inOrder = inOrder(repositoryMock, assetRevisionRepositoryMock);
+		inOrder.verify(repositoryMock).saveAndFlush(entity);
+		inOrder.verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
 	}
 
 	@Test
@@ -622,7 +635,6 @@ class AssetServiceTest {
 
 		verify(repositoryMock).save(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getActor()).isEqualTo("joe01doe");
-		// There is no previous state to snapshot; revision 0 is the asset as created.
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 }

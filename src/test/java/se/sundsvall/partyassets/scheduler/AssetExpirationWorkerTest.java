@@ -10,6 +10,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.OptimisticLockingFailureException;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
@@ -17,6 +18,9 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -82,11 +86,34 @@ class AssetExpirationWorkerTest {
 			assertThat(revision.getStatus()).isEqualTo("ACTIVE");
 		});
 		assertThat(asset.getStatus()).isEqualTo(Status.EXPIRED);
-		// The job runs outside a request, so there is no identifier to read.
 		assertThat(asset.getActor()).isNull();
+		assertThat(asset.getRevision()).isEqualTo(2);
 		verify(assetRepositoryMock).findById(ASSET_ID);
-		verify(assetRepositoryMock).save(asset);
+		verify(assetRepositoryMock).saveAndFlush(asset);
 		verifyNoMoreInteractions(assetRepositoryMock, assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void expire_writesTheSnapshotOnlyAfterTheAssetUpdateHasFlushed() {
+		final var asset = AssetEntity.create().withId(ASSET_ID).withRevision(1).withStatus(Status.ACTIVE).withValidTo(VALID_TO);
+		when(assetRepositoryMock.findById(ASSET_ID)).thenReturn(Optional.of(asset));
+
+		worker.expire(ASSET_ID);
+
+		final var inOrder = inOrder(assetRepositoryMock, assetRevisionRepositoryMock);
+		inOrder.verify(assetRepositoryMock).saveAndFlush(asset);
+		inOrder.verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
+	}
+
+	@Test
+	void expire_writesNoSnapshotWhenAnotherWriterAlreadyChangedTheAsset() {
+		final var asset = AssetEntity.create().withId(ASSET_ID).withRevision(1).withStatus(Status.ACTIVE).withValidTo(VALID_TO);
+		when(assetRepositoryMock.findById(ASSET_ID)).thenReturn(Optional.of(asset));
+		when(assetRepositoryMock.saveAndFlush(asset)).thenThrow(new OptimisticLockingFailureException("conflict"));
+
+		assertThatExceptionOfType(OptimisticLockingFailureException.class).isThrownBy(() -> worker.expire(ASSET_ID));
+
+		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
 	@Test
@@ -100,7 +127,19 @@ class AssetExpirationWorkerTest {
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
-	// The row can move between the listing and the expiry, since they are separate transactions.
+	@Test
+	void expire_skipsAnAssetWhoseValidToWasExtended() {
+		final var asset = AssetEntity.create().withId(ASSET_ID).withRevision(1).withStatus(Status.ACTIVE).withValidTo(LocalDate.now().plusYears(1));
+		when(assetRepositoryMock.findById(ASSET_ID)).thenReturn(Optional.of(asset));
+
+		worker.expire(ASSET_ID);
+
+		assertThat(asset.getStatus()).isEqualTo(Status.ACTIVE);
+		verify(assetRepositoryMock).findById(ASSET_ID);
+		verifyNoMoreInteractions(assetRepositoryMock);
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
 	@Test
 	void expire_skipsAnAssetWhoseStatusChanged() {
 		final var asset = AssetEntity.create().withId(ASSET_ID).withStatus(Status.BLOCKED).withValidTo(VALID_TO);

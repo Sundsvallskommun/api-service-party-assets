@@ -60,8 +60,6 @@ class AssetRevisionMapperTest {
 		assertThatJson(revision.getAttachments()).isEqualTo("[]");
 	}
 
-	// The canary for Jackson's date handling. An attachment timestamp has to survive the round trip through the column,
-	// or a revision cannot report the metadata it had.
 	@Test
 	void toRevisionRoundTripsAnAttachmentTimestamp() {
 		final var created = OffsetDateTime.of(2023, 1, 2, 12, 0, 0, 0, ZoneOffset.ofHours(2));
@@ -80,8 +78,6 @@ class AssetRevisionMapperTest {
 			assertThat(attachment.getId()).isEqualTo("attachment-1");
 			assertThat(attachment.getFileName()).isEqualTo("lokalritning.pdf");
 			assertThat(attachment.getFileSize()).isEqualTo(1024);
-			// The offset has to survive too, not just the instant. AssertJ compares OffsetDateTime by instant, so
-			// asserting the offset separately is what catches a rewrite of 12:00+02:00 into 10:00Z.
 			assertThat(attachment.getCreated()).isEqualTo(created);
 			assertThat(attachment.getCreated().getOffset()).isEqualTo(created.getOffset());
 		});
@@ -112,8 +108,6 @@ class AssetRevisionMapperTest {
 		assertThat(revision.getPartyType()).isNull();
 	}
 
-	// The point of the whole feature: an asset snapshotted and read back has to describe the same thing the live asset
-	// does. If this drifts, every revision in the database is quietly wrong.
 	@Test
 	void toAssetRevisionRoundTripsThroughToRevision() {
 		final var id = randomUUID().toString();
@@ -130,7 +124,6 @@ class AssetRevisionMapperTest {
 
 		assertThat(fromSnapshot)
 			.usingRecursiveComparison()
-			// recordedAt is when the snapshot was taken, which has no counterpart on the live asset.
 			.ignoringFields("recordedAt")
 			.isEqualTo(fromAsset);
 	}
@@ -145,7 +138,6 @@ class AssetRevisionMapperTest {
 		assertThat(revision.getStatus()).isNull();
 	}
 
-	// The column is a varchar precisely so a value dropped from the enum cannot make old snapshots unreadable.
 	@Test
 	void toAssetRevisionWithAnUnknownStatusYieldsNull() {
 		final var revision = toAssetRevision(AssetRevisionEntity.create()
@@ -176,7 +168,6 @@ class AssetRevisionMapperTest {
 		assertThat(currentActor()).isNull();
 	}
 
-	// The header needs both a value and a type to parse at all. A value on its own leaves no actor, silently.
 	@Test
 	void currentActorIsNullForAHeaderWithoutAType() {
 		Identifier.set(Identifier.parse("joe01doe"));

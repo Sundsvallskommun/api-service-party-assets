@@ -73,7 +73,6 @@ class AssetAttachmentsIT extends AbstractAppTest {
 
 		assertThat(location).isNotNull();
 
-		// Uploading an attachment counts as changing the permit, so the asset itself is marked as updated.
 		assertThat(jdbcTemplate.queryForObject("select updated from asset where id = ?", Timestamp.class, ACTIVE_ASSET_ID)).isNotNull();
 
 		setupCall()
@@ -129,7 +128,6 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
 
-		// Soft deleted: the row and its data survive so older revisions still resolve to the file.
 		assertThat(attachmentRepository.findById(attachmentId)).hasValueSatisfying(attachment -> assertThat(attachment.isDeleted()).isTrue());
 		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID))
 			.noneSatisfy(attachment -> assertThat(attachment.getId()).isEqualTo(attachmentId));
@@ -196,14 +194,11 @@ class AssetAttachmentsIT extends AbstractAppTest {
 		assertThat(copiedAttachments.getFirst().getFileName()).isEqualTo(originalAttachments.getFirst().getFileName());
 		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeCopy + 1);
 
-		// The copy has to hold the same bytes as the original, not merely a data row of its own.
 		assertThat(attachmentBytes(copiedAttachments.getFirst().getId()))
 			.isNotEmpty()
 			.isEqualTo(attachmentBytes(originalAttachments.getFirst().getId()));
 	}
 
-	// The README promises that deleting an asset takes its attachments with it. The cascade runs through a derived
-	// delete on a LAZY collection, so it is worth proving end to end rather than assuming.
 	@Test
 	void test09_deleteAssetWithAttachments() throws Exception {
 		createAttachmentOnActiveAsset();
@@ -222,8 +217,6 @@ class AssetAttachmentsIT extends AbstractAppTest {
 		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeDelete - 1);
 	}
 
-	// The invariant the whole feature rests on: deleting an attachment must not put its bytes out of reach, or the
-	// history lies about the part of a permit that carries the most legal weight.
 	@Test
 	void test10_deletedAttachmentIsStillDownloadable() throws Exception {
 		final var attachmentId = createAttachmentOnActiveAsset();
@@ -286,7 +279,6 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
 
-		// One per write path: the upload, the rename and the deletion.
 		assertThat(countRevisions(ACTIVE_ASSET_ID)).isEqualTo(revisionsBefore + 3);
 	}
 

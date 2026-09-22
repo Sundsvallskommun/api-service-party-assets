@@ -18,10 +18,6 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.hibernate.Length.LONG32;
 import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 
-/**
- * A snapshot of an asset as it was before a change. The current state stays on AssetEntity; everything older lives
- * here, one row per revision. See docs/design-revisionshantering.md.
- */
 @Entity
 @Table(name = "asset_revision",
 	uniqueConstraints = {
@@ -35,9 +31,6 @@ public class AssetRevisionEntity {
 	@UuidGenerator
 	private String id;
 
-	// The asset primary key, deliberately not mapped as an association: an association would pull AssetEntity's eager
-	// collections into every revision read, and nothing is meant to join out of this table. The cascading delete is
-	// therefore expressed in the migration rather than by JPA.
 	@Column(name = "asset_id", nullable = false)
 	private String assetId;
 
@@ -57,15 +50,12 @@ public class AssetRevisionEntity {
 	@Column(name = "origin")
 	private String origin;
 
-	// AssetEntity.assetId, the number the business uses. Renamed here because asset_id already means the primary key.
 	@Column(name = "external_asset_id")
 	private String externalAssetId;
 
 	@Column(name = "party_id")
 	private String partyId;
 
-	// Status and party type are stored as plain strings rather than as enums. Hibernate renders an @Enumerated column
-	// as a real MariaDB enum, which would reject historical rows the day a value is dropped from the Java enum.
 	@Column(name = "party_type", length = 32)
 	private String partyType;
 

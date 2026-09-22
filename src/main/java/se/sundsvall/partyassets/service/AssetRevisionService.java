@@ -14,10 +14,6 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toAssetRevision;
 
-/**
- * Reads the history of an asset. Kept apart from AssetService because it never mutates, which is also what keeps
- * AssetMutationGuardTest's list of write paths from growing.
- */
 @Service
 @Transactional(readOnly = true)
 public class AssetRevisionService {
@@ -33,8 +29,6 @@ public class AssetRevisionService {
 		this.assetRevisionRepository = assetRevisionRepository;
 	}
 
-	// Newest first: the asset row is the current revision, and the history table is queried descending, so the result is
-	// already ordered without a sort.
 	public List<AssetRevision> getRevisions(final String municipalityId, final String id) {
 		final var asset = getAssetEntity(municipalityId, id);
 
@@ -60,8 +54,6 @@ public class AssetRevisionService {
 				.build());
 	}
 
-	// Tenancy is enforced here and nowhere else: the asset id is a primary key that has already been proven to belong to
-	// this municipality, and asset_revision.municipality_id is a snapshot value rather than an access control column.
 	private AssetEntity getAssetEntity(final String municipalityId, final String id) {
 		return assetRepository.findByIdAndMunicipalityId(id, municipalityId)
 			.orElseThrow(() -> Problem.builder()

@@ -36,9 +36,6 @@ public interface AssetAttachmentRepository extends JpaRepository<AssetAttachment
 		@Param("assetId") String assetId,
 		@Param("municipalityId") String municipalityId);
 
-	// Soft-deleted attachments stay downloadable: an older revision lists the file, and the revision is worth little if
-	// the bytes cannot be fetched. Only readAttachment uses this - the listing and both mutating paths go through
-	// findByIdForAsset and therefore see a deleted attachment as gone.
 	@Query("""
 		select a from AssetAttachmentEntity a
 		where a.id = :id

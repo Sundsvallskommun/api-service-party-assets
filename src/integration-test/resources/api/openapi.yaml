@@ -585,6 +585,12 @@ paths:
               style: simple
               schema:
                 type: string
+        "409":
+          description: Conflict - The asset was updated by someone else
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "400":
           description: Bad Request
           content:
@@ -851,6 +857,12 @@ paths:
       responses:
         "204":
           description: No content - Successful operation
+        "409":
+          description: Conflict - The asset was updated by someone else
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "400":
           description: Bad Request
           content:
@@ -907,6 +919,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssetAttachment"
+        "409":
+          description: Conflict - The asset was updated by someone else
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "400":
           description: Bad Request
           content:
@@ -1629,8 +1647,7 @@ components:
           type: integer
           format: int32
           description: "Revision number. Numbering starts at 0, which is the asset\
-            \ as it was created. A gap in the sequence means a write path changed\
-            \ the asset without recording a snapshot"
+            \ as it was created, and increases by one for every recorded change"
           examples:
           - 2
           readOnly: true

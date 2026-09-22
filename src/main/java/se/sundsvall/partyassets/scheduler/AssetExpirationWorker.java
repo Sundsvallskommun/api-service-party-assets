@@ -30,8 +30,6 @@ public class AssetExpirationWorker {
 		this.assetRevisionRepository = assetRevisionRepository;
 	}
 
-	// Ids rather than entities: each one is expired in its own transaction, and a detached entity carried across that
-	// boundary would have to be merged back.
 	@Transactional(readOnly = true)
 	public List<String> findExpirableAssetIds() {
 		final var ids = assetRepository.findByStatusInAndValidToBefore(EXPIRABLE_STATUSES, LocalDate.now(ZoneId.systemDefault()))
@@ -43,18 +41,18 @@ public class AssetExpirationWorker {
 		return ids;
 	}
 
-	// One transaction per asset, so a single failure costs that asset rather than the whole night. The loop lives in
-	// AssetExpirationJob rather than here: a self-invoked call would run inside the caller's transaction and this
-	// annotation would be ignored.
 	@Transactional
 	public void expire(final String assetId) {
 		assetRepository.findById(assetId)
 			.filter(asset -> EXPIRABLE_STATUSES.contains(asset.getStatus()))
+			.filter(asset -> asset.getValidTo() != null && asset.getValidTo().isBefore(LocalDate.now(ZoneId.systemDefault())))
 			.ifPresent(asset -> {
-				assetRevisionRepository.save(toRevision(asset));
+				final var revision = toRevision(asset);
 				asset.setActor(currentActor());
+				asset.setRevision(asset.getRevision() + 1);
 				asset.setStatus(Status.EXPIRED);
-				assetRepository.save(asset);
+				assetRepository.saveAndFlush(asset);
+				assetRevisionRepository.save(revision);
 				LOG.info("Expired asset {}", asset.getId());
 			});
 	}

@@ -68,8 +68,6 @@ public class AssetAttachmentEntity {
 	@Column(name = "description")
 	private String description;
 
-	// Deleting an attachment marks it instead of removing the row: an older revision lists the file and has to keep
-	// resolving to its bytes. Hidden from the listing, still downloadable by id.
 	@Column(name = "deleted", nullable = false)
 	@ColumnDefault("false")
 	private boolean deleted;

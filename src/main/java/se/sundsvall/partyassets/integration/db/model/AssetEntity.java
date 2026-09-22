@@ -48,16 +48,15 @@ public class AssetEntity {
 	@UuidGenerator
 	private String id;
 
-	// One column carries both the revision number and the optimistic lock. A write path that changes the row without
-	// writing a snapshot leaves a gap in the numbering, and the gap is meant to be visible.
-	// See docs/design-revisionshantering.md.
-	@Version
 	@Column(name = "revision", nullable = false)
 	@ColumnDefault("0")
 	private Integer revision;
 
-	// Who created the state the row currently holds, taken from the X-Sent-By header via dept44's Identifier. Null when
-	// the header is absent or does not parse, and for rows written by the nightly expiration job.
+	@Version
+	@Column(name = "version", nullable = false)
+	@ColumnDefault("0")
+	private Long version;
+
 	@Column(name = "actor")
 	private String actor;
 
@@ -129,19 +128,12 @@ public class AssetEntity {
 	@PrePersist
 	void prePersist() {
 		created = now(systemDefault()).truncatedTo(MILLIS);
+		revision = ofNullable(revision).orElse(0);
 	}
 
 	@PreUpdate()
 	void preUpdate() {
 		updated = now(systemDefault()).truncatedTo(MILLIS);
-	}
-
-	// preUpdate only fires once Hibernate already considers the row dirty. A write path that changes nothing else - a
-	// PATCH to the status the asset already had, or a rename of one of its attachments - has to mark the row itself, or
-	// @Version is not bumped and the next snapshot collides with the one just written.
-	public AssetEntity markUpdated() {
-		preUpdate();
-		return this;
 	}
 
 	public String getId() {
@@ -167,6 +159,19 @@ public class AssetEntity {
 
 	public AssetEntity withRevision(final Integer revision) {
 		this.revision = revision;
+		return this;
+	}
+
+	public Long getVersion() {
+		return version;
+	}
+
+	public void setVersion(final Long version) {
+		this.version = version;
+	}
+
+	public AssetEntity withVersion(final Long version) {
+		this.version = version;
 		return this;
 	}
 
@@ -447,7 +452,7 @@ public class AssetEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(actor, additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo);
+		return Objects.hash(actor, additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo, version);
 	}
 
 	@Override
@@ -465,12 +470,13 @@ public class AssetEntity {
 		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created,
 			other.created) && Objects.equals(description, other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(municipalityId,
 				other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision)
-			&& status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
+			&& status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo) && Objects.equals(version, other.version);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetEntity [id=" + id + ", revision=" + revision + ", actor=" + actor + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType + ", caseReferenceIds="
+		return "AssetEntity [id=" + id + ", revision=" + revision + ", version=" + version + ", actor=" + actor + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType
+			+ ", caseReferenceIds="
 			+ caseReferenceIds + ", type=" + type + ", issued="
 			+ issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters="
 			+ jsonParameters

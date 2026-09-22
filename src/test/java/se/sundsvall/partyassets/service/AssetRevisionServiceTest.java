@@ -75,7 +75,6 @@ class AssetRevisionServiceTest {
 
 		final var result = service.getRevisions(MUNICIPALITY_ID, id);
 
-		// updated is null until the first change, so created is the only honest answer for recordedAt.
 		assertThat(result).singleElement().satisfies(revision -> {
 			assertThat(revision.getRevision()).isZero();
 			assertThat(revision.getRecordedAt()).isEqualTo(created);
@@ -105,7 +104,6 @@ class AssetRevisionServiceTest {
 
 		assertThat(result.getRevision()).isEqualTo(3);
 		assertThat(result.getId()).isEqualTo(id);
-		// The current revision lives on the asset row, so the history table is never touched.
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
@@ -125,9 +123,8 @@ class AssetRevisionServiceTest {
 		verifyNoMoreInteractions(assetRevisionRepositoryMock);
 	}
 
-	// A gap means a write path mutated without snapshotting. It has to read as a miss, not as a neighbouring revision.
 	@Test
-	void getRevisionForAGapInTheNumbering() {
+	void getRevisionForARevisionThatWasNeverRecorded() {
 		final var id = UUID.randomUUID().toString();
 		final var asset = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(3);
 
@@ -152,7 +149,7 @@ class AssetRevisionServiceTest {
 	}
 
 	@Test
-	void getRevisionForAnAssetEntityIsNotAffectedByTheRequestedMunicipality() {
+	void getRevisionForAnAssetInAnotherMunicipality() {
 		final var id = UUID.randomUUID().toString();
 		when(assetRepositoryMock.findByIdAndMunicipalityId(id, "2260")).thenReturn(Optional.empty());
 

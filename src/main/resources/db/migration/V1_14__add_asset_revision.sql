@@ -1,5 +1,6 @@
     alter table asset
         add column revision integer default 0 not null,
+        add column version bigint default 0 not null,
         add column actor varchar(255);
 
     alter table asset_attachment
@@ -33,9 +34,6 @@
     alter table if exists asset_revision
        add constraint uq_asset_revision_asset_id_revision unique (asset_id, revision);
 
-    -- asset_revision.asset_id is a plain column, not a JPA association, so nothing in the entity model cleans up the
-    -- history when an asset is deleted. Deleting an asset has to take its revisions with it, which makes this the only
-    -- thing enforcing that. Hibernate cannot emit on delete cascade, so it exists here and not in the generated schema.
     alter table asset_revision
        add constraint fk_asset_revision_asset_id
        foreign key (asset_id)

@@ -73,7 +73,6 @@ class AssetRevisionResourceTest {
 		verifyNoMoreInteractions(serviceMock);
 	}
 
-	// Numbering starts at 0, so revision 0 has to be reachable rather than rejected as a missing value.
 	@Test
 	void getRevisionZero() {
 		when(serviceMock.getRevision(MUNICIPALITY_ID, ASSET_ID, 0)).thenReturn(AssetRevision.create().withRevision(0));

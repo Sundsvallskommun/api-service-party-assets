@@ -53,8 +53,6 @@ class AssetAttachmentRepositoryTest {
 				tuple(SECOND_ATTACHMENT_ID, "planritning.pdf"));
 	}
 
-	// The query filters on the asset primary key, not on AssetEntity.assetId - passing the external business id must
-	// therefore find nothing.
 	@Test
 	void findAllForAssetDoesNotMatchTheExternalAssetId() {
 		assertThat(repository.findAllForAsset("PRH-0000000001", MUNICIPALITY_ID)).isEmpty();
@@ -99,7 +97,6 @@ class AssetAttachmentRepositoryTest {
 		assertThat(repository.findByIdForAsset(DELETED_ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).isEmpty();
 	}
 
-	// The bytes of a deleted attachment have to stay reachable, or an older revision points at a file that is gone.
 	@Test
 	void findByIdForAssetIncludingDeletedFindsASoftDeletedAttachment() {
 		assertThat(repository.findByIdForAssetIncludingDeleted(DELETED_ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID))
@@ -110,7 +107,6 @@ class AssetAttachmentRepositoryTest {
 			});
 	}
 
-	// Still the right behaviour for the cascade from deleting a whole asset; the soft delete lives in the service.
 	@Test
 	void deleteRemovesTheAttachmentDataRow() {
 		final var attachment = repository.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID).orElseThrow();

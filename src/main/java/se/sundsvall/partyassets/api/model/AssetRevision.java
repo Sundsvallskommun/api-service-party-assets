@@ -15,7 +15,7 @@ public class AssetRevision {
 	@Schema(description = "Unique id of the asset this revision belongs to", examples = "1c8f38a6-b492-4037-b7dc-de5bc6c629f0", accessMode = READ_ONLY)
 	private String id;
 
-	@Schema(description = "Revision number. Numbering starts at 0, which is the asset as it was created. A gap in the sequence means a write path changed the asset without recording a snapshot",
+	@Schema(description = "Revision number. Numbering starts at 0, which is the asset as it was created, and increases by one for every recorded change",
 		examples = "2",
 		accessMode = READ_ONLY)
 	private Integer revision;

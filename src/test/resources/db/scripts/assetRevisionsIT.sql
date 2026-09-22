@@ -1,11 +1,9 @@
 insert into asset (id, asset_id, description, municipality_id, origin, party_id, party_type, status,
                    status_reason, `type`, issued, valid_to, revision, actor, created, updated)
 values
-    -- Active asset with history: revisions 0 and 1 in asset_revision, 2 on the row itself
     ('e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 'PRH-0000000001', 'Serveringstillstånd', '2281', 'CASEDATA',
      'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE', 'BLOCKED', 'Stöldanmäld', 'PERMIT', '2023-01-01', '2033-12-31',
      2, 'third.actor', '2023-01-01 10:00:00', '2023-04-01 10:00:00'),
-    -- Never changed: revision 0, no history rows, and updated is still null
     ('cba6f0e5-e826-4690-8776-37c69d981a2a', 'PRH-0000000002', 'Parkeringstillstånd', '2281', 'CASEDATA',
      'c5d21b57-c785-4d3c-8361-940cae999ff7', 'ENTERPRISE', 'ACTIVE', null, 'PERMIT', '2023-02-01', '2034-01-31',
      0, null, '2023-02-01 10:00:00', null);
