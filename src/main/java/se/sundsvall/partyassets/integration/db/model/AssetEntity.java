@@ -15,12 +15,14 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.UuidGenerator;
 import se.sundsvall.partyassets.api.model.Status;
@@ -45,6 +47,19 @@ public class AssetEntity {
 	@Id
 	@UuidGenerator
 	private String id;
+
+	// One column carries both the revision number and the optimistic lock. A write path that changes the row without
+	// writing a snapshot leaves a gap in the numbering, and the gap is meant to be visible.
+	// See docs/design-revisionshantering.md.
+	@Version
+	@Column(name = "revision", nullable = false)
+	@ColumnDefault("0")
+	private Integer revision;
+
+	// Who created the state the row currently holds, taken from the X-Sent-By header via dept44's Identifier. Null when
+	// the header is absent or does not parse, and for rows written by the nightly expiration job.
+	@Column(name = "actor")
+	private String actor;
 
 	@Column(name = "municipality_id")
 	private String municipalityId;
@@ -131,6 +146,32 @@ public class AssetEntity {
 
 	public AssetEntity withId(final String id) {
 		this.id = id;
+		return this;
+	}
+
+	public Integer getRevision() {
+		return revision;
+	}
+
+	public void setRevision(final Integer revision) {
+		this.revision = revision;
+	}
+
+	public AssetEntity withRevision(final Integer revision) {
+		this.revision = revision;
+		return this;
+	}
+
+	public String getActor() {
+		return actor;
+	}
+
+	public void setActor(final String actor) {
+		this.actor = actor;
+	}
+
+	public AssetEntity withActor(final String actor) {
+		this.actor = actor;
 		return this;
 	}
 
@@ -398,7 +439,7 @@ public class AssetEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, status, statusReason, type, updated, validTo);
+		return Objects.hash(actor, additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo);
 	}
 
 	@Override
@@ -413,15 +454,16 @@ public class AssetEntity {
 			return false;
 		}
 		AssetEntity other = (AssetEntity) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created, other.created) && Objects.equals(description,
-			other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(origin, other.origin)
-			&& Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type)
-			&& Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
+		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created,
+			other.created) && Objects.equals(description, other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(municipalityId,
+				other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision)
+			&& status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "AssetEntity [id=" + id + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType + ", caseReferenceIds=" + caseReferenceIds + ", type=" + type + ", issued="
+		return "AssetEntity [id=" + id + ", revision=" + revision + ", actor=" + actor + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType + ", caseReferenceIds="
+			+ caseReferenceIds + ", type=" + type + ", issued="
 			+ issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters="
 			+ jsonParameters
 			+ ", created=" + created + ", updated=" + updated + "]";

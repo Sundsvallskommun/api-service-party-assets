@@ -8,9 +8,11 @@
 
     create table asset (
         issued date not null,
+        revision integer default 0 not null,
         valid_to date,
         created datetime(6),
         updated datetime(6),
+        actor varchar(255),
         asset_id varchar(255),
         description varchar(255),
         id varchar(255) not null,
@@ -26,6 +28,7 @@
     ) engine=InnoDB;
 
     create table asset_attachment (
+        deleted bit default false not null,
         file_size integer,
         asset_attachment_data_id bigint not null,
         created datetime(6),
@@ -52,6 +55,31 @@
         parameter_key varchar(255),
         schema_id varchar(255) not null,
         parameter_value longtext,
+        primary key (id)
+    ) engine=InnoDB;
+
+    create table asset_revision (
+        issued date,
+        revision integer not null,
+        valid_to date,
+        recorded_at datetime(6) not null,
+        party_type varchar(32),
+        status varchar(32),
+        actor varchar(255),
+        asset_id varchar(255) not null,
+        description varchar(255),
+        external_asset_id varchar(255),
+        id varchar(255) not null,
+        municipality_id varchar(255),
+        origin varchar(255),
+        party_id varchar(255),
+        replaces_id varchar(255),
+        status_reason varchar(255),
+        `type` varchar(255),
+        additional_parameters longtext,
+        attachments longtext,
+        case_reference_ids longtext,
+        json_parameters longtext,
         primary key (id)
     ) engine=InnoDB;
 
@@ -85,6 +113,9 @@
 
     alter table if exists asset_attachment 
        add constraint uc_asset_attachment_data_id unique (asset_attachment_data_id);
+
+    alter table if exists asset_revision 
+       add constraint uq_asset_revision_asset_id_revision unique (asset_id, revision);
 
     create index idx_case_reference_id_asset_id 
        on case_reference_id (asset_id);

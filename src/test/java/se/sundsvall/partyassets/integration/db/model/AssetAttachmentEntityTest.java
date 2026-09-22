@@ -50,8 +50,10 @@ class AssetAttachmentEntityTest {
 		final var description = "Ritning över serveringslokal";
 		final var created = now();
 		final var updated = now().plusDays(1);
+		final var deleted = true;
 
 		final var bean = AssetAttachmentEntity.create()
+			.withDeleted(deleted)
 			.withAsset(asset)
 			.withAttachmentData(attachmentData)
 			.withId(id)
@@ -74,14 +76,18 @@ class AssetAttachmentEntityTest {
 		assertThat(bean.getFileSize()).isEqualTo(fileSize);
 		assertThat(bean.getCategory()).isEqualTo(category);
 		assertThat(bean.getDescription()).isEqualTo(description);
+		assertThat(bean.isDeleted()).isEqualTo(deleted);
 		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getUpdated()).isEqualTo(updated);
 	}
 
+	// deleted is a primitive, so it is false rather than null on a fresh bean - a wrapper would have made soft deletion
+	// three-valued and forced every query predicate to handle null.
 	@Test
 	void testNoDirtOnCreatedBean() {
-		assertThat(AssetAttachmentEntity.create()).hasAllNullFieldsOrProperties();
-		assertThat(new AssetAttachmentEntity()).hasAllNullFieldsOrProperties();
+		assertThat(AssetAttachmentEntity.create()).hasAllNullFieldsOrPropertiesExcept("deleted");
+		assertThat(new AssetAttachmentEntity()).hasAllNullFieldsOrPropertiesExcept("deleted");
+		assertThat(AssetAttachmentEntity.create().isDeleted()).isFalse();
 	}
 
 	@Test
