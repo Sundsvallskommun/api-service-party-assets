@@ -1,0 +1,5 @@
+{
+	"title": "Invalid asset status",
+	"status": 400,
+	"detail": "DRAFT assets must be updated via the asset drafts resource"
+}

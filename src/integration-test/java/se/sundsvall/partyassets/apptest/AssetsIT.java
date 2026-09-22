@@ -2,6 +2,7 @@ package se.sundsvall.partyassets.apptest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+import static org.springframework.http.HttpHeaders.IF_MATCH;
 import static org.springframework.http.HttpHeaders.LOCATION;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
@@ -12,6 +13,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static org.springframework.http.MediaType.ALL_VALUE;
 
 import java.util.List;
@@ -339,6 +341,29 @@ class AssetsIT extends AbstractAppTest {
 			.withHttpMethod(GET)
 			.withServicePath(location.getPath())
 			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test24_updateAssetWithAStaleIfMatch() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + "647e3062-62dc-499f-9faa-e54cb97aa214")
+			.withHeader(IF_MATCH, "\"99\"")
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(PRECONDITION_FAILED)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test23_updateDraftAssetViaRegularEndpoint() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + "1bdbb931-5c6f-4ffe-bfc9-d9e5bffe48a4")
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}

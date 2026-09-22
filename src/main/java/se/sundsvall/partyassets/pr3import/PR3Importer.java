@@ -35,6 +35,7 @@ import static java.util.function.Predicate.not;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static se.sundsvall.partyassets.integration.db.model.PartyType.PRIVATE;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
 
 @Component
 @ConditionalOnProperty(name = "pr3import.enabled", havingValue = "true", matchIfMissing = true)
@@ -251,7 +252,7 @@ class PR3Importer {
 								.build();
 						}
 
-						assetRepository.save(toEntity(assetCreateRequest, PRIVATE, municipalityId));
+						assetRepository.save(toEntity(assetCreateRequest, PRIVATE, municipalityId).withActor(currentActor()));
 					} catch (final Exception e) {
 						if (e instanceof final ThrowableProblem p) {
 							errorDetail = ofNullable(p.getDetail());

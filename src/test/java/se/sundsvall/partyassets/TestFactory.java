@@ -24,6 +24,8 @@ public final class TestFactory {
 
 	public static AssetEntity getAssetEntity(final String id, final String partyId) {
 		final var assetEntity = AssetEntity.create()
+			.withRevision(2)
+			.withActor("previous.actor")
 			.withAdditionalParameters(new HashMap<>(Map.of("key", "value")))
 			.withAssetId("assetId")
 			.withMunicipalityId("municipalityId")

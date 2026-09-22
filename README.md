@@ -106,6 +106,49 @@ curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
   -F 'category=LOKALRITNING'
 ```
 
+Removing a file marks it rather than erasing it. It disappears from the listing and can no longer be changed or removed
+again, but it stays downloadable at its own URL, because an earlier revision of the permit still refers to it and that
+history would otherwise point at a file that no longer exists. Deleting the whole asset does erase them.
+
+### Revision history
+
+Every change to an asset first writes a snapshot of what it looked like beforehand. The asset row itself is always the
+newest revision, and the older ones are read back through two endpoints:
+
+```bash
+curl -X 'GET' 'http://localhost:8080/2281/assets/{id}/revisions'
+curl -X 'GET' 'http://localhost:8080/2281/assets/{id}/revisions/0'
+```
+
+Numbering starts at 0, which is the asset as it was created, and the listing returns the newest revision first. The
+number moves only when a snapshot is taken, so the sequence has no gaps — and a write path that changed the asset
+without recording one would leave nothing behind to show for it.
+
+Each revision records who created it, taken from the `X-Sent-By` header. That header needs both a value and a type to be
+read at all, so `X-Sent-By: joe01doe` is silently ignored while `X-Sent-By: joe01doe; type=adAccount` is not. Requests
+without the header, and the nightly job that expires permits, leave the actor empty.
+
+Two writes that overlap in time are rejected rather than merged: the one that loses gets `409 Conflict` and has to
+reload. That covers attachment changes too, since adding, renaming or removing a file is a change to the permit. What it
+does not cover is reading a permit, waiting, and writing after someone else already has. That write succeeds and the
+earlier change is overwritten, though both are visible afterwards in the revision history.
+
+To close that gap, read the permit first and send the `ETag` you got back as `If-Match`:
+
+```bash
+curl -i -X 'GET' 'http://localhost:8080/2281/assets/{id}'          # ETag: "3"
+curl -X 'PATCH' 'http://localhost:8080/2281/assets/{id}' \
+  -H 'If-Match: "3"' -H 'Content-Type: application/json' \
+  -d '{"status":"BLOCKED"}'
+```
+
+The header is optional, and leaving it out behaves exactly as before. Sending it means the update is rejected with
+`412 Precondition Failed` if the permit changed after the read the tag came from. Only a plain entity-tag is understood,
+so `*`, weak tags and lists of tags all count as a mismatch. The tag changes on every recorded change to the permit,
+including a renamed attachment.
+
+Deleting an asset deletes its history with it, so nothing is readable afterwards through any endpoint.
+
 ## Configuration
 
 Configuration is crucial for the application to run successfully. Ensure all necessary settings are configured in

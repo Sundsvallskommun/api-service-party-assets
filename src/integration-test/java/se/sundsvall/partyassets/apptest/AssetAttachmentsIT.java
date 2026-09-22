@@ -73,7 +73,6 @@ class AssetAttachmentsIT extends AbstractAppTest {
 
 		assertThat(location).isNotNull();
 
-		// Uploading an attachment counts as changing the permit, so the asset itself is marked as updated.
 		assertThat(jdbcTemplate.queryForObject("select updated from asset where id = ?", Timestamp.class, ACTIVE_ASSET_ID)).isNotNull();
 
 		setupCall()
@@ -129,7 +128,9 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
 
-		assertThat(attachmentRepository.findById(attachmentId)).isEmpty();
+		assertThat(attachmentRepository.findById(attachmentId)).hasValueSatisfying(attachment -> assertThat(attachment.isDeleted()).isTrue());
+		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID))
+			.noneSatisfy(attachment -> assertThat(attachment.getId()).isEqualTo(attachmentId));
 	}
 
 	@Test
@@ -193,14 +194,11 @@ class AssetAttachmentsIT extends AbstractAppTest {
 		assertThat(copiedAttachments.getFirst().getFileName()).isEqualTo(originalAttachments.getFirst().getFileName());
 		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeCopy + 1);
 
-		// The copy has to hold the same bytes as the original, not merely a data row of its own.
 		assertThat(attachmentBytes(copiedAttachments.getFirst().getId()))
 			.isNotEmpty()
 			.isEqualTo(attachmentBytes(originalAttachments.getFirst().getId()));
 	}
 
-	// The README promises that deleting an asset takes its attachments with it. The cascade runs through a derived
-	// delete on a LAZY collection, so it is worth proving end to end rather than assuming.
 	@Test
 	void test09_deleteAssetWithAttachments() throws Exception {
 		createAttachmentOnActiveAsset();
@@ -217,6 +215,75 @@ class AssetAttachmentsIT extends AbstractAppTest {
 
 		assertThat(attachmentRepository.findAllForAsset(ACTIVE_ASSET_ID, MUNICIPALITY_ID)).isEmpty();
 		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeDelete - 1);
+	}
+
+	@Test
+	void test10_deletedAttachmentIsStillDownloadable() throws Exception {
+		final var attachmentId = createAttachmentOnActiveAsset();
+		final var bytesBeforeDelete = attachmentBytes(attachmentId);
+		final var dataRowsBeforeDelete = countAttachmentDataRows();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedBinaryResponse(FILE)
+			.sendRequestAndVerifyResponse();
+
+		assertThat(attachmentBytes(attachmentId)).isEqualTo(bytesBeforeDelete);
+		assertThat(countAttachmentDataRows()).isEqualTo(dataRowsBeforeDelete);
+	}
+
+	@Test
+	void test11_deletingAnAlreadyDeletedAttachmentReturnsNotFound() throws Exception {
+		final var attachmentId = createAttachmentOnActiveAsset();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NOT_FOUND)
+			.sendRequest();
+	}
+
+	@Test
+	void test12_attachmentChangesRecordRevisions() throws Exception {
+		final var revisionsBefore = countRevisions(ACTIVE_ASSET_ID);
+		final var attachmentId = createAttachmentOnActiveAsset();
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"fileName\":\"omdopt.pdf\"}")
+			.withExpectedResponseStatus(OK)
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(DELETE)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + attachmentId)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		assertThat(countRevisions(ACTIVE_ASSET_ID)).isEqualTo(revisionsBefore + 3);
+	}
+
+	private long countRevisions(final String assetId) {
+		return jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, assetId);
 	}
 
 	private byte[] attachmentBytes(final String attachmentId) {

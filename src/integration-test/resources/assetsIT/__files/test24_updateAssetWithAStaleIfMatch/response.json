@@ -1,0 +1,5 @@
+{
+	"title": "Asset has changed",
+	"status": 412,
+	"detail": "Asset with id 647e3062-62dc-499f-9faa-e54cb97aa214 does not match the supplied If-Match, please reload it and try again"
+}

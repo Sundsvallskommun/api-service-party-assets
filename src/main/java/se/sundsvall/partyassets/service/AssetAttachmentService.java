@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,10 +16,13 @@ import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
+import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
+import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
@@ -28,6 +32,8 @@ import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAs
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.updateEntity;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
+import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 
 @Service
 @Transactional
@@ -44,10 +50,34 @@ public class AssetAttachmentService {
 
 	private final AssetRepository assetRepository;
 	private final AssetAttachmentRepository attachmentRepository;
+	private final AssetRevisionRepository assetRevisionRepository;
 
-	public AssetAttachmentService(final AssetRepository assetRepository, final AssetAttachmentRepository attachmentRepository) {
+	public AssetAttachmentService(final AssetRepository assetRepository, final AssetAttachmentRepository attachmentRepository, final AssetRevisionRepository assetRevisionRepository) {
 		this.assetRepository = assetRepository;
 		this.attachmentRepository = attachmentRepository;
+		this.assetRevisionRepository = assetRevisionRepository;
+	}
+
+	private AssetRevisionEntity snapshot(final AssetEntity asset) {
+		final var revision = toRevision(asset);
+		asset.setActor(currentActor());
+		asset.setRevision(asset.getRevision() + 1);
+		return revision;
+	}
+
+	private AssetAttachmentEntity saveAndFlush(final AssetAttachmentEntity attachment, final AssetRevisionEntity revision, final String id) {
+		final AssetAttachmentEntity saved;
+		try {
+			saved = attachmentRepository.saveAndFlush(attachment);
+		} catch (final OptimisticLockingFailureException e) {
+			throw Problem.builder()
+				.withStatus(CONFLICT)
+				.withTitle("Asset was updated by someone else")
+				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
+				.build();
+		}
+		assetRevisionRepository.save(revision);
+		return saved;
 	}
 
 	// The blob only wraps the upload stream and the driver reads it when the row is inserted, so the insert is flushed
@@ -57,8 +87,10 @@ public class AssetAttachmentService {
 		validateAssetIsModifiable(asset);
 		validateFile(file);
 
+		final var revision = snapshot(asset);
+
 		try (final var content = file.getInputStream()) {
-			return attachmentRepository.saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description)).getId();
+			return saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description), revision, id).getId();
 		} catch (final IOException e) {
 			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Could not read uploaded file %s: %s".formatted(file.getOriginalFilename(), e.getMessage()));
 		}
@@ -75,7 +107,7 @@ public class AssetAttachmentService {
 	// writing inside the transaction would keep a database connection checked out for the whole network transfer.
 	@Transactional(readOnly = true)
 	public AssetAttachmentContent readAttachment(final String municipalityId, final String id, final String attachmentId) {
-		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
+		final var attachment = getAnyAttachmentEntity(municipalityId, id, attachmentId);
 
 		try (final var content = attachment.getAttachmentData().getFile().getBinaryStream()) {
 			return new AssetAttachmentContent(attachment.getFileName(), attachment.getMimeType(), content.readAllBytes());
@@ -89,15 +121,17 @@ public class AssetAttachmentService {
 	public AssetAttachment updateAttachment(final String municipalityId, final String id, final String attachmentId, final AssetAttachmentUpdateRequest request) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
+		final var revision = snapshot(attachment.getAsset());
 
-		return toAssetAttachment(attachmentRepository.saveAndFlush(updateEntity(attachment, request)));
+		return toAssetAttachment(saveAndFlush(updateEntity(attachment, request), revision, id));
 	}
 
 	public void deleteAttachment(final String municipalityId, final String id, final String attachmentId) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
+		final var revision = snapshot(attachment.getAsset());
 
-		attachmentRepository.delete(attachment);
+		saveAndFlush(attachment.withDeleted(true), revision, id);
 	}
 
 	private void validateAssetIsModifiable(final AssetEntity asset) {
@@ -144,11 +178,22 @@ public class AssetAttachmentService {
 		verifyAssetExists(municipalityId, id);
 
 		return attachmentRepository.findByIdForAsset(attachmentId, id, municipalityId)
-			.orElseThrow(() -> Problem.builder()
-				.withStatus(NOT_FOUND)
-				.withTitle(ATTACHMENT_NOT_FOUND_TITLE)
-				.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, id, municipalityId))
-				.build());
+			.orElseThrow(() -> attachmentNotFound(municipalityId, id, attachmentId));
+	}
+
+	private AssetAttachmentEntity getAnyAttachmentEntity(final String municipalityId, final String id, final String attachmentId) {
+		verifyAssetExists(municipalityId, id);
+
+		return attachmentRepository.findByIdForAssetIncludingDeleted(attachmentId, id, municipalityId)
+			.orElseThrow(() -> attachmentNotFound(municipalityId, id, attachmentId));
+	}
+
+	private ThrowableProblem attachmentNotFound(final String municipalityId, final String id, final String attachmentId) {
+		return Problem.builder()
+			.withStatus(NOT_FOUND)
+			.withTitle(ATTACHMENT_NOT_FOUND_TITLE)
+			.withDetail(ATTACHMENT_NOT_FOUND_DETAIL.formatted(attachmentId, id, municipalityId))
+			.build();
 	}
 
 	private ThrowableProblem assetNotFound(final String municipalityId, final String id) {

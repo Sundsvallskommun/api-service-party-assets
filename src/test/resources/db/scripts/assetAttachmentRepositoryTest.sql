@@ -10,10 +10,12 @@ insert into asset_attachment_data (id, file)
 values
     (1, 0x255044462d312e340a),
     (2, 0x255044462d312e340a),
-    (3, 0x255044462d312e340a);
+    (3, 0x255044462d312e340a),
+    (4, 0x255044462d312e340a);
 
-insert into asset_attachment (id, asset_id, asset_attachment_data_id, municipality_id, file_name, mime_type, file_size, category, description, created, updated)
+insert into asset_attachment (id, asset_id, asset_attachment_data_id, municipality_id, file_name, mime_type, file_size, category, description, deleted, created, updated)
 values
-    ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 1, '2281', 'lokalritning.pdf', 'application/pdf', 9, 'LOKALRITNING', 'Ritning över serveringslokal', '2023-01-01 10:00:00', null),
-    ('647e3062-62dc-499f-9faa-e54cb97aa214', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 2, '2281', 'planritning.pdf', 'application/pdf', 9, 'PLANRITNING', null, '2023-01-02 10:00:00', null),
-    ('cba6f0e5-e826-4690-8776-37c69d981a2a', '945576d3-6e92-4118-ba33-53582d338ad3', 3, '2281', 'annan-ritning.pdf', 'application/pdf', 9, 'LOKALRITNING', null, null, null);
+    ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 1, '2281', 'lokalritning.pdf', 'application/pdf', 9, 'LOKALRITNING', 'Ritning över serveringslokal', false, '2023-01-01 10:00:00', null),
+    ('647e3062-62dc-499f-9faa-e54cb97aa214', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 2, '2281', 'planritning.pdf', 'application/pdf', 9, 'PLANRITNING', null, false, '2023-01-02 10:00:00', null),
+    ('cba6f0e5-e826-4690-8776-37c69d981a2a', '945576d3-6e92-4118-ba33-53582d338ad3', 3, '2281', 'annan-ritning.pdf', 'application/pdf', 9, 'LOKALRITNING', null, false, null, null),
+    ('d1e2f3a4-5b6c-7d8e-9f01-2a3b4c5d6e7f', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 4, '2281', 'raderad.pdf', 'application/pdf', 9, 'LOKALRITNING', null, true, '2023-01-03 10:00:00', null);

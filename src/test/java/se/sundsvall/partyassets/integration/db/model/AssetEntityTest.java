@@ -64,8 +64,14 @@ class AssetEntityTest {
 		final var updated = OffsetDateTime.now();
 		final var replacesId = "replacesId";
 		final var validTo = LocalDate.now();
+		final var revision = 3;
+		final var version = 5L;
+		final var actor = "joe01doe";
 
 		final var bean = AssetEntity.create()
+			.withRevision(revision)
+			.withVersion(version)
+			.withActor(actor)
 			.withAdditionalParameters(additionParameters)
 			.withAttachments(attachments)
 			.withAssetId(assetId)
@@ -87,6 +93,9 @@ class AssetEntityTest {
 			.withValidTo(validTo);
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
+		assertThat(bean.getRevision()).isEqualTo(revision);
+		assertThat(bean.getVersion()).isEqualTo(version);
+		assertThat(bean.getActor()).isEqualTo(actor);
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionParameters);
 		assertThat(bean.getAttachments()).isEqualTo(attachments);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);

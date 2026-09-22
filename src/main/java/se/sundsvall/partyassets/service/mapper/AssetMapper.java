@@ -64,10 +64,9 @@ public final class AssetMapper {
 			.withValidTo(original.getValidTo());
 	}
 
-	// The file is copied rather than shared with the original asset. A shared data row would need reference counting to
-	// keep deletion of one asset from taking the file of another with it (DRAKEN-4910).
 	private static List<AssetAttachmentEntity> copyAttachments(final List<AssetAttachmentEntity> attachments) {
 		return ofNullable(attachments).orElse(emptyList()).stream()
+			.filter(a -> !a.isDeleted())
 			.map(a -> AssetAttachmentEntity.create()
 				.withAttachmentData(copyAssetAttachmentData(a.getAttachmentData()))
 				.withMunicipalityId(a.getMunicipalityId())
@@ -125,7 +124,7 @@ public final class AssetMapper {
 		return entity;
 	}
 
-	private static List<AssetJsonParameter> toAssetJsonParameterList(List<AssetJsonParameterEntity> assetJsonParameterEntityList) {
+	static List<AssetJsonParameter> toAssetJsonParameterList(List<AssetJsonParameterEntity> assetJsonParameterEntityList) {
 		return ofNullable(assetJsonParameterEntityList).orElse(emptyList()).stream()
 			.map(AssetMapper::toAssetJsonParameter)
 			.filter(Objects::nonNull)

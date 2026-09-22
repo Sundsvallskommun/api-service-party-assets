@@ -3,6 +3,7 @@ TRUNCATE table additional_parameter;
 TRUNCATE table case_reference_id;
 TRUNCATE table asset_attachment;
 TRUNCATE table asset_attachment_data;
+TRUNCATE table asset_revision;
 TRUNCATE table asset;
 TRUNCATE table asset_json_parameter;
 TRUNCATE table status;

@@ -7,6 +7,7 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
@@ -33,6 +34,7 @@ class AssetAttachmentRepositoryTest {
 	private static final String ATTACHMENT_ID = "7c145278-da81-49b0-a011-0f8f6821e3a0";
 	private static final String SECOND_ATTACHMENT_ID = "647e3062-62dc-499f-9faa-e54cb97aa214";
 	private static final String OTHER_ATTACHMENT_ID = "cba6f0e5-e826-4690-8776-37c69d981a2a";
+	private static final String DELETED_ATTACHMENT_ID = "d1e2f3a4-5b6c-7d8e-9f01-2a3b4c5d6e7f";
 
 	@Autowired
 	private AssetAttachmentRepository repository;
@@ -51,8 +53,6 @@ class AssetAttachmentRepositoryTest {
 				tuple(SECOND_ATTACHMENT_ID, "planritning.pdf"));
 	}
 
-	// The query filters on the asset primary key, not on AssetEntity.assetId - passing the external business id must
-	// therefore find nothing.
 	@Test
 	void findAllForAssetDoesNotMatchTheExternalAssetId() {
 		assertThat(repository.findAllForAsset("PRH-0000000001", MUNICIPALITY_ID)).isEmpty();
@@ -83,6 +83,28 @@ class AssetAttachmentRepositoryTest {
 	@Test
 	void findByIdForAssetWithForeignMunicipalityId() {
 		assertThat(repository.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, OTHER_MUNICIPALITY_ID)).isEmpty();
+	}
+
+	@Test
+	void findAllForAssetSkipsSoftDeleted() {
+		assertThat(repository.findAllForAsset(ASSET_ID, MUNICIPALITY_ID))
+			.extracting(AssetAttachmentEntity::getFileName)
+			.doesNotContain("raderad.pdf");
+	}
+
+	@Test
+	void findByIdForAssetSkipsSoftDeleted() {
+		assertThat(repository.findByIdForAsset(DELETED_ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).isEmpty();
+	}
+
+	@Test
+	void findByIdForAssetIncludingDeletedFindsASoftDeletedAttachment() {
+		assertThat(repository.findByIdForAssetIncludingDeleted(DELETED_ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID))
+			.hasValueSatisfying(attachment -> {
+				assertThat(attachment.isDeleted()).isTrue();
+				assertThat(attachment.getFileName()).isEqualTo("raderad.pdf");
+				assertThat(attachment.getAttachmentData()).isNotNull();
+			});
 	}
 
 	@Test

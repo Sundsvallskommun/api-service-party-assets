@@ -66,7 +66,8 @@ class AssetAttachmentResource {
 
 	@PostMapping(consumes = MULTIPART_FORM_DATA_VALUE, produces = ALL_VALUE)
 	@Operation(summary = "Create an asset attachment", responses = {
-		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true)
+		@ApiResponse(responseCode = "201", description = "Created - Successful operation", headers = @Header(name = LOCATION, description = "Location of the created resource."), useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "409", description = "Conflict - The asset was updated by someone else", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
 	ResponseEntity<Void> createAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
@@ -113,7 +114,8 @@ class AssetAttachmentResource {
 
 	@PatchMapping(path = "{attachmentId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
 	@Operation(summary = "Update asset attachment metadata", responses = {
-		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "409", description = "Conflict - The asset was updated by someone else", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
 	ResponseEntity<AssetAttachment> updateAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
@@ -126,7 +128,8 @@ class AssetAttachmentResource {
 
 	@DeleteMapping(path = "{attachmentId}", produces = ALL_VALUE)
 	@Operation(summary = "Delete an asset attachment", responses = {
-		@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true)
+		@ApiResponse(responseCode = "204", description = "No content - Successful operation", useReturnTypeSchema = true),
+		@ApiResponse(responseCode = "409", description = "Conflict - The asset was updated by someone else", content = @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = Problem.class)))
 	})
 	ResponseEntity<Void> deleteAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,

@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -66,6 +67,10 @@ public class AssetAttachmentEntity {
 
 	@Column(name = "description")
 	private String description;
+
+	@Column(name = "deleted", nullable = false)
+	@ColumnDefault("false")
+	private boolean deleted;
 
 	@TimeZoneStorage(NORMALIZE)
 	private OffsetDateTime created;
@@ -210,6 +215,19 @@ public class AssetAttachmentEntity {
 		return this;
 	}
 
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(final boolean deleted) {
+		this.deleted = deleted;
+	}
+
+	public AssetAttachmentEntity withDeleted(final boolean deleted) {
+		this.deleted = deleted;
+		return this;
+	}
+
 	public OffsetDateTime getCreated() {
 		return created;
 	}
@@ -238,7 +256,7 @@ public class AssetAttachmentEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(category, created, description, fileName, fileSize, id, mimeType, municipalityId, updated);
+		return Objects.hash(category, created, deleted, description, fileName, fileSize, id, mimeType, municipalityId, updated);
 	}
 
 	@Override
@@ -253,14 +271,14 @@ public class AssetAttachmentEntity {
 			return false;
 		}
 		final AssetAttachmentEntity other = (AssetAttachmentEntity) obj;
-		return Objects.equals(category, other.category) && Objects.equals(created, other.created) && Objects.equals(description, other.description) && Objects.equals(fileName, other.fileName) && Objects.equals(fileSize, other.fileSize) && Objects.equals(
-			id, other.id) && Objects.equals(mimeType, other.mimeType) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(updated, other.updated);
+		return Objects.equals(category, other.category) && Objects.equals(created, other.created) && deleted == other.deleted && Objects.equals(description, other.description) && Objects.equals(fileName, other.fileName) && Objects.equals(fileSize,
+			other.fileSize) && Objects.equals(id, other.id) && Objects.equals(mimeType, other.mimeType) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(updated, other.updated);
 	}
 
 	// The asset is left out: AssetEntity uses field access, so even reading its id off the proxy would initialize it.
 	@Override
 	public String toString() {
-		return "AssetAttachmentEntity [id=" + id + ", municipalityId=" + municipalityId + ", fileName=" + fileName + ", mimeType=" + mimeType + ", fileSize=" + fileSize + ", category=" + category + ", description=" + description + ", created=" + created
-			+ ", updated=" + updated + "]";
+		return "AssetAttachmentEntity [id=" + id + ", municipalityId=" + municipalityId + ", fileName=" + fileName + ", mimeType=" + mimeType + ", fileSize=" + fileSize + ", category=" + category + ", description=" + description + ", deleted=" + deleted
+			+ ", created=" + created + ", updated=" + updated + "]";
 	}
 }

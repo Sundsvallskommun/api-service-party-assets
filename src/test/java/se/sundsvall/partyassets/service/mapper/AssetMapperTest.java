@@ -29,7 +29,6 @@ class AssetMapperTest {
 			.isEqualTo(entity);
 		assertThat(asset.getReplacesId()).isEqualTo(entity.getReplacesId());
 
-		// Json params
 		assertThat(asset.getJsonParameters()).hasSize(1);
 		assertThat(entity.getJsonParameters()).hasSize(1);
 		final var assetParam = asset.getJsonParameters().getFirst();
@@ -62,7 +61,6 @@ class AssetMapperTest {
 		assertThat(entity.getCreated()).isNull();
 		assertThat(entity.getUpdated()).isNull();
 
-		// Json params
 		assertThat(request.getJsonParameters()).hasSize(1);
 		assertThat(entity.getJsonParameters()).hasSize(1);
 		final var requestJsonParam = request.getJsonParameters().getFirst();
@@ -93,7 +91,6 @@ class AssetMapperTest {
 		assertThat(entity.getId()).isEqualTo(original.getId());
 		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 
-		// Json params
 		assertThat(entity.getJsonParameters()).hasSize(1);
 	}
 
@@ -113,7 +110,6 @@ class AssetMapperTest {
 		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
 		assertThat(entity.getValidTo()).isEqualTo(LocalDate.of(2010, 1, 1)); // validTo not in request, unchanged
 
-		// Json params
 		assertThat(entity.getJsonParameters()).hasSize(1);
 		assertThat(entity.getJsonParameters().getFirst().getKey()).isEqualTo("key2");
 		assertThat(entity.getJsonParameters().getFirst().getSchemaId()).isEqualTo("2281_person_schema_2.0.0");
@@ -240,6 +236,27 @@ class AssetMapperTest {
 		assertThat(copiedAttachment.getDescription()).isEqualTo("description");
 		assertThat(copiedAttachment.getAttachmentData()).isNotSameAs(attachmentData);
 		assertThat(copiedAttachment.getAttachmentData().getFile().getBinaryStream().readAllBytes()).isEqualTo("content".getBytes());
+	}
+
+	@Test
+	void toCopyEntitySkipsSoftDeletedAttachments() {
+		final var original = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		original.addOrReplaceAttachments(List.of(
+			AssetAttachmentEntity.create()
+				.withId("kept")
+				.withFileName("kvar.pdf")
+				.withAttachmentData(AssetAttachmentDataEntity.create().withFile(new MariaDbBlob("content".getBytes()))),
+			AssetAttachmentEntity.create()
+				.withId("gone")
+				.withFileName("raderad.pdf")
+				.withDeleted(true)
+				.withAttachmentData(AssetAttachmentDataEntity.create().withFile(new MariaDbBlob("content".getBytes())))));
+
+		final var copy = AssetMapper.toCopyEntity(original);
+
+		assertThat(copy.getAttachments())
+			.extracting(AssetAttachmentEntity::getFileName)
+			.containsExactly("kvar.pdf");
 	}
 
 	@Test

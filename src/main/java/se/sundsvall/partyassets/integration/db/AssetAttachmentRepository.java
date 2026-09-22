@@ -17,6 +17,7 @@ public interface AssetAttachmentRepository extends JpaRepository<AssetAttachment
 		select a from AssetAttachmentEntity a
 		where a.asset.id = :assetId
 		and a.municipalityId = :municipalityId
+		and a.deleted = false
 		order by a.created, a.id
 		""")
 	List<AssetAttachmentEntity> findAllForAsset(
@@ -28,8 +29,20 @@ public interface AssetAttachmentRepository extends JpaRepository<AssetAttachment
 		where a.id = :id
 		and a.asset.id = :assetId
 		and a.municipalityId = :municipalityId
+		and a.deleted = false
 		""")
 	Optional<AssetAttachmentEntity> findByIdForAsset(
+		@Param("id") String id,
+		@Param("assetId") String assetId,
+		@Param("municipalityId") String municipalityId);
+
+	@Query("""
+		select a from AssetAttachmentEntity a
+		where a.id = :id
+		and a.asset.id = :assetId
+		and a.municipalityId = :municipalityId
+		""")
+	Optional<AssetAttachmentEntity> findByIdForAssetIncludingDeleted(
 		@Param("id") String id,
 		@Param("assetId") String assetId,
 		@Param("municipalityId") String municipalityId);

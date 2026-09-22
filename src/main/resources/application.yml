@@ -22,6 +22,12 @@ openapi:
 resilience4j:
   circuitbreaker:
     instances:
+      # A concurrent update is a client condition, not a downstream fault. Left to count as a failure it would open the
+      # breaker and turn 409 into 503 for callers who never collided with anyone.
+      assetAttachmentRepository:
+        ignoreExceptions: org.springframework.dao.OptimisticLockingFailureException
+      assetRepository:
+        ignoreExceptions: org.springframework.dao.OptimisticLockingFailureException
       json-schema:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       party:
