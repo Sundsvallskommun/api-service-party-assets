@@ -131,7 +131,8 @@ with ten drawings attached one at a time goes live at revision 0 rather than dra
 file. A draft is not a permit yet, and how it was put together is not part of the permit's history. The first change
 after activation writes revision 0 into the history and moves the asset to revision 1.
 
-Each revision records who created it, taken from the `X-Sent-By` header. That header needs both a value and a type to be
+Each revision records who created it, taken from the `X-Sent-By` header. A draft carries whoever changed it last, and
+revision 0 of an activated draft carries whoever activated it. That header needs both a value and a type to be
 read at all, so `X-Sent-By: joe01doe` is silently ignored while `X-Sent-By: joe01doe; type=adAccount` is not. Requests
 without the header, and the nightly job that expires permits, leave the actor empty.
 

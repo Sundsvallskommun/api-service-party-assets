@@ -11,14 +11,16 @@ public final class AssetRevisions {
 
 	private AssetRevisions() {}
 
-	public static AssetRevisionEntity snapshot(final AssetEntity asset) {
-		if (asset.getStatus() == DRAFT) {
-			return null;
-		}
-
-		final var revision = toRevision(asset);
+	/**
+	 * Records the current actor on the asset, moves it to its next revision and returns its previous state for the history.
+	 * A draft gets the actor only, no revision, and returns null.
+	 */
+	public static AssetRevisionEntity advanceRevision(final AssetEntity asset) {
+		final var revision = asset.getStatus() == DRAFT ? null : toRevision(asset);
 		asset.setActor(currentActor());
-		asset.setRevision(asset.getRevision() + 1);
+		if (revision != null) {
+			asset.setRevision(asset.getRevision() + 1);
+		}
 
 		return revision;
 	}

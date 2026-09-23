@@ -31,7 +31,7 @@ import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
-import static se.sundsvall.partyassets.service.AssetRevisions.snapshot;
+import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
@@ -135,7 +135,7 @@ public class AssetService {
 			validateValidTo(entity);
 			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
 		}
-		final var revision = snapshot(entity);
+		final var revision = advanceRevision(entity);
 		save(updateEntity(entity, request), revision, id);
 	}
 
@@ -143,7 +143,7 @@ public class AssetService {
 		final var entity = getAssetEntity(municipalityId, id);
 		validateNotDraft(entity);
 		validatePrecondition(entity, ifMatch);
-		final var revision = snapshot(entity);
+		final var revision = advanceRevision(entity);
 		save(updateEntity(entity, request), revision, id);
 	}
 
@@ -200,7 +200,7 @@ public class AssetService {
 		repository.findByIdAndMunicipalityId(replacesId, municipalityId)
 			.filter(original -> original.getStatus() == ACTIVE)
 			.ifPresent(original -> {
-				final var revision = snapshot(original);
+				final var revision = advanceRevision(original);
 				original.setStatus(REPLACED);
 				save(original, revision, original.getId());
 			});

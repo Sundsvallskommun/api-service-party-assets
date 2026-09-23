@@ -2,7 +2,10 @@ package se.sundsvall.partyassets.apptest;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
+import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
@@ -19,6 +22,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 /**
  * Draft assets integration tests.
@@ -36,6 +40,9 @@ class DraftAssetsIT extends AbstractAppTest {
 	private static final String REQUEST_FILE = "request.json";
 	private static final String RESPONSE_FILE = "response.json";
 	private static final String PATH = "/" + MUNICIPALITY_ID + "/asset-drafts";
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@Test
 	void test01_createDraftAssetPrivateParty() {
@@ -159,6 +166,24 @@ class DraftAssetsIT extends AbstractAppTest {
 			.withExpectedResponseStatus(OK)
 			.withExpectedResponse("replaced_response.json")
 			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test11_activateDraftRecordsTheActivatingActor() {
+		final var draftId = "a0000000-0000-0000-0000-000000000002";
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + draftId)
+			.withHeader(Identifier.HEADER_NAME, "joe01doe; type=adAccount")
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"ACTIVE\"}")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		assertThat(jdbcTemplate.queryForObject("select actor from asset where id = ?", String.class, draftId)).isEqualTo("joe01doe");
+		assertThat(jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, draftId)).isZero();
 	}
 
 	@Test

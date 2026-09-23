@@ -519,6 +519,36 @@ class AssetServiceTest {
 	}
 
 	@Test
+	void updateDraftAssetSetsTheNewActor() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(DRAFT);
+		Identifier.set(Identifier.parse("joe01doe; type=adAccount"));
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest(), null);
+
+		assertThat(entity.getActor()).isEqualTo("joe01doe");
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void activateDraftAssetSetsTheActivatingActor() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString())
+			.withStatus(DRAFT)
+			.withValidTo(java.time.LocalDate.now().plusDays(10));
+		Identifier.set(Identifier.parse("joe01doe; type=adAccount"));
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE), null);
+
+		assertThat(entity.getActor()).isEqualTo("joe01doe");
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
 	void updateNonDraftAssetViaDraftEndpointThrowsBadRequest() {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();

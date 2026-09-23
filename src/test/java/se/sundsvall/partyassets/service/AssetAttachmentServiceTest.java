@@ -3,6 +3,7 @@ package se.sundsvall.partyassets.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mariadb.jdbc.MariaDbBlob;
@@ -15,6 +16,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.ThrowableProblem;
+import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
@@ -49,6 +51,11 @@ class AssetAttachmentServiceTest {
 	private static final String FILE_NAME = "lokalritning.pdf";
 	private static final String MIME_TYPE = "application/pdf";
 	private static final byte[] CONTENT = "content".getBytes();
+
+	@AfterEach
+	void clearIdentifier() {
+		Identifier.remove();
+	}
 
 	@Mock
 	private AssetRepository assetRepositoryMock;
@@ -231,14 +238,16 @@ class AssetAttachmentServiceTest {
 	}
 
 	@Test
-	void createAttachmentOnDraftAssetKeepsTheActorThatAssembledIt() {
-		final var asset = asset(Status.DRAFT).withActor("assembling.actor");
+	void createAttachmentOnDraftAssetSetsTheNewActor() {
+		final var asset = asset(Status.DRAFT).withActor("previous.actor");
+		Identifier.set(Identifier.parse("joe01doe; type=adAccount"));
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
 
 		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null);
 
-		assertThat(asset.getActor()).isEqualTo("assembling.actor");
+		assertThat(asset.getActor()).isEqualTo("joe01doe");
+		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
 	@Test

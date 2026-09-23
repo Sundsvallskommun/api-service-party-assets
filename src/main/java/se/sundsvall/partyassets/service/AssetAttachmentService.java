@@ -29,7 +29,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
-import static se.sundsvall.partyassets.service.AssetRevisions.snapshot;
+import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
@@ -80,7 +80,7 @@ public class AssetAttachmentService {
 		validateAssetIsModifiable(asset);
 		validateFile(file);
 
-		final var revision = snapshot(asset);
+		final var revision = advanceRevision(asset);
 
 		try (final var content = file.getInputStream()) {
 			return saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description), revision, id).getId();
@@ -114,7 +114,7 @@ public class AssetAttachmentService {
 	public AssetAttachment updateAttachment(final String municipalityId, final String id, final String attachmentId, final AssetAttachmentUpdateRequest request) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
-		final var revision = snapshot(attachment.getAsset());
+		final var revision = advanceRevision(attachment.getAsset());
 
 		return toAssetAttachment(saveAndFlush(updateEntity(attachment, request), revision, id));
 	}
@@ -122,7 +122,7 @@ public class AssetAttachmentService {
 	public void deleteAttachment(final String municipalityId, final String id, final String attachmentId) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
-		final var revision = snapshot(attachment.getAsset());
+		final var revision = advanceRevision(attachment.getAsset());
 
 		saveAndFlush(attachment.withDeleted(true), revision, id);
 	}
