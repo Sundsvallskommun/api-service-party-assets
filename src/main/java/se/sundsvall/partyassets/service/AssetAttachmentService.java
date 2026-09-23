@@ -21,7 +21,6 @@ import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
-import se.sundsvall.partyassets.service.mapper.AssetRevisionMapper;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -30,11 +29,11 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
+import static se.sundsvall.partyassets.service.AssetRevisions.snapshot;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.updateEntity;
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
 
 @Service
 @Transactional
@@ -57,19 +56,6 @@ public class AssetAttachmentService {
 		this.assetRepository = assetRepository;
 		this.attachmentRepository = attachmentRepository;
 		this.assetRevisionRepository = assetRevisionRepository;
-	}
-
-	// A draft has not been published yet, so the way it was assembled is not history: the state it carries when it goes
-	// active is revision 0, and only changes made after that are recorded.
-	private Optional<AssetRevisionEntity> snapshot(final AssetEntity asset) {
-		final var revision = Optional.of(asset)
-			.filter(entity -> entity.getStatus() != DRAFT)
-			.map(AssetRevisionMapper::toRevision);
-
-		asset.setActor(currentActor());
-		revision.ifPresent(ignored -> asset.setRevision(asset.getRevision() + 1));
-
-		return revision;
 	}
 
 	private AssetAttachmentEntity saveAndFlush(final AssetAttachmentEntity attachment, final Optional<AssetRevisionEntity> revision, final String id) {

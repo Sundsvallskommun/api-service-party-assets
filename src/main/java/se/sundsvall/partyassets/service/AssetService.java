@@ -19,7 +19,6 @@ import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
-import se.sundsvall.partyassets.service.mapper.AssetRevisionMapper;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -32,6 +31,7 @@ import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
+import static se.sundsvall.partyassets.service.AssetRevisions.snapshot;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
@@ -57,19 +57,6 @@ public class AssetService {
 		this.assetRevisionRepository = assetRevisionRepository;
 		this.partyTypeProvider = partyTypeProvider;
 		this.relationClient = relationClient;
-	}
-
-	// A draft has not been published yet, so the way it was assembled is not history: the state it carries when it goes
-	// active is revision 0, and only changes made after that are recorded.
-	private Optional<AssetRevisionEntity> snapshot(final AssetEntity entity) {
-		final var revision = Optional.of(entity)
-			.filter(asset -> asset.getStatus() != DRAFT)
-			.map(AssetRevisionMapper::toRevision);
-
-		entity.setActor(currentActor());
-		revision.ifPresent(ignored -> entity.setRevision(entity.getRevision() + 1));
-
-		return revision;
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {

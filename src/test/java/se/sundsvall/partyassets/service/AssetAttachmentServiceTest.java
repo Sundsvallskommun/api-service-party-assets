@@ -231,6 +231,17 @@ class AssetAttachmentServiceTest {
 	}
 
 	@Test
+	void createAttachmentOnDraftAssetKeepsTheActorThatAssembledIt() {
+		final var asset = asset(Status.DRAFT).withActor("assembling.actor");
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
+
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null);
+
+		assertThat(asset.getActor()).isEqualTo("assembling.actor");
+	}
+
+	@Test
 	void updateAttachmentOnDraftAssetRecordsNoRevision() {
 		final var entity = attachment(Status.DRAFT);
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
