@@ -80,6 +80,9 @@ public class AssetRevisionEntity {
 	@Column(name = "description")
 	private String description;
 
+	@Column(name = "title")
+	private String title;
+
 	@Column(name = "additional_parameters", length = LONG32)
 	private String additionalParameters;
 
@@ -322,6 +325,19 @@ public class AssetRevisionEntity {
 		return this;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(final String title) {
+		this.title = title;
+	}
+
+	public AssetRevisionEntity withTitle(final String title) {
+		this.title = title;
+		return this;
+	}
+
 	public String getAdditionalParameters() {
 		return additionalParameters;
 	}
@@ -376,7 +392,7 @@ public class AssetRevisionEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(actor, additionalParameters, assetId, attachments, caseReferenceIds, description, externalAssetId, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, recordedAt, replacesId, revision, status,
+		return Objects.hash(actor, additionalParameters, assetId, attachments, caseReferenceIds, description, title, externalAssetId, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, recordedAt, replacesId, revision, status,
 			statusReason, type, validTo);
 	}
 
@@ -393,7 +409,8 @@ public class AssetRevisionEntity {
 		}
 		final AssetRevisionEntity other = (AssetRevisionEntity) obj;
 		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(attachments, other.attachments) && Objects.equals(caseReferenceIds,
-			other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(externalAssetId, other.externalAssetId) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters,
+			other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(externalAssetId, other.externalAssetId) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued)
+			&& Objects.equals(jsonParameters,
 				other.jsonParameters) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && Objects.equals(partyType, other.partyType) && Objects.equals(recordedAt,
 					other.recordedAt) && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision) && Objects.equals(status, other.status) && Objects.equals(statusReason, other.statusReason) && Objects.equals(type,
 						other.type) && Objects.equals(validTo, other.validTo);
@@ -403,6 +420,7 @@ public class AssetRevisionEntity {
 	public String toString() {
 		return "AssetRevisionEntity [id=" + id + ", assetId=" + assetId + ", revision=" + revision + ", actor=" + actor + ", recordedAt=" + recordedAt + ", municipalityId=" + municipalityId + ", origin=" + origin + ", externalAssetId=" + externalAssetId
 			+ ", partyId=" + partyId + ", partyType=" + partyType + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description
+			+ ", title=" + title
 			+ ", additionalParameters=" + additionalParameters + ", caseReferenceIds=" + caseReferenceIds + ", jsonParameters=" + jsonParameters + ", attachments=" + attachments + "]";
 	}
 }

@@ -57,6 +57,7 @@ class AssetRevisionEntityTest {
 		final var status = "ACTIVE";
 		final var statusReason = "Status reason";
 		final var description = "Serveringstillstånd";
+		final var title = "title";
 		final var additionalParameters = "{\"foo\":\"bar\"}";
 		final var caseReferenceIds = "[\"case-1\"]";
 		final var jsonParameters = "[{\"key\":\"key1\"}]";
@@ -80,6 +81,7 @@ class AssetRevisionEntityTest {
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withDescription(description)
+			.withTitle(title)
 			.withAdditionalParameters(additionalParameters)
 			.withCaseReferenceIds(caseReferenceIds)
 			.withJsonParameters(jsonParameters)
@@ -103,6 +105,7 @@ class AssetRevisionEntityTest {
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getDescription()).isEqualTo(description);
+		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);

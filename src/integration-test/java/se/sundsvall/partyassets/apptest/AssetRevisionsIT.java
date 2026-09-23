@@ -125,6 +125,23 @@ class AssetRevisionsIT extends AbstractAppTest {
 			.sendRequest();
 	}
 
+	@Test
+	void test08_titleIsLockedOnAnActiveAssetAndKeptInTheHistory() {
+		jdbcTemplate.update("update asset set title = ? where id = ?", "Stadigvarande tillstånd", ASSET_WITH_HISTORY);
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath("/" + MUNICIPALITY_ID + "/assets/" + ASSET_WITH_HISTORY)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"EXPIRED\",\"title\":\"Ny titel\"}")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		assertThat(jdbcTemplate.queryForObject("select title from asset where id = ?", String.class, ASSET_WITH_HISTORY)).isEqualTo("Stadigvarande tillstånd");
+		assertThat(jdbcTemplate.queryForObject("select title from asset_revision where asset_id = ? and revision = 2", String.class, ASSET_WITH_HISTORY)).isEqualTo("Stadigvarande tillstånd");
+	}
+
 	private long revisionCount(final String assetId) {
 		return jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, assetId);
 	}

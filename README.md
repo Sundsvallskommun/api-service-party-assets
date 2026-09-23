@@ -87,6 +87,14 @@ Alternatively, see the `openapi.yml` file located in directory `src/test/resourc
 curl -X 'GET' 'http://localhost:8080/2281/assets?assetId=PRH-123456789' -H 'accept: application/json'
 ```
 
+### Title
+
+`title` is optional display text for the citizen, such as "Stadigvarande tillstånd för servering av alkohol" on Mina
+sidor. It is at most 255 characters. It can be set when an asset is created and changed while the asset is a draft. A blank
+title is stored as no title, so sending `"title": ""` on a draft removes it. Once
+the asset is active, `PATCH /assets/{id}` ignores it, so the title stays as issued. It is not a search parameter; filter
+on `type` instead.
+
 ### Attachments
 
 An asset can carry the files that belong to the permit itself — the drawing of the premises where alcohol may be served,

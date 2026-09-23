@@ -32,6 +32,7 @@ public final class TestFactory {
 			.withCaseReferenceIds(new ArrayList<>(List.of("caseReferenceId")))
 			.withCreated(OffsetDateTime.now().minusDays(7))
 			.withDescription("description")
+			.withTitle("title")
 			.withId(id)
 			.withIssued(LocalDate.of(2010, 1, 1))
 			.withPartyId(partyId)
@@ -58,6 +59,7 @@ public final class TestFactory {
 			.withAdditionalParameters(Map.of("key", "value"))
 			.withAssetId("assetId")
 			.withDescription("description")
+			.withTitle("title")
 			.withId(UUID.randomUUID().toString())
 			.withIssued(LocalDate.of(2010, 1, 1))
 			.withJsonParameters(List.of(AssetJsonParameter.create()
@@ -80,6 +82,7 @@ public final class TestFactory {
 			.withAdditionalParameters(Map.of("key", "value"))
 			.withAssetId("assetId")
 			.withDescription("description")
+			.withTitle("title")
 			.withIssued(LocalDate.of(2010, 1, 1))
 			.withJsonParameters(List.of(AssetJsonParameter.create()
 				.withKey("key1")
@@ -107,6 +110,7 @@ public final class TestFactory {
 			.withValue(OBJECT_MAPPER.createObjectNode().put("newAttribute", "value"))));
 		request.setStatus(Status.BLOCKED);
 		request.setStatusReason("statusReasonUpdated");
+		request.setTitle("titleUpdated");
 		return request;
 	}
 

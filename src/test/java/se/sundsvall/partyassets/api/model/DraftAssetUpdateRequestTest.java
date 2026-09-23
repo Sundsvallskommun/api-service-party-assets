@@ -41,6 +41,7 @@ class DraftAssetUpdateRequestTest {
 		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var status = Status.ACTIVE;
 		final var statusReason = "statusReason";
+		final var title = "title";
 		final var validTo = LocalDate.now();
 		final var indefinitely = true;
 
@@ -50,6 +51,7 @@ class DraftAssetUpdateRequestTest {
 			.withJsonParameters(jsonParameters)
 			.withStatus(status)
 			.withStatusReason(statusReason)
+			.withTitle(title)
 			.withValidTo(validTo)
 			.withIndefinitely(indefinitely);
 
@@ -59,6 +61,7 @@ class DraftAssetUpdateRequestTest {
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
+		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getValidTo()).isEqualTo(validTo);
 		assertThat(bean.getIndefinitely()).isEqualTo(indefinitely);
 	}
