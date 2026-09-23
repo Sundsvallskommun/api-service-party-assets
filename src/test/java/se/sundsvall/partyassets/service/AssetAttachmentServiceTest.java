@@ -3,6 +3,7 @@ package se.sundsvall.partyassets.service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mariadb.jdbc.MariaDbBlob;
@@ -15,6 +16,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.ThrowableProblem;
+import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetAttachmentRepository;
@@ -49,6 +51,11 @@ class AssetAttachmentServiceTest {
 	private static final String FILE_NAME = "lokalritning.pdf";
 	private static final String MIME_TYPE = "application/pdf";
 	private static final byte[] CONTENT = "content".getBytes();
+
+	@AfterEach
+	void clearIdentifier() {
+		Identifier.remove();
+	}
 
 	@Mock
 	private AssetRepository assetRepositoryMock;
@@ -217,6 +224,61 @@ class AssetAttachmentServiceTest {
 	}
 
 	@Test
+	void createAttachmentOnDraftAssetRecordsNoRevision() {
+		final var asset = asset(Status.DRAFT);
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
+
+		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+
+		assertThat(result).isEqualTo(ATTACHMENT_ID);
+		assertThat(asset.getRevision()).isEqualTo(2);
+		verify(attachmentRepositoryMock).saveAndFlush(any(AssetAttachmentEntity.class));
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void createAttachmentOnDraftAssetSetsTheNewActor() {
+		final var asset = asset(Status.DRAFT).withActor("previous.actor");
+		Identifier.set(Identifier.parse("joe01doe; type=adAccount"));
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
+
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null);
+
+		assertThat(asset.getActor()).isEqualTo("joe01doe");
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateAttachmentOnDraftAssetRecordsNoRevision() {
+		final var entity = attachment(Status.DRAFT);
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+		when(attachmentRepositoryMock.saveAndFlush(entity)).thenReturn(entity);
+
+		service.updateAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, AssetAttachmentUpdateRequest.create().withCategory("LOKALRITNING"));
+
+		assertThat(entity.getAsset().getRevision()).isEqualTo(2);
+		verify(attachmentRepositoryMock).saveAndFlush(entity);
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void deleteAttachmentOnDraftAssetRecordsNoRevision() {
+		final var entity = attachment(Status.DRAFT);
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.deleteAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
+
+		assertThat(entity.isDeleted()).isTrue();
+		assertThat(entity.getAsset().getRevision()).isEqualTo(2);
+		verify(attachmentRepositoryMock).saveAndFlush(entity);
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
 	void createAttachmentOnBlockedAsset() {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.BLOCKED)));
 
@@ -337,7 +399,7 @@ class AssetAttachmentServiceTest {
 
 	@Test
 	void updateAttachment() {
-		final var entity = attachment(Status.DRAFT);
+		final var entity = attachment(Status.ACTIVE);
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
 		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 		when(attachmentRepositoryMock.saveAndFlush(entity)).thenReturn(entity);
@@ -354,7 +416,7 @@ class AssetAttachmentServiceTest {
 
 	@Test
 	void updateAttachmentRecordsTheMetadataAsItWas() {
-		final var entity = attachment(Status.DRAFT);
+		final var entity = attachment(Status.ACTIVE);
 		entity.getAsset().withAttachments(List.of(entity));
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
 		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));

@@ -12,8 +12,8 @@ import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRepository.AssetIdProjection;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
+import static java.util.Optional.ofNullable;
+import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
 
 @Component
 public class AssetExpirationWorker {
@@ -47,12 +47,10 @@ public class AssetExpirationWorker {
 			.filter(asset -> EXPIRABLE_STATUSES.contains(asset.getStatus()))
 			.filter(asset -> asset.getValidTo() != null && asset.getValidTo().isBefore(LocalDate.now(ZoneId.systemDefault())))
 			.ifPresent(asset -> {
-				final var revision = toRevision(asset);
-				asset.setActor(currentActor());
-				asset.setRevision(asset.getRevision() + 1);
+				final var revision = advanceRevision(asset);
 				asset.setStatus(Status.EXPIRED);
 				assetRepository.saveAndFlush(asset);
-				assetRevisionRepository.save(revision);
+				ofNullable(revision).ifPresent(assetRevisionRepository::save);
 				LOG.info("Expired asset {}", asset.getId());
 			});
 	}

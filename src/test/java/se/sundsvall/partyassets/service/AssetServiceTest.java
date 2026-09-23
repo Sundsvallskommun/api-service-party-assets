@@ -437,7 +437,8 @@ class AssetServiceTest {
 		verify(repositoryMock, times(2)).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(ACTIVE));
-		verify(assetRevisionRepositoryMock, times(2)).save(any(AssetRevisionEntity.class));
+		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
+		assertThat(revisionCaptor.getValue().getAssetId()).isEqualTo(originalId);
 	}
 
 	@Test
@@ -474,8 +475,9 @@ class AssetServiceTest {
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getStatus()).isEqualTo(ACTIVE);
-		verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
-		verifyNoMoreInteractions(repositoryMock, assetRevisionRepositoryMock);
+		assertThat(entityCaptor.getValue().getRevision()).isEqualTo(2);
+		verifyNoMoreInteractions(repositoryMock);
+		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
 	@Test
@@ -512,7 +514,38 @@ class AssetServiceTest {
 
 		verify(repositoryMock).findByIdAndMunicipalityId(id, MUNICIPALITY_ID);
 		verify(repositoryMock).saveAndFlush(any(AssetEntity.class));
-		verify(assetRevisionRepositoryMock).save(any(AssetRevisionEntity.class));
+		assertThat(entity.getRevision()).isEqualTo(2);
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateDraftAssetSetsTheNewActor() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(DRAFT);
+		Identifier.set(Identifier.parse("joe01doe; type=adAccount"));
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest(), null);
+
+		assertThat(entity.getActor()).isEqualTo("joe01doe");
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void activateDraftAssetSetsTheActivatingActor() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString())
+			.withStatus(DRAFT)
+			.withValidTo(java.time.LocalDate.now().plusDays(10));
+		Identifier.set(Identifier.parse("joe01doe; type=adAccount"));
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE), null);
+
+		assertThat(entity.getActor()).isEqualTo("joe01doe");
+		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
 	@Test

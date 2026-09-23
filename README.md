@@ -112,19 +112,27 @@ history would otherwise point at a file that no longer exists. Deleting the whol
 
 ### Revision history
 
-Every change to an asset first writes a snapshot of what it looked like beforehand. The asset row itself is always the
-newest revision, and the older ones are read back through two endpoints:
+A change to a live asset first writes a snapshot of what it looked like beforehand. The asset row itself is the newest
+revision, and it is returned alongside the older ones by two endpoints:
 
 ```bash
 curl -X 'GET' 'http://localhost:8080/2281/assets/{id}/revisions'
 curl -X 'GET' 'http://localhost:8080/2281/assets/{id}/revisions/0'
 ```
 
-Numbering starts at 0, which is the asset as it was created, and the listing returns the newest revision first. The
-number moves only when a snapshot is taken, so the sequence has no gaps — and a write path that changed the asset
-without recording one would leave nothing behind to show for it.
+The listing returns the newest revision first, and its first entry is always the asset's current state, so a permit that
+has not changed since it went live still returns one revision. Numbering starts at 0, the asset as it entered service,
+whether it was created outright or activated from a draft. The number moves only when a snapshot is taken, so the
+sequence has no gaps.
 
-Each revision records who created it, taken from the `X-Sent-By` header. That header needs both a value and a type to be
+Nothing that happens while an asset is `DRAFT` is recorded. Not its fields, not its attachments, and not the moment it
+goes active. Activating a draft sets the asset to revision 0 and writes no snapshot, so a permit assembled as a draft
+with ten drawings attached one at a time goes live at revision 0 rather than dragging a snapshot behind it for every
+file. A draft is not a permit yet, and how it was put together is not part of the permit's history. The first change
+after activation writes revision 0 into the history and moves the asset to revision 1.
+
+Each revision records who created it, taken from the `X-Sent-By` header. A draft carries whoever changed it last, and
+revision 0 of an activated draft carries whoever activated it. That header needs both a value and a type to be
 read at all, so `X-Sent-By: joe01doe` is silently ignored while `X-Sent-By: joe01doe; type=adAccount` is not. Requests
 without the header, and the nightly job that expires permits, leave the actor empty.
 
@@ -144,8 +152,9 @@ curl -X 'PATCH' 'http://localhost:8080/2281/assets/{id}' \
 
 The header is optional, and leaving it out behaves exactly as before. Sending it means the update is rejected with
 `412 Precondition Failed` if the permit changed after the read the tag came from. Only a plain entity-tag is understood,
-so `*`, weak tags and lists of tags all count as a mismatch. The tag changes on every recorded change to the permit,
-including a renamed attachment.
+so `*`, weak tags and lists of tags all count as a mismatch. The tag is not the revision number. It is a separate
+counter that moves on every write to the permit, so editing a draft or renaming an attachment both invalidate a tag read
+before them, even where no revision was recorded.
 
 Deleting an asset deletes its history with it, so nothing is readable afterwards through any endpoint.
 

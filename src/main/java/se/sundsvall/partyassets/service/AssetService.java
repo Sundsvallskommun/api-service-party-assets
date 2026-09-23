@@ -19,6 +19,7 @@ import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -30,11 +31,11 @@ import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
+import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
 
 @Service
@@ -56,13 +57,6 @@ public class AssetService {
 		this.assetRevisionRepository = assetRevisionRepository;
 		this.partyTypeProvider = partyTypeProvider;
 		this.relationClient = relationClient;
-	}
-
-	private AssetRevisionEntity snapshot(final AssetEntity entity) {
-		final var revision = toRevision(entity);
-		entity.setActor(currentActor());
-		entity.setRevision(entity.getRevision() + 1);
-		return revision;
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
@@ -141,7 +135,7 @@ public class AssetService {
 			validateValidTo(entity);
 			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
 		}
-		final var revision = snapshot(entity);
+		final var revision = advanceRevision(entity);
 		save(updateEntity(entity, request), revision, id);
 	}
 
@@ -149,7 +143,7 @@ public class AssetService {
 		final var entity = getAssetEntity(municipalityId, id);
 		validateNotDraft(entity);
 		validatePrecondition(entity, ifMatch);
-		final var revision = snapshot(entity);
+		final var revision = advanceRevision(entity);
 		save(updateEntity(entity, request), revision, id);
 	}
 
@@ -176,7 +170,7 @@ public class AssetService {
 				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
 				.build();
 		}
-		assetRevisionRepository.save(revision);
+		ofNullable(revision).ifPresent(assetRevisionRepository::save);
 	}
 
 	private void validateNotDraft(final AssetEntity entity) {
@@ -206,7 +200,7 @@ public class AssetService {
 		repository.findByIdAndMunicipalityId(replacesId, municipalityId)
 			.filter(original -> original.getStatus() == ACTIVE)
 			.ifPresent(original -> {
-				final var revision = snapshot(original);
+				final var revision = advanceRevision(original);
 				original.setStatus(REPLACED);
 				save(original, revision, original.getId());
 			});

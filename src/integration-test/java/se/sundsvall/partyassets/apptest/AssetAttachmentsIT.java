@@ -44,6 +44,7 @@ class AssetAttachmentsIT extends AbstractAppTest {
 	private static final String MUNICIPALITY_ID = "2281";
 	private static final String ACTIVE_ASSET_ID = "e84b72ee-1a34-44b5-b8f6-2e0e42e99010";
 	private static final String EXPIRED_ASSET_ID = "5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884";
+	private static final String DRAFT_ASSET_ID = "3f7c1b2e-9a41-4f5d-b8c7-1d2e3f4a5b6c";
 	private static final String NON_EXISTING_ASSET_ID = "0fa4d59c-ee1f-4a5f-a5e7-6d0e19a05a83";
 	private static final String FILE = "lokalritning.pdf";
 	private static final String RESPONSE_FILE = "response.json";
@@ -282,6 +283,34 @@ class AssetAttachmentsIT extends AbstractAppTest {
 		assertThat(countRevisions(ACTIVE_ASSET_ID)).isEqualTo(revisionsBefore + 3);
 	}
 
+	@Test
+	void test13_draftAssemblyRecordsNoRevisionsUntilItIsActivated() throws Exception {
+		final var attachmentId = createAttachment(DRAFT_ASSET_ID);
+
+		assertThat(countRevisions(DRAFT_ASSET_ID)).isZero();
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath("/" + MUNICIPALITY_ID + "/asset-drafts/" + DRAFT_ASSET_ID)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"ACTIVE\"}")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		assertThat(countRevisions(DRAFT_ASSET_ID)).isZero();
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(path(DRAFT_ASSET_ID) + "/" + attachmentId)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"fileName\":\"omdopt.pdf\"}")
+			.withExpectedResponseStatus(OK)
+			.sendRequest();
+
+		assertThat(countRevisions(DRAFT_ASSET_ID)).isEqualTo(1);
+	}
+
 	private long countRevisions(final String assetId) {
 		return jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, assetId);
 	}
@@ -299,9 +328,13 @@ class AssetAttachmentsIT extends AbstractAppTest {
 	}
 
 	private String createAttachmentOnActiveAsset() throws Exception {
+		return createAttachment(ACTIVE_ASSET_ID);
+	}
+
+	private String createAttachment(final String assetId) throws Exception {
 		final var location = setupCall()
 			.withHttpMethod(POST)
-			.withServicePath(path(ACTIVE_ASSET_ID))
+			.withServicePath(path(assetId))
 			.withContentType(MULTIPART_FORM_DATA)
 			.withRequestFile("attachment", FILE)
 			.withExpectedResponseStatus(CREATED)

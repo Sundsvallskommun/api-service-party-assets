@@ -21,6 +21,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
+import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -28,12 +29,11 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
+import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachments;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.updateEntity;
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 
 @Service
 @Transactional
@@ -58,13 +58,6 @@ public class AssetAttachmentService {
 		this.assetRevisionRepository = assetRevisionRepository;
 	}
 
-	private AssetRevisionEntity snapshot(final AssetEntity asset) {
-		final var revision = toRevision(asset);
-		asset.setActor(currentActor());
-		asset.setRevision(asset.getRevision() + 1);
-		return revision;
-	}
-
 	private AssetAttachmentEntity saveAndFlush(final AssetAttachmentEntity attachment, final AssetRevisionEntity revision, final String id) {
 		final AssetAttachmentEntity saved;
 		try {
@@ -76,7 +69,7 @@ public class AssetAttachmentService {
 				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
 				.build();
 		}
-		assetRevisionRepository.save(revision);
+		ofNullable(revision).ifPresent(assetRevisionRepository::save);
 		return saved;
 	}
 
@@ -87,7 +80,7 @@ public class AssetAttachmentService {
 		validateAssetIsModifiable(asset);
 		validateFile(file);
 
-		final var revision = snapshot(asset);
+		final var revision = advanceRevision(asset);
 
 		try (final var content = file.getInputStream()) {
 			return saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description), revision, id).getId();
@@ -121,7 +114,7 @@ public class AssetAttachmentService {
 	public AssetAttachment updateAttachment(final String municipalityId, final String id, final String attachmentId, final AssetAttachmentUpdateRequest request) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
-		final var revision = snapshot(attachment.getAsset());
+		final var revision = advanceRevision(attachment.getAsset());
 
 		return toAssetAttachment(saveAndFlush(updateEntity(attachment, request), revision, id));
 	}
@@ -129,7 +122,7 @@ public class AssetAttachmentService {
 	public void deleteAttachment(final String municipalityId, final String id, final String attachmentId) {
 		final var attachment = getAttachmentEntity(municipalityId, id, attachmentId);
 		validateAssetIsModifiable(attachment.getAsset());
-		final var revision = snapshot(attachment.getAsset());
+		final var revision = advanceRevision(attachment.getAsset());
 
 		saveAndFlush(attachment.withDeleted(true), revision, id);
 	}
