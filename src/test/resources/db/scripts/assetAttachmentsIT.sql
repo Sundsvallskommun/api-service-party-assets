@@ -4,7 +4,9 @@ values
     -- Active asset, attachments may be added and removed
     ('e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 'PRH-0000000001', 'Serveringstillstånd', '2281', 'CASEDATA', 'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE', 'ACTIVE', null, 'PERMIT', '2023-01-01', '2033-12-31', '2023-01-01', null),
     -- Expired asset, attachments are read only
-    ('5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'PRH-0000000002', 'Serveringstillstånd', '2281', 'CASEDATA', 'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE', 'EXPIRED', null, 'PERMIT', '2022-01-01', '2022-12-31', '2022-01-01', '2023-01-01');
+    ('5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'PRH-0000000002', 'Serveringstillstånd', '2281', 'CASEDATA', 'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE', 'EXPIRED', null, 'PERMIT', '2022-01-01', '2022-12-31', '2022-01-01', '2023-01-01'),
+    -- Draft asset, assembled with attachments before it is activated
+    ('3f7c1b2e-9a41-4f5d-b8c7-1d2e3f4a5b6c', 'PRH-0000000003', 'Serveringstillstånd', '2281', 'CASEDATA', 'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE', 'DRAFT', null, 'PERMIT', '2023-01-01', null, '2023-01-01', null);
 
 insert into asset_attachment_data (id, file)
 values

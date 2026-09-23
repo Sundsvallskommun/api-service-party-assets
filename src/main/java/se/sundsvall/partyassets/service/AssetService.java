@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
+import se.sundsvall.partyassets.service.mapper.AssetRevisionMapper;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -34,7 +36,6 @@ import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.currentActor;
-import static se.sundsvall.partyassets.service.mapper.AssetRevisionMapper.toRevision;
 import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
 
 @Service
@@ -58,10 +59,16 @@ public class AssetService {
 		this.relationClient = relationClient;
 	}
 
-	private AssetRevisionEntity snapshot(final AssetEntity entity) {
-		final var revision = toRevision(entity);
+	// A draft has not been published yet, so the way it was assembled is not history: the state it carries when it goes
+	// active is revision 0, and only changes made after that are recorded.
+	private Optional<AssetRevisionEntity> snapshot(final AssetEntity entity) {
+		final var revision = Optional.of(entity)
+			.filter(asset -> asset.getStatus() != DRAFT)
+			.map(AssetRevisionMapper::toRevision);
+
 		entity.setActor(currentActor());
-		entity.setRevision(entity.getRevision() + 1);
+		revision.ifPresent(ignored -> entity.setRevision(entity.getRevision() + 1));
+
 		return revision;
 	}
 
@@ -166,7 +173,7 @@ public class AssetService {
 		}
 	}
 
-	private void save(final AssetEntity entity, final AssetRevisionEntity revision, final String id) {
+	private void save(final AssetEntity entity, final Optional<AssetRevisionEntity> revision, final String id) {
 		try {
 			repository.saveAndFlush(entity);
 		} catch (final OptimisticLockingFailureException e) {
@@ -176,7 +183,7 @@ public class AssetService {
 				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
 				.build();
 		}
-		assetRevisionRepository.save(revision);
+		revision.ifPresent(assetRevisionRepository::save);
 	}
 
 	private void validateNotDraft(final AssetEntity entity) {

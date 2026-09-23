@@ -217,6 +217,48 @@ class AssetAttachmentServiceTest {
 	}
 
 	@Test
+	void createAttachmentOnDraftAssetRecordsNoRevision() {
+		final var asset = asset(Status.DRAFT);
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
+
+		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+
+		assertThat(result).isEqualTo(ATTACHMENT_ID);
+		assertThat(asset.getRevision()).isEqualTo(2);
+		verify(attachmentRepositoryMock).saveAndFlush(any(AssetAttachmentEntity.class));
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateAttachmentOnDraftAssetRecordsNoRevision() {
+		final var entity = attachment(Status.DRAFT);
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+		when(attachmentRepositoryMock.saveAndFlush(entity)).thenReturn(entity);
+
+		service.updateAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, AssetAttachmentUpdateRequest.create().withCategory("LOKALRITNING"));
+
+		assertThat(entity.getAsset().getRevision()).isEqualTo(2);
+		verify(attachmentRepositoryMock).saveAndFlush(entity);
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void deleteAttachmentOnDraftAssetRecordsNoRevision() {
+		final var entity = attachment(Status.DRAFT);
+		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.deleteAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID);
+
+		assertThat(entity.isDeleted()).isTrue();
+		assertThat(entity.getAsset().getRevision()).isEqualTo(2);
+		verify(attachmentRepositoryMock).saveAndFlush(entity);
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
 	void createAttachmentOnBlockedAsset() {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.BLOCKED)));
 
@@ -337,7 +379,7 @@ class AssetAttachmentServiceTest {
 
 	@Test
 	void updateAttachment() {
-		final var entity = attachment(Status.DRAFT);
+		final var entity = attachment(Status.ACTIVE);
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
 		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 		when(attachmentRepositoryMock.saveAndFlush(entity)).thenReturn(entity);
@@ -354,7 +396,7 @@ class AssetAttachmentServiceTest {
 
 	@Test
 	void updateAttachmentRecordsTheMetadataAsItWas() {
-		final var entity = attachment(Status.DRAFT);
+		final var entity = attachment(Status.ACTIVE);
 		entity.getAsset().withAttachments(List.of(entity));
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
 		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
