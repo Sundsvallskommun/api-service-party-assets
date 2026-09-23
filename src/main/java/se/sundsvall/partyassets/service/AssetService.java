@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import org.jspecify.annotations.NonNull;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -20,6 +19,7 @@ import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
 
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -160,7 +160,7 @@ public class AssetService {
 		}
 	}
 
-	private void save(final AssetEntity entity, final Optional<AssetRevisionEntity> revision, final String id) {
+	private void save(final AssetEntity entity, final AssetRevisionEntity revision, final String id) {
 		try {
 			repository.saveAndFlush(entity);
 		} catch (final OptimisticLockingFailureException e) {
@@ -170,7 +170,7 @@ public class AssetService {
 				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
 				.build();
 		}
-		revision.ifPresent(assetRevisionRepository::save);
+		ofNullable(revision).ifPresent(assetRevisionRepository::save);
 	}
 
 	private void validateNotDraft(final AssetEntity entity) {

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -22,6 +21,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
+import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -58,7 +58,7 @@ public class AssetAttachmentService {
 		this.assetRevisionRepository = assetRevisionRepository;
 	}
 
-	private AssetAttachmentEntity saveAndFlush(final AssetAttachmentEntity attachment, final Optional<AssetRevisionEntity> revision, final String id) {
+	private AssetAttachmentEntity saveAndFlush(final AssetAttachmentEntity attachment, final AssetRevisionEntity revision, final String id) {
 		final AssetAttachmentEntity saved;
 		try {
 			saved = attachmentRepository.saveAndFlush(attachment);
@@ -69,7 +69,7 @@ public class AssetAttachmentService {
 				.withDetail("Asset with id %s was updated by someone else, please reload it and try again".formatted(id))
 				.build();
 		}
-		revision.ifPresent(assetRevisionRepository::save);
+		ofNullable(revision).ifPresent(assetRevisionRepository::save);
 		return saved;
 	}
 

@@ -12,6 +12,7 @@ import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRepository.AssetIdProjection;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 
+import static java.util.Optional.ofNullable;
 import static se.sundsvall.partyassets.service.AssetRevisions.snapshot;
 
 @Component
@@ -49,7 +50,7 @@ public class AssetExpirationWorker {
 				final var revision = snapshot(asset);
 				asset.setStatus(Status.EXPIRED);
 				assetRepository.saveAndFlush(asset);
-				revision.ifPresent(assetRevisionRepository::save);
+				ofNullable(revision).ifPresent(assetRevisionRepository::save);
 				LOG.info("Expired asset {}", asset.getId());
 			});
 	}
