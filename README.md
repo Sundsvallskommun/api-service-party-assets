@@ -102,9 +102,11 @@ for instance. They are stored with the asset rather than beside it, since the pe
 follow the asset through its life: a draft made from an active asset gets its own copy of every file, and deleting an
 asset deletes them.
 
-Uploads are `multipart/form-data` with the file in the `attachment` part, at most 50 MB per file. Allowed types are PDF,
-PNG, JPEG, TIFF and Word (`.docx`), checked against the `Content-Type` the client declares for the part — so the type
-has to be spelled out for anything curl does not recognise from the extension. Files can be added, changed and removed
+Uploads are `multipart/form-data` with the file in the `attachment` part, at most 50 MB per file. Any file type is
+accepted: callers are other services that already decide which types they allow, and a second list here would only
+drift out of step with theirs. The `Content-Type` the client declares for the part is stored and sent back on download.
+One that is missing, cannot be parsed, is a wildcard such as `*/*`, or is longer than 255 characters is stored as
+`application/octet-stream` instead. Files can be added, changed and removed
 while the asset is `DRAFT`, `ACTIVE` or `TEMPORARY`; once it is blocked, has expired or been replaced, its attachments
 can still be listed and downloaded but no longer changed.
 

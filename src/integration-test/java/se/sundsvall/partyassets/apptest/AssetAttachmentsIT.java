@@ -147,14 +147,25 @@ class AssetAttachmentsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test06_createAttachmentWithDisallowedContentType() throws Exception {
-		setupCall()
+	void test06_createAttachmentWithAnyContentType() throws Exception {
+		final var location = setupCall()
 			.withHttpMethod(POST)
 			.withServicePath(path(ACTIVE_ASSET_ID))
 			.withContentType(MULTIPART_FORM_DATA)
 			.withRequestFile("attachment", "anteckningar.txt")
-			.withExpectedResponseStatus(BAD_REQUEST)
-			.withExpectedResponse(RESPONSE_FILE)
+			.withExpectedResponseStatus(CREATED)
+			.sendRequest()
+			.getResponseHeaders()
+			.getLocation();
+
+		assertThat(location).isNotNull();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(location.getPath())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponseHeader(CONTENT_TYPE, List.of("^text/plain.*$"))
+			.withExpectedBinaryResponse("anteckningar.txt")
 			.sendRequestAndVerifyResponse();
 	}
 
