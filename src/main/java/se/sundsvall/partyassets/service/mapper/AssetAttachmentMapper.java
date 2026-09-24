@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import org.hibernate.Hibernate;
+import org.springframework.http.InvalidMediaTypeException;
+import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import se.sundsvall.dept44.problem.Problem;
@@ -17,8 +19,11 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
 public final class AssetAttachmentMapper {
+
+	private static final int MAX_MIME_TYPE_LENGTH = 255;
 
 	private AssetAttachmentMapper() {}
 
@@ -31,10 +36,18 @@ public final class AssetAttachmentMapper {
 				.withFile(Hibernate.getLobHelper().createBlob(content, file.getSize())))
 			.withMunicipalityId(asset.getMunicipalityId())
 			.withFileName(StringUtils.getFilename(file.getOriginalFilename()))
-			.withMimeType(file.getContentType())
+			.withMimeType(toMimeType(file.getContentType()))
 			.withFileSize(Math.toIntExact(file.getSize()))
 			.withCategory(category)
 			.withDescription(description);
+	}
+
+	private static String toMimeType(final String contentType) {
+		try {
+			return MediaType.parseMediaType(contentType).isConcrete() && contentType.length() <= MAX_MIME_TYPE_LENGTH ? contentType : APPLICATION_OCTET_STREAM_VALUE;
+		} catch (final InvalidMediaTypeException e) {
+			return APPLICATION_OCTET_STREAM_VALUE;
+		}
 	}
 
 	// The MariaDB driver materializes a blob in memory, so copying one costs its full size in heap for the duration of

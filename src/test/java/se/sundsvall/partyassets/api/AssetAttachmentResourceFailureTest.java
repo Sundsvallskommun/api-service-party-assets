@@ -23,7 +23,6 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PDF;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA;
-import static org.springframework.http.MediaType.TEXT_HTML;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -75,29 +74,6 @@ class AssetAttachmentResourceFailureTest {
 		assertThat(response.getViolations())
 			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("createAttachment.municipalityId", "not a valid municipality ID"));
-
-		verifyNoInteractions(serviceMock);
-	}
-
-	@Test
-	void createAttachmentWithInvalidContentType() {
-		final var body = new MultipartBodyBuilder();
-		body.part("attachment", file()).contentType(TEXT_HTML);
-
-		final var response = webTestClient.post()
-			.uri(path(MUNICIPALITY_ID, ASSET_ID))
-			.contentType(MULTIPART_FORM_DATA)
-			.bodyValue(body.build())
-			.exchange()
-			.expectStatus().isBadRequest()
-			.expectBody(ConstraintViolationProblem.class)
-			.returnResult()
-			.getResponseBody();
-
-		assertThat(response).isNotNull();
-		assertThat(response.getViolations())
-			.extracting(Violation::field, Violation::message)
-			.containsExactly(tuple("createAttachment.attachment", "content type is not allowed for attachments"));
 
 		verifyNoInteractions(serviceMock);
 	}

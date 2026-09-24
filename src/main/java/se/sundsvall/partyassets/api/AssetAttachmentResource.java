@@ -30,7 +30,6 @@ import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.partyassets.api.model.AssetAttachment;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
-import se.sundsvall.partyassets.api.validation.ValidAttachmentContentType;
 import se.sundsvall.partyassets.service.AssetAttachmentService;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -72,7 +71,7 @@ class AssetAttachmentResource {
 	ResponseEntity<Void> createAttachment(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		@PathVariable @ValidUuid final String id,
-		@NotNull @ValidAttachmentContentType @RequestPart("attachment") final MultipartFile attachment,
+		@NotNull @RequestPart("attachment") final MultipartFile attachment,
 		@Parameter(name = "category", description = "What the attachment depicts", example = "LOKALRITNING") @Size(max = 255) @RequestPart(name = "category", required = false) final String category,
 		@Parameter(name = "description", description = "Attachment description") @Size(max = 255) @RequestPart(name = "description", required = false) final String description) {
 

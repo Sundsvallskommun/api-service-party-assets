@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mariadb.jdbc.MariaDbBlob;
 import org.springframework.mock.web.MockMultipartFile;
 import se.sundsvall.partyassets.api.model.AssetAttachmentUpdateRequest;
@@ -16,6 +18,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.copyAssetAttachmentData;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachment;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.toAssetAttachmentEntity;
@@ -43,6 +46,38 @@ class AssetAttachmentMapperTest {
 		assertThat(result.getCategory()).isEqualTo("LOKALRITNING");
 		assertThat(result.getDescription()).isEqualTo("description");
 		assertThat(result.getAttachmentData().getFile().getBinaryStream().readAllBytes()).isEqualTo(CONTENT);
+	}
+
+	@Test
+	void toEntityKeepsAnyConcreteContentType() throws Exception {
+		final var xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+		final var file = new MockMultipartFile("attachment", "budget.xlsx", xlsx, CONTENT);
+
+		final var result = toAssetAttachmentEntity(AssetEntity.create(), file, file.getInputStream(), null, null);
+
+		assertThat(result.getMimeType()).isEqualTo(xlsx);
+	}
+
+	@ParameterizedTest
+	@NullAndEmptySource
+	@ValueSource(strings = {
+		"garbage", "text/plain; charset=nonexistent", "*/*", "text/*"
+	})
+	void toEntityStoresAnUnusableContentTypeAsOctetStream(final String contentType) throws Exception {
+		final var file = new MockMultipartFile("attachment", "file", contentType, CONTENT);
+
+		final var result = toAssetAttachmentEntity(AssetEntity.create(), file, file.getInputStream(), null, null);
+
+		assertThat(result.getMimeType()).isEqualTo(APPLICATION_OCTET_STREAM_VALUE);
+	}
+
+	@Test
+	void toEntityStoresAContentTypeTooLongForTheColumnAsOctetStream() throws Exception {
+		final var file = new MockMultipartFile("attachment", "file.pdf", "application/pdf; name=" + "a".repeat(250), CONTENT);
+
+		final var result = toAssetAttachmentEntity(AssetEntity.create(), file, file.getInputStream(), null, null);
+
+		assertThat(result.getMimeType()).isEqualTo(APPLICATION_OCTET_STREAM_VALUE);
 	}
 
 	@Test
