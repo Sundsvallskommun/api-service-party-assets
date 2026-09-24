@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.api.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,10 @@ public class DraftAssetUpdateRequest {
 
 	@Schema(description = "Status reason", examples = "Status reason")
 	private String statusReason;
+
+	@Schema(description = "Asset title, shown to the party", examples = "Stadigvarande tillstånd för servering av alkohol")
+	@Size(max = 255)
+	private String title;
 
 	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
@@ -101,6 +106,19 @@ public class DraftAssetUpdateRequest {
 		return this;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public DraftAssetUpdateRequest withTitle(String title) {
+		this.title = title;
+		return this;
+	}
+
 	public Map<String, String> getAdditionalParameters() {
 		return additionalParameters;
 	}
@@ -129,7 +147,7 @@ public class DraftAssetUpdateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, indefinitely, issued, jsonParameters, status, statusReason, validTo);
+		return Objects.hash(additionalParameters, indefinitely, issued, jsonParameters, status, statusReason, title, validTo);
 	}
 
 	@Override
@@ -145,12 +163,13 @@ public class DraftAssetUpdateRequest {
 		}
 		DraftAssetUpdateRequest other = (DraftAssetUpdateRequest) obj;
 		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(indefinitely, other.indefinitely) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && status == other.status
-			&& Objects.equals(statusReason, other.statusReason) && Objects.equals(validTo, other.validTo);
+			&& Objects.equals(statusReason, other.statusReason) && Objects.equals(title, other.title) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
-		return "DraftAssetUpdateRequest [issued=" + issued + ", validTo=" + validTo + ", indefinitely=" + indefinitely + ", status=" + status + ", statusReason=" + statusReason + ", additionalParameters=" + additionalParameters + ", jsonParameters="
+		return "DraftAssetUpdateRequest [issued=" + issued + ", validTo=" + validTo + ", indefinitely=" + indefinitely + ", status=" + status + ", statusReason=" + statusReason + ", title=" + title + ", additionalParameters=" + additionalParameters
+			+ ", jsonParameters="
 			+ jsonParameters + "]";
 	}
 

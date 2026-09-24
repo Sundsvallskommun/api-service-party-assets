@@ -260,6 +260,29 @@ class AssetResourceTest {
 	}
 
 	@Test
+	void createAssetTooLongTitle() {
+		// Arrange
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatusReason(null).withTitle("a".repeat(256));
+
+		// Act
+		final var response = webTestClient.post()
+			.uri(PATH)
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("title", "size must be between 0 and 255"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void createAssetWithSourceReference() {
 
 		// Arrange

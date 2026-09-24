@@ -38,6 +38,9 @@ public class Asset {
 	@Schema(description = "Asset description", examples = "Asset description")
 	private String description;
 
+	@Schema(description = "Asset title, shown to the party", examples = "Stadigvarande tillstånd för servering av alkohol")
+	private String title;
+
 	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
 
@@ -181,6 +184,19 @@ public class Asset {
 		return this;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public Asset withTitle(String title) {
+		this.title = title;
+		return this;
+	}
+
 	public Map<String, String> getAdditionalParameters() {
 		return additionalParameters;
 	}
@@ -222,7 +238,7 @@ public class Asset {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, description, id, issued, jsonParameters, origin, partyId, replacesId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, description, title, id, issued, jsonParameters, origin, partyId, replacesId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -237,7 +253,7 @@ public class Asset {
 			return false;
 		}
 		Asset other = (Asset) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(id,
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(id,
 			other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId)
 			&& Objects.equals(replacesId, other.replacesId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type)
 			&& Objects.equals(validTo, other.validTo);
@@ -246,6 +262,6 @@ public class Asset {
 	@Override
 	public String toString() {
 		return "Asset [id=" + id + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status
-			+ ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId + "]";
+			+ ", statusReason=" + statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId + "]";
 	}
 }

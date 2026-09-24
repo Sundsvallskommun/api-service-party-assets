@@ -49,6 +49,7 @@ class AssetRevisionMapperTest {
 		assertThat(revision.getStatus()).isEqualTo("ACTIVE");
 		assertThat(revision.getStatusReason()).isEqualTo(entity.getStatusReason());
 		assertThat(revision.getDescription()).isEqualTo(entity.getDescription());
+		assertThat(revision.getTitle()).isEqualTo(entity.getTitle());
 	}
 
 	@Test
@@ -129,6 +130,7 @@ class AssetRevisionMapperTest {
 			.usingRecursiveComparison()
 			.ignoringFields("recordedAt")
 			.isEqualTo(fromAsset);
+		assertThat(fromSnapshot.getTitle()).isEqualTo(entity.getTitle());
 	}
 
 	@Test

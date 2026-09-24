@@ -99,6 +99,8 @@ public class AssetEntity {
 
 	private String description;
 
+	private String title;
+
 	@ElementCollection(fetch = EAGER)
 	@CollectionTable(name = "additional_parameter",
 		joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_additional_parameter_asset_id")),
@@ -357,6 +359,19 @@ public class AssetEntity {
 		return this;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(final String title) {
+		this.title = title;
+	}
+
+	public AssetEntity withTitle(final String title) {
+		this.title = title;
+		return this;
+	}
+
 	public Map<String, String> getAdditionalParameters() {
 		return additionalParameters;
 	}
@@ -452,7 +467,8 @@ public class AssetEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(actor, additionalParameters, assetId, caseReferenceIds, created, description, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo, version);
+		return Objects.hash(actor, additionalParameters, assetId, caseReferenceIds, created, description, title, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo,
+			version);
 	}
 
 	@Override
@@ -468,8 +484,9 @@ public class AssetEntity {
 		}
 		AssetEntity other = (AssetEntity) obj;
 		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created,
-			other.created) && Objects.equals(description, other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(municipalityId,
-				other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision)
+			other.created) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects
+				.equals(municipalityId,
+					other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision)
 			&& status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type) && Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo) && Objects.equals(version, other.version);
 	}
 
@@ -478,7 +495,8 @@ public class AssetEntity {
 		return "AssetEntity [id=" + id + ", revision=" + revision + ", version=" + version + ", actor=" + actor + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType
 			+ ", caseReferenceIds="
 			+ caseReferenceIds + ", type=" + type + ", issued="
-			+ issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters="
+			+ issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters
+			+ ", jsonParameters="
 			+ jsonParameters
 			+ ", created=" + created + ", updated=" + updated + "]";
 	}

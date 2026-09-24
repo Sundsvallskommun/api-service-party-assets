@@ -52,6 +52,7 @@ class AssetEntityTest {
 		final var caseReferenceIds = List.of("entry");
 		final var created = OffsetDateTime.now().minusDays(1);
 		final var description = "description";
+		final var title = "title";
 		final var id = "id";
 		final var jsonParameters = List.of(AssetJsonParameterEntity.create());
 		final var issued = LocalDate.now();
@@ -79,6 +80,7 @@ class AssetEntityTest {
 			.withCaseReferenceIds(caseReferenceIds)
 			.withCreated(created)
 			.withDescription(description)
+			.withTitle(title)
 			.withId(id)
 			.withJsonParameters(jsonParameters)
 			.withIssued(issued)
@@ -103,6 +105,7 @@ class AssetEntityTest {
 		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getDescription()).isEqualTo(description);
+		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getIssued()).isEqualTo(issued);

@@ -51,6 +51,7 @@ class AssetRevisionTest {
 		final var status = Status.ACTIVE;
 		final var statusReason = "Status reason";
 		final var description = "Asset description";
+		final var title = "title";
 		final var additionalParameters = Map.of("foo", "bar");
 		final var jsonParameters = List.of(AssetJsonParameter.create().withKey("key1"));
 		final var replacesId = "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9";
@@ -70,6 +71,7 @@ class AssetRevisionTest {
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withDescription(description)
+			.withTitle(title)
 			.withAdditionalParameters(additionalParameters)
 			.withJsonParameters(jsonParameters)
 			.withReplacesId(replacesId)
@@ -89,6 +91,7 @@ class AssetRevisionTest {
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getDescription()).isEqualTo(description);
+		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getReplacesId()).isEqualTo(replacesId);

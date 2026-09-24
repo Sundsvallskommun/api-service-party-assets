@@ -50,6 +50,7 @@ class AssetMapperTest {
 		assertThat(entity.getAssetId()).isEqualTo(request.getAssetId());
 		assertThat(entity.getMunicipalityId()).isEqualTo(municipalityId);
 		assertThat(entity.getDescription()).isEqualTo(request.getDescription());
+		assertThat(entity.getTitle()).isEqualTo(request.getTitle());
 		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
 		assertThat(entity.getPartyId()).isEqualTo(request.getPartyId());
 		assertThat(entity.getPartyType()).isEqualTo(partyType);
@@ -85,6 +86,7 @@ class AssetMapperTest {
 
 		assertThat(entity.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(entity.getDescription()).isEqualTo(original.getDescription());
+		assertThat(entity.getTitle()).isEqualTo(original.getTitle());
 		assertThat(entity.getIssued()).isEqualTo(original.getIssued());
 		assertThat(entity.getPartyId()).isEqualTo(original.getPartyId());
 		assertThat(entity.getType()).isEqualTo(original.getType());
@@ -108,6 +110,7 @@ class AssetMapperTest {
 		assertThat(entity.getIssued()).isEqualTo(request.getIssued());
 		assertThat(entity.getStatus()).isEqualTo(request.getStatus());
 		assertThat(entity.getStatusReason()).isEqualTo(request.getStatusReason());
+		assertThat(entity.getTitle()).isEqualTo(request.getTitle());
 		assertThat(entity.getValidTo()).isEqualTo(LocalDate.of(2010, 1, 1)); // validTo not in request, unchanged
 
 		assertThat(entity.getJsonParameters()).hasSize(1);
@@ -190,6 +193,7 @@ class AssetMapperTest {
 		assertThat(copy.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(copy.getCaseReferenceIds()).isEqualTo(original.getCaseReferenceIds());
 		assertThat(copy.getDescription()).isEqualTo(original.getDescription());
+		assertThat(copy.getTitle()).isEqualTo(original.getTitle());
 		assertThat(copy.getIssued()).isEqualTo(original.getIssued());
 		assertThat(copy.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 		assertThat(copy.getOrigin()).isEqualTo(original.getOrigin());
@@ -260,6 +264,25 @@ class AssetMapperTest {
 	}
 
 	@Test
+	void toEntityWithBlankTitleStoresNull() {
+		final var request = TestFactory.getAssetCreateRequest(UUID.randomUUID().toString()).withTitle("   ");
+
+		final var entity = AssetMapper.toEntity(request, PartyType.PRIVATE, "2281");
+
+		assertThat(entity.getTitle()).isNull();
+	}
+
+	@Test
+	void updateEntityWithDraftRequestAndBlankTitleClearsTheTitle() {
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var request = DraftAssetUpdateRequest.create().withTitle("");
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getTitle()).isNull();
+	}
+
+	@Test
 	void updateEntityWithEmptyValues() {
 
 		final var id = UUID.randomUUID().toString();
@@ -276,6 +299,7 @@ class AssetMapperTest {
 		assertThat(entity.getValidTo()).isEqualTo(original.getValidTo());
 		assertThat(entity.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(entity.getDescription()).isEqualTo(original.getDescription());
+		assertThat(entity.getTitle()).isEqualTo(original.getTitle());
 		assertThat(entity.getIssued()).isEqualTo(original.getIssued());
 		assertThat(entity.getJsonParameters()).isEqualTo(original.getJsonParameters());
 		assertThat(entity.getPartyId()).isEqualTo(original.getPartyId());

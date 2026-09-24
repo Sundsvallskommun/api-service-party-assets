@@ -39,6 +39,7 @@ class AssetCreateRequestTest {
 		final var additionalParameters = Map.of("key", "value");
 		final var assetId = "assetId";
 		final var description = "description";
+		final var title = "title";
 		final var issued = LocalDate.now();
 		final var jsonParameters = List.of(AssetJsonParameter.create());
 		final var origin = "origin";
@@ -52,6 +53,7 @@ class AssetCreateRequestTest {
 			.withAdditionalParameters(additionalParameters)
 			.withAssetId(assetId)
 			.withDescription(description)
+			.withTitle(title)
 			.withIssued(issued)
 			.withJsonParameters(jsonParameters)
 			.withOrigin(origin)
@@ -65,6 +67,7 @@ class AssetCreateRequestTest {
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
 		assertThat(bean.getDescription()).isEqualTo(description);
+		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getIssued()).isEqualTo(issued);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);
 		assertThat(bean.getOrigin()).isEqualTo(origin);

@@ -57,6 +57,9 @@ public class AssetRevision {
 	@Schema(description = "Asset description", examples = "Asset description", accessMode = READ_ONLY)
 	private String description;
 
+	@Schema(description = "Asset title, shown to the party", examples = "Stadigvarande tillstånd för servering av alkohol", accessMode = READ_ONLY)
+	private String title;
+
 	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}", accessMode = READ_ONLY)
 	private Map<String, String> additionalParameters;
 
@@ -243,6 +246,19 @@ public class AssetRevision {
 		return this;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public AssetRevision withTitle(String title) {
+		this.title = title;
+		return this;
+	}
+
 	public Map<String, String> getAdditionalParameters() {
 		return additionalParameters;
 	}
@@ -297,7 +313,7 @@ public class AssetRevision {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(actor, additionalParameters, assetId, attachments, description, id, issued, jsonParameters, origin, partyId, recordedAt, replacesId, revision, status, statusReason, type, validTo);
+		return Objects.hash(actor, additionalParameters, assetId, attachments, description, title, id, issued, jsonParameters, origin, partyId, recordedAt, replacesId, revision, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -313,7 +329,8 @@ public class AssetRevision {
 		}
 		final AssetRevision other = (AssetRevision) obj;
 		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(attachments, other.attachments) && Objects.equals(description,
-			other.description) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId)
+			other.description) && Objects.equals(title, other.title) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(
+				partyId, other.partyId)
 			&& Objects.equals(recordedAt, other.recordedAt) && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type,
 				other.type) && Objects.equals(validTo, other.validTo);
 	}
@@ -321,7 +338,8 @@ public class AssetRevision {
 	@Override
 	public String toString() {
 		return "AssetRevision [id=" + id + ", revision=" + revision + ", actor=" + actor + ", recordedAt=" + recordedAt + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo="
-			+ validTo + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId + ", attachments="
+			+ validTo + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId
+			+ ", attachments="
 			+ attachments + "]";
 	}
 }

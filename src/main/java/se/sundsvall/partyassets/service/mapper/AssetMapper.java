@@ -20,6 +20,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static java.util.Collections.emptyList;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import static se.sundsvall.partyassets.service.mapper.AssetAttachmentMapper.copyAssetAttachmentData;
 
 public final class AssetMapper {
@@ -33,6 +34,7 @@ public final class AssetMapper {
 			.withAdditionalParameters(entity.getAdditionalParameters())
 			.withAssetId(entity.getAssetId())
 			.withDescription(entity.getDescription())
+			.withTitle(entity.getTitle())
 			.withId(entity.getId())
 			.withIssued(entity.getIssued())
 			.withJsonParameters(toAssetJsonParameterList(entity.getJsonParameters()))
@@ -51,6 +53,7 @@ public final class AssetMapper {
 			.withAssetId(original.getAssetId())
 			.withCaseReferenceIds(original.getCaseReferenceIds() != null ? new ArrayList<>(original.getCaseReferenceIds()) : null)
 			.withDescription(original.getDescription())
+			.withTitle(original.getTitle())
 			.withIssued(original.getIssued())
 			.addOrReplaceJsonParameters(copyJsonParameters(original.getJsonParameters()))
 			.addOrReplaceAttachments(copyAttachments(original.getAttachments()))
@@ -92,6 +95,7 @@ public final class AssetMapper {
 			.withAdditionalParameters(request.getAdditionalParameters())
 			.withAssetId(request.getAssetId())
 			.withDescription(request.getDescription())
+			.withTitle(defaultIfBlank(request.getTitle(), null))
 			.withIssued(request.getIssued())
 			.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(request.getJsonParameters()))
 			.withOrigin(request.getOrigin())
@@ -121,6 +125,8 @@ public final class AssetMapper {
 		}
 		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
 		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
+		// Why: a blank title clears it, while a missing one leaves it as it is.
+		Optional.ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
 		return entity;
 	}
 

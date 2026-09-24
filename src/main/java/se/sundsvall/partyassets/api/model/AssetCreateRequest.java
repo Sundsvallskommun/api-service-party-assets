@@ -3,6 +3,7 @@ package se.sundsvall.partyassets.api.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +49,10 @@ public class AssetCreateRequest {
 
 	@Schema(description = "Asset description", examples = "Asset description")
 	private String description;
+
+	@Schema(description = "Asset title, shown to the party", examples = "Stadigvarande tillstånd för servering av alkohol")
+	@Size(max = 255)
+	private String title;
 
 	@Schema(description = "Additional parameters", examples = "{\"foo\":\"bar\"}")
 	private Map<String, String> additionalParameters;
@@ -176,6 +181,19 @@ public class AssetCreateRequest {
 		return this;
 	}
 
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public AssetCreateRequest withTitle(String title) {
+		this.title = title;
+		return this;
+	}
+
 	public Map<String, String> getAdditionalParameters() {
 		return additionalParameters;
 	}
@@ -211,7 +229,7 @@ public class AssetCreateRequest {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, description, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, description, title, issued, jsonParameters, origin, partyId, status, statusReason, type, validTo);
 	}
 
 	@Override
@@ -226,7 +244,7 @@ public class AssetCreateRequest {
 			return false;
 		}
 		AssetCreateRequest other = (AssetCreateRequest) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(
 			issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && status == other.status && Objects.equals(statusReason, other.statusReason)
 			&& Objects.equals(type, other.type) && Objects.equals(validTo, other.validTo);
 	}
@@ -234,6 +252,6 @@ public class AssetCreateRequest {
 	@Override
 	public String toString() {
 		return "AssetCreateRequest [assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status + ", statusReason="
-			+ statusReason + ", description=" + description + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
+			+ statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + "]";
 	}
 }

@@ -39,6 +39,7 @@ class AssetTest {
 		final var additionalParameters = Map.of("key", "value");
 		final var assetId = "assetId";
 		final var description = "description";
+		final var title = "title";
 		final var id = "id";
 		final var issued = LocalDate.now();
 		final var jsonParameters = List.of(AssetJsonParameter.create());
@@ -54,6 +55,7 @@ class AssetTest {
 			.withAdditionalParameters(additionalParameters)
 			.withAssetId(assetId)
 			.withDescription(description)
+			.withTitle(title)
 			.withId(id)
 			.withJsonParameters(jsonParameters)
 			.withIssued(issued)
@@ -69,6 +71,7 @@ class AssetTest {
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
 		assertThat(bean.getDescription()).isEqualTo(description);
+		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getId()).isEqualTo(id);
 		assertThat(bean.getIssued()).isEqualTo(issued);
 		assertThat(bean.getJsonParameters()).isEqualTo(jsonParameters);

@@ -432,6 +432,57 @@ class DraftAssetResourceTest {
 	}
 
 	@Test
+	void createDraftAssetTooLongTitle() {
+		// Arrange
+		final var assetRequest = TestFactory.getAssetCreateRequest(randomUUID().toString()).withStatus(Status.DRAFT).withStatusReason(null).withTitle("a".repeat(256));
+
+		// Act
+		final var response = webTestClient.post()
+			.uri(PATH)
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("title", "size must be between 0 and 255"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void updateDraftAssetTooLongTitle() {
+		// Arrange
+		final var id = randomUUID().toString();
+		final var assetRequest = TestFactory.getDraftAssetUpdateRequest();
+		assetRequest.setStatusReason("LOST");
+		assetRequest.setTitle("a".repeat(256));
+
+		when(statusServiceMock.getReasonsForAllStatuses(MUNICIPALITY_ID)).thenReturn(VALID_STATUS_REASONS_FOR_STATUSES);
+
+		// Act
+		final var response = webTestClient.patch()
+			.uri(PATH + "/{id}", id)
+			.bodyValue(assetRequest)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("title", "size must be between 0 and 255"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
 	void updateDraftAssetFaultyStatusReason() {
 		// Arrange
 		final var id = randomUUID().toString();

@@ -9,6 +9,7 @@ import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
+import se.sundsvall.partyassets.api.model.Asset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -184,6 +185,47 @@ class DraftAssetsIT extends AbstractAppTest {
 
 		assertThat(jdbcTemplate.queryForObject("select actor from asset where id = ?", String.class, draftId)).isEqualTo("joe01doe");
 		assertThat(jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, draftId)).isZero();
+	}
+
+	@Test
+	void test12_createAndUpdateDraftTitle() throws Exception {
+		final var location = setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(PATH)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(CREATED)
+			.sendRequest()
+			.getResponseHeaders().getLocation();
+
+		assertThat(location).isNotNull();
+		assertThat(titleOf(location.getPath())).isEqualTo("Tillfälligt tillstånd");
+
+		patchTitle(location.getPath(), "Stadigvarande tillstånd för servering av alkohol");
+		assertThat(titleOf(location.getPath())).isEqualTo("Stadigvarande tillstånd för servering av alkohol");
+
+		patchTitle(location.getPath(), "");
+		assertThat(titleOf(location.getPath())).isNull();
+	}
+
+	private void patchTitle(final String path, final String title) {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(path)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"title\":\"" + title + "\"}")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequest();
+	}
+
+	private String titleOf(final String path) throws Exception {
+		return setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(path)
+			.withExpectedResponseStatus(OK)
+			.sendRequest()
+			.andReturnBody(Asset.class)
+			.getTitle();
 	}
 
 	@Test
