@@ -1316,7 +1316,8 @@ components:
         instance:
           type: string
           format: uri
-        causeAsProblem: {}
+        causeAsProblem:
+          $ref: "#/components/schemas/ThrowableProblem"
     Violation:
       type: object
       properties:
