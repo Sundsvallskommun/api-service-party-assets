@@ -2,12 +2,9 @@ package se.sundsvall.partyassets.apptest;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.util.LinkedMultiValueMap;
@@ -59,9 +56,6 @@ class AssetAttachmentsIT extends AbstractAppTest {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
-
-	@Autowired
-	private TestRestTemplate restTemplate;
 
 	private static String path(final String assetId) {
 		return "/" + MUNICIPALITY_ID + "/assets/" + assetId + "/attachments";
@@ -336,15 +330,17 @@ class AssetAttachmentsIT extends AbstractAppTest {
 		jdbcTemplate.update("update asset_attachment set category = ? where id = ?", "TILLSTANDSBEVIS", oldId);
 		final var revisionsBefore = countRevisions(ACTIVE_ASSET_ID);
 
-		final var body = new LinkedMultiValueMap<String, Object>();
-		body.add("attachment", new ClassPathResource("assetAttachmentsIT/__files/test14_replacingAnAttachmentKeepsTheOldOneInTheHistory/" + FILE));
-		body.add("replaces", oldId);
-		final var headers = new HttpHeaders();
-		headers.setContentType(MULTIPART_FORM_DATA);
-		final var response = restTemplate.postForEntity(path(ACTIVE_ASSET_ID), new HttpEntity<>(body, headers), Void.class);
+		final var location = setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(path(ACTIVE_ASSET_ID))
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequest(new LinkedMultiValueMap<>(Map.of("replaces", List.of(oldId))))
+			.withRequestFile("attachment", FILE)
+			.withExpectedResponseStatus(CREATED)
+			.sendRequest()
+			.getResponseHeaders()
+			.getLocation();
 
-		assertThat(response.getStatusCode()).isEqualTo(CREATED);
-		final var location = response.getHeaders().getLocation();
 		assertThat(location).isNotNull();
 		final var newId = location.getPath().substring(location.getPath().lastIndexOf('/') + 1);
 
