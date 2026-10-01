@@ -75,15 +75,24 @@ public class AssetAttachmentService {
 
 	// The blob only wraps the upload stream and the driver reads it when the row is inserted, so the insert is flushed
 	// while the stream is still open. A plain save would leave the read to happen after try-with-resources closed it.
-	public String createAttachment(final String municipalityId, final String id, final MultipartFile file, final String category, final String description) {
+	// A replaced attachment is marked deleted in the same flush as the insert, so the asset never carries both files and
+	// the swap is recorded as one revision.
+	public String createAttachment(final String municipalityId, final String id, final MultipartFile file, final String category, final String description, final String replaces) {
 		final var asset = getAssetEntity(municipalityId, id);
 		validateAssetIsModifiable(asset);
 		validateFile(file);
+		final var replaced = ofNullable(replaces)
+			.map(attachmentId -> attachmentRepository.findByIdForAsset(attachmentId, id, municipalityId)
+				.orElseThrow(() -> attachmentNotFound(municipalityId, id, attachmentId)))
+			.orElse(null);
 
 		final var revision = advanceRevision(asset);
+		ofNullable(replaced).ifPresent(attachment -> attachment.setDeleted(true));
 
+		final var newCategory = category != null || replaced == null ? category : replaced.getCategory();
+		final var newDescription = description != null || replaced == null ? description : replaced.getDescription();
 		try (final var content = file.getInputStream()) {
-			return saveAndFlush(toAssetAttachmentEntity(asset, file, content, category, description), revision, id).getId();
+			return saveAndFlush(toAssetAttachmentEntity(asset, file, content, newCategory, newDescription), revision, id).getId();
 		} catch (final IOException e) {
 			throw Problem.valueOf(INTERNAL_SERVER_ERROR, "Could not read uploaded file %s: %s".formatted(file.getOriginalFilename(), e.getMessage()));
 		}

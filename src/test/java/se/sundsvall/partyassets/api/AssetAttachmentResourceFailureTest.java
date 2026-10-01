@@ -177,6 +177,30 @@ class AssetAttachmentResourceFailureTest {
 	}
 
 	@Test
+	void createAttachmentReplacingAnInvalidAttachmentId() {
+		final var body = new MultipartBodyBuilder();
+		body.part("attachment", file()).contentType(APPLICATION_PDF);
+		body.part("replaces", "not-a-uuid");
+
+		final var response = webTestClient.post()
+			.uri(path(MUNICIPALITY_ID, ASSET_ID))
+			.contentType(MULTIPART_FORM_DATA)
+			.bodyValue(body.build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field)
+			.containsExactly("createAttachment.replaces");
+
+		verifyNoInteractions(serviceMock);
+	}
+
+	@Test
 	void createAttachmentWithoutFilePart() {
 		final var body = new MultipartBodyBuilder();
 		body.part("category", "LOKALRITNING");

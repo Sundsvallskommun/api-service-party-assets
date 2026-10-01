@@ -4,8 +4,13 @@ import java.sql.Timestamp;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.util.LinkedMultiValueMap;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
@@ -54,6 +59,9 @@ class AssetAttachmentsIT extends AbstractAppTest {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+
+	@Autowired
+	private TestRestTemplate restTemplate;
 
 	private static String path(final String assetId) {
 		return "/" + MUNICIPALITY_ID + "/assets/" + assetId + "/attachments";
@@ -320,6 +328,40 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.sendRequest();
 
 		assertThat(countRevisions(DRAFT_ASSET_ID)).isEqualTo(1);
+	}
+
+	@Test
+	void test14_replacingAnAttachmentKeepsTheOldOneInTheHistory() throws Exception {
+		final var oldId = createAttachmentOnActiveAsset();
+		jdbcTemplate.update("update asset_attachment set category = ? where id = ?", "TILLSTANDSBEVIS", oldId);
+		final var revisionsBefore = countRevisions(ACTIVE_ASSET_ID);
+
+		final var body = new LinkedMultiValueMap<String, Object>();
+		body.add("attachment", new ClassPathResource("assetAttachmentsIT/__files/test14_replacingAnAttachmentKeepsTheOldOneInTheHistory/" + FILE));
+		body.add("replaces", oldId);
+		final var headers = new HttpHeaders();
+		headers.setContentType(MULTIPART_FORM_DATA);
+		final var response = restTemplate.postForEntity(path(ACTIVE_ASSET_ID), new HttpEntity<>(body, headers), Void.class);
+
+		assertThat(response.getStatusCode()).isEqualTo(CREATED);
+		final var location = response.getHeaders().getLocation();
+		assertThat(location).isNotNull();
+		final var newId = location.getPath().substring(location.getPath().lastIndexOf('/') + 1);
+
+		assertThat(newId).isNotEqualTo(oldId);
+		assertThat(countRevisions(ACTIVE_ASSET_ID)).isEqualTo(revisionsBefore + 1);
+		assertThat(jdbcTemplate.queryForList("select id from asset_attachment where asset_id = ? and deleted = false", String.class, ACTIVE_ASSET_ID)).containsExactly(newId);
+		assertThat(jdbcTemplate.queryForObject("select category from asset_attachment where id = ?", String.class, newId)).isEqualTo("TILLSTANDSBEVIS");
+		assertThat(jdbcTemplate.queryForObject("select attachments from asset_revision where asset_id = ? order by revision desc limit 1", String.class, ACTIVE_ASSET_ID))
+			.contains(oldId)
+			.doesNotContain(newId);
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + oldId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedBinaryResponse(FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	private long countRevisions(final String assetId) {

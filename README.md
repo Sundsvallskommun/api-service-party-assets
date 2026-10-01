@@ -141,6 +141,17 @@ Removing a file marks it rather than erasing it. It disappears from the listing 
 again, but it stays downloadable at its own URL, because an earlier revision of the permit still refers to it and that
 history would otherwise point at a file that no longer exists. Deleting the whole asset does erase them.
 
+To swap one file for a newer version, such as a reissued tillståndsbevis, upload the new file with a `replaces` part
+naming the old attachment. The new file gets its own id. The old one is removed the same way a delete removes it, and
+both happen in one revision, so the permit never carries both files. The new attachment takes the old one's
+`category` and `description` unless the request sets them.
+
+```bash
+curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
+  -F 'attachment=@tillstandsbevis.pdf;type=application/pdf' \
+  -F 'replaces={attachmentId}'
+```
+
 ### Revision history
 
 A change to a live asset first writes a snapshot of what it looked like beforehand. The asset row itself is the newest

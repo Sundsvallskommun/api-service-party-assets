@@ -73,9 +73,12 @@ class AssetAttachmentResource {
 		@PathVariable @ValidUuid final String id,
 		@NotNull @RequestPart("attachment") final MultipartFile attachment,
 		@Parameter(name = "category", description = "What the attachment depicts", example = "LOKALRITNING") @Size(max = 255) @RequestPart(name = "category", required = false) final String category,
-		@Parameter(name = "description", description = "Attachment description") @Size(max = 255) @RequestPart(name = "description", required = false) final String description) {
+		@Parameter(name = "description", description = "Attachment description") @Size(max = 255) @RequestPart(name = "description", required = false) final String description,
+		@Parameter(name = "replaces",
+			description = "Id of an attachment this one replaces. The replaced attachment is removed from the asset but kept in its revision history, "
+				+ "and its category and description are carried over unless new ones are given") @ValidUuid(nullable = true) @RequestPart(name = "replaces", required = false) final String replaces) {
 
-		final var attachmentId = service.createAttachment(municipalityId, id, attachment, category, description);
+		final var attachmentId = service.createAttachment(municipalityId, id, attachment, category, description, replaces);
 
 		return created(fromPath("/{municipalityId}/assets/{id}/attachments/{attachmentId}").buildAndExpand(municipalityId, id, attachmentId).toUri())
 			.header(CONTENT_TYPE, ALL_VALUE)
