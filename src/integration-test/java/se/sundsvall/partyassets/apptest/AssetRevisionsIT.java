@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
@@ -126,7 +127,7 @@ class AssetRevisionsIT extends AbstractAppTest {
 	}
 
 	@Test
-	void test08_titleIsLockedOnAnActiveAssetAndKeptInTheHistory() {
+	void test08_contentIsLockedOnABlockedAsset() {
 		jdbcTemplate.update("update asset set title = ? where id = ?", "Stadigvarande tillstånd", ASSET_WITH_HISTORY);
 
 		setupCall()
@@ -134,12 +135,37 @@ class AssetRevisionsIT extends AbstractAppTest {
 			.withServicePath("/" + MUNICIPALITY_ID + "/assets/" + ASSET_WITH_HISTORY)
 			.withContentType(APPLICATION_JSON)
 			.withRequest("{\"status\":\"EXPIRED\",\"title\":\"Ny titel\"}")
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.sendRequest();
+
+		assertThat(jdbcTemplate.queryForObject("select title from asset where id = ?", String.class, ASSET_WITH_HISTORY)).isEqualTo("Stadigvarande tillstånd");
+		assertThat(jdbcTemplate.queryForObject("select status from asset where id = ?", String.class, ASSET_WITH_HISTORY)).isEqualTo("BLOCKED");
+		assertThat(revisionCount(ASSET_WITH_HISTORY)).isEqualTo(2);
+	}
+
+	@Test
+	void test09_changingTheContentOfAnActiveAssetAddsARevision() {
+		jdbcTemplate.update("update asset set title = ? where id = ?", "Parkeringstillstånd", UNCHANGED_ASSET);
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath("/" + MUNICIPALITY_ID + "/assets/" + UNCHANGED_ASSET)
+			.withHeader(Identifier.HEADER_NAME, "joe01doe; type=adAccount")
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"title\":\"Nytt parkeringstillstånd\",\"validTo\":\"2035-01-31\",\"additionalParameters\":{\"serveringsansvarig\":\"Anna Andersson\"}}")
 			.withExpectedResponseStatus(NO_CONTENT)
 			.withExpectedResponseBodyIsNull()
 			.sendRequestAndVerifyResponse();
 
-		assertThat(jdbcTemplate.queryForObject("select title from asset where id = ?", String.class, ASSET_WITH_HISTORY)).isEqualTo("Stadigvarande tillstånd");
-		assertThat(jdbcTemplate.queryForObject("select title from asset_revision where asset_id = ? and revision = 2", String.class, ASSET_WITH_HISTORY)).isEqualTo("Stadigvarande tillstånd");
+		assertThat(revisionCount(UNCHANGED_ASSET)).isEqualTo(1);
+		assertThat(jdbcTemplate.queryForObject("select revision from asset where id = ?", Integer.class, UNCHANGED_ASSET)).isEqualTo(1);
+		assertThat(jdbcTemplate.queryForObject("select title from asset where id = ?", String.class, UNCHANGED_ASSET)).isEqualTo("Nytt parkeringstillstånd");
+		assertThat(jdbcTemplate.queryForObject("select valid_to from asset where id = ?", String.class, UNCHANGED_ASSET)).isEqualTo("2035-01-31");
+		assertThat(jdbcTemplate.queryForObject("select parameter_value from additional_parameter where asset_id = ? and parameter_key = ?", String.class, UNCHANGED_ASSET, "serveringsansvarig")).isEqualTo("Anna Andersson");
+		assertThat(jdbcTemplate.queryForObject("select title from asset_revision where asset_id = ? and revision = 0", String.class, UNCHANGED_ASSET)).isEqualTo("Parkeringstillstånd");
+		assertThat(jdbcTemplate.queryForObject("select valid_to from asset_revision where asset_id = ? and revision = 0", String.class, UNCHANGED_ASSET)).isEqualTo("2034-01-31");
+		assertThat(jdbcTemplate.queryForObject("select additional_parameters from asset_revision where asset_id = ? and revision = 0", String.class, UNCHANGED_ASSET)).isEqualTo("{}");
+		assertThat(jdbcTemplate.queryForObject("select status from asset where id = ?", String.class, UNCHANGED_ASSET)).isEqualTo("ACTIVE");
 	}
 
 	private long revisionCount(final String assetId) {

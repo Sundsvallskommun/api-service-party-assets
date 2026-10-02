@@ -25,7 +25,7 @@ class AssetMutationGuardTest {
 		"updateAsset(String,String,AssetUpdateRequest,String)");
 
 	private static final Set<String> ASSET_ATTACHMENT_SERVICE_METHODS = Set.of(
-		"createAttachment(String,String,MultipartFile,String,String)",
+		"createAttachment(String,String,MultipartFile,String,String,String)",
 		"readAttachments(String,String)",
 		"readAttachment(String,String,String)",
 		"updateAttachment(String,String,String,AssetAttachmentUpdateRequest)",

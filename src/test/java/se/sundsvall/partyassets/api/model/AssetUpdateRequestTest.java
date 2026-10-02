@@ -1,6 +1,8 @@
 package se.sundsvall.partyassets.api.model;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,14 +38,29 @@ class AssetUpdateRequestTest {
 	void testBuilderMethods() {
 		final var status = Status.ACTIVE;
 		final var statusReason = "someReason";
+		final var validTo = LocalDate.now();
+		final var indefinitely = true;
+		final var title = "title";
+		final var additionalParameters = Map.of("key", "value");
+		final var jsonParameters = List.of(AssetJsonParameter.create().withKey("key"));
 
-		final var assetUpdateRequest = new AssetUpdateRequest();
-		assetUpdateRequest.setStatus(status);
-		assetUpdateRequest.setStatusReason(statusReason);
+		final var assetUpdateRequest = AssetUpdateRequest.create()
+			.withStatus(status)
+			.withStatusReason(statusReason)
+			.withValidTo(validTo)
+			.withIndefinitely(indefinitely)
+			.withTitle(title)
+			.withAdditionalParameters(additionalParameters)
+			.withJsonParameters(jsonParameters);
 
 		assertThat(assetUpdateRequest).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(assetUpdateRequest.getStatus()).isEqualTo(status);
 		assertThat(assetUpdateRequest.getStatusReason()).isEqualTo(statusReason);
+		assertThat(assetUpdateRequest.getValidTo()).isEqualTo(validTo);
+		assertThat(assetUpdateRequest.getIndefinitely()).isEqualTo(indefinitely);
+		assertThat(assetUpdateRequest.getTitle()).isEqualTo(title);
+		assertThat(assetUpdateRequest.getAdditionalParameters()).isEqualTo(additionalParameters);
+		assertThat(assetUpdateRequest.getJsonParameters()).isEqualTo(jsonParameters);
 	}
 
 	@Test

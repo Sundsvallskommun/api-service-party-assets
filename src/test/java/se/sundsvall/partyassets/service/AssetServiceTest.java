@@ -1,12 +1,16 @@
 package se.sundsvall.partyassets.service;
 
 import generated.se.sundsvall.relation.Relation;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -17,6 +21,8 @@ import org.springframework.data.jpa.domain.Specification;
 import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.dept44.support.Identifier;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
+import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
@@ -47,6 +53,7 @@ import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.BLOCKED;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
+import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -639,6 +646,71 @@ class AssetServiceTest {
 			assertThat(revision.getStatus()).isEqualTo("ACTIVE");
 		});
 		assertThat(entity.getStatus()).isEqualTo(BLOCKED);
+	}
+
+	@Test
+	void updateAssetContentRecordsARevisionOfThePreviousContent() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(2);
+		final var request = AssetUpdateRequest.create().withAdditionalParameters(Map.of("key", "changed_value"));
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, request, null);
+
+		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
+		assertThat(revisionCaptor.getValue()).satisfies(revision -> {
+			assertThat(revision.getRevision()).isEqualTo(2);
+			assertThat(revision.getAdditionalParameters()).contains("\"key\":\"value\"");
+		});
+		assertThat(entity.getRevision()).isEqualTo(3);
+		assertThat(entity.getAdditionalParameters()).isEqualTo(Map.of("key", "changed_value"));
+		assertThat(entity.getStatus()).isEqualTo(ACTIVE);
+	}
+
+	@Test
+	void updateAssetContentOnTemporaryAsset() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(TEMPORARY);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, AssetUpdateRequest.create().withTitle("titleUpdated"), null);
+
+		verify(repositoryMock).saveAndFlush(entity);
+		assertThat(entity.getTitle()).isEqualTo("titleUpdated");
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = {
+		"BLOCKED", "EXPIRED", "REPLACED"
+	})
+	void updateAssetContentOnLockedAssetThrowsBadRequest(final Status status) {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(status);
+		final var request = AssetUpdateRequest.create().withValidTo(LocalDate.of(2030, 1, 1));
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, request, null))
+			.withMessage("Asset content cannot be modified: Content can only be modified on assets with status [ACTIVE, TEMPORARY], but asset %s has status %s".formatted(id, status));
+
+		verify(repositoryMock, never()).saveAndFlush(any());
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
+	void updateStatusOnLockedAsset() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(BLOCKED);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, AssetUpdateRequest.create().withStatus(ACTIVE), null);
+
+		verify(repositoryMock).saveAndFlush(entity);
+		assertThat(entity.getStatus()).isEqualTo(ACTIVE);
 	}
 
 	@Test

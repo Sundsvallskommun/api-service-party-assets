@@ -90,10 +90,31 @@ curl -X 'GET' 'http://localhost:8080/2281/assets?assetId=PRH-123456789' -H 'acce
 ### Title
 
 `title` is optional display text for the citizen, such as "Stadigvarande tillstånd för servering av alkohol" on Mina
-sidor. It is at most 255 characters. It can be set when an asset is created and changed while the asset is a draft. A blank
-title is stored as no title, so sending `"title": ""` on a draft removes it. Once
-the asset is active, `PATCH /assets/{id}` ignores it, so the title stays as issued. It is not a search parameter; filter
-on `type` instead.
+sidor. It is at most 255 characters. It can be set when an asset is created and changed while the asset is a draft,
+active or temporary. A blank title is stored as no title, so sending `"title": ""` removes it. It is not a search
+parameter; filter on `type` instead.
+
+### Changing a live asset
+
+`PATCH /assets/{id}` changes an asset that is `ACTIVE` or `TEMPORARY` in place. Besides `status` and `statusReason` it
+takes `title`, `validTo`, `indefinitely`, `additionalParameters` and `jsonParameters`, with the same rules as on a
+draft. A field left out stays as it is. `additionalParameters` replaces the whole map and `jsonParameters` the whole
+list, so send every key and parameter the asset should keep, not only the one that changed. Each change records the
+previous state as a revision (see below). Once an asset is blocked, has expired or been replaced, only its status can
+change, and a request carrying any of those fields gets `400 Bad Request`.
+
+To change the person responsible for serving on a permit that also has serving hours, read the asset, change that one
+key and send the map back whole. Leaving out `serveringstid` here would remove it.
+
+```bash
+curl -X 'PATCH' 'http://localhost:8080/2281/assets/{id}' \
+  -H 'If-Match: "3"' -H 'Content-Type: application/json' \
+  -d '{"additionalParameters":{"serveringsansvarig":"Anna Andersson","serveringstid":"11-01"}}'
+```
+
+Use this for changes to the same permit, such as a new person responsible for serving or longer opening hours after a
+decision. When the permit is replaced by a new one, copy it instead with `POST /assets/{id}`. The copy is a draft with
+its own id, a `replacesId` pointing back, and every attachment. Activating it marks the original `REPLACED`.
 
 ### Attachments
 
@@ -119,6 +140,17 @@ curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
 Removing a file marks it rather than erasing it. It disappears from the listing and can no longer be changed or removed
 again, but it stays downloadable at its own URL, because an earlier revision of the permit still refers to it and that
 history would otherwise point at a file that no longer exists. Deleting the whole asset does erase them.
+
+To swap one file for a newer version, such as a reissued tillståndsbevis, upload the new file with a `replaces` part
+naming the old attachment. The new file gets its own id. The old one is removed the same way a delete removes it, and
+both happen in one revision, so the permit never carries both files. The new attachment takes the old one's
+`category` and `description` unless the request sets them.
+
+```bash
+curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
+  -F 'attachment=@tillstandsbevis.pdf;type=application/pdf' \
+  -F 'replaces={attachmentId}'
+```
 
 ### Revision history
 

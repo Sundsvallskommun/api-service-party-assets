@@ -2,10 +2,12 @@ package se.sundsvall.partyassets.apptest;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.util.LinkedMultiValueMap;
 import se.sundsvall.dept44.test.AbstractAppTest;
 import se.sundsvall.dept44.test.annotation.wiremock.WireMockAppTestSuite;
 import se.sundsvall.partyassets.Application;
@@ -320,6 +322,42 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.sendRequest();
 
 		assertThat(countRevisions(DRAFT_ASSET_ID)).isEqualTo(1);
+	}
+
+	@Test
+	void test14_replacingAnAttachmentKeepsTheOldOneInTheHistory() throws Exception {
+		final var oldId = createAttachmentOnActiveAsset();
+		jdbcTemplate.update("update asset_attachment set category = ? where id = ?", "TILLSTANDSBEVIS", oldId);
+		final var revisionsBefore = countRevisions(ACTIVE_ASSET_ID);
+
+		final var location = setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(path(ACTIVE_ASSET_ID))
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequest(new LinkedMultiValueMap<>(Map.of("replaces", List.of(oldId))))
+			.withRequestFile("attachment", FILE)
+			.withExpectedResponseStatus(CREATED)
+			.sendRequest()
+			.getResponseHeaders()
+			.getLocation();
+
+		assertThat(location).isNotNull();
+		final var newId = location.getPath().substring(location.getPath().lastIndexOf('/') + 1);
+
+		assertThat(newId).isNotEqualTo(oldId);
+		assertThat(countRevisions(ACTIVE_ASSET_ID)).isEqualTo(revisionsBefore + 1);
+		assertThat(jdbcTemplate.queryForList("select id from asset_attachment where asset_id = ? and deleted = false", String.class, ACTIVE_ASSET_ID)).containsExactly(newId);
+		assertThat(jdbcTemplate.queryForObject("select category from asset_attachment where id = ?", String.class, newId)).isEqualTo("TILLSTANDSBEVIS");
+		assertThat(jdbcTemplate.queryForObject("select attachments from asset_revision where asset_id = ? order by revision desc limit 1", String.class, ACTIVE_ASSET_ID))
+			.contains(oldId)
+			.doesNotContain(newId);
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(path(ACTIVE_ASSET_ID) + "/" + oldId)
+			.withExpectedResponseStatus(OK)
+			.withExpectedBinaryResponse(FILE)
+			.sendRequestAndVerifyResponse();
 	}
 
 	private long countRevisions(final String assetId) {

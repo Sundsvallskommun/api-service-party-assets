@@ -2,15 +2,19 @@ package se.sundsvall.partyassets.service.mapper;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mariadb.jdbc.MariaDbBlob;
 import se.sundsvall.partyassets.TestFactory;
+import se.sundsvall.partyassets.api.model.AssetJsonParameter;
+import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentDataEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetAttachmentEntity;
 import se.sundsvall.partyassets.integration.db.model.PartyType;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -94,6 +98,52 @@ class AssetMapperTest {
 		assertThat(entity.getMunicipalityId()).isEqualTo(original.getMunicipalityId());
 
 		assertThat(entity.getJsonParameters()).hasSize(1);
+	}
+
+	@Test
+	void updateEntityWithContent() {
+
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var request = AssetUpdateRequest.create()
+			.withValidTo(LocalDate.of(2030, 1, 1))
+			.withTitle("titleUpdated")
+			.withAdditionalParameters(Map.of("key", "changed_value"))
+			.withJsonParameters(List.of(AssetJsonParameter.create()
+				.withKey("key2")
+				.withSchemaId("2281_person_schema_2.0.0")
+				.withValue(new ObjectMapper().createObjectNode().put("newAttribute", "value"))));
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isEqualTo(LocalDate.of(2030, 1, 1));
+		assertThat(entity.getTitle()).isEqualTo("titleUpdated");
+		assertThat(entity.getAdditionalParameters()).isEqualTo(Map.of("key", "changed_value"));
+		assertThat(entity.getJsonParameters()).hasSize(1);
+		assertThat(entity.getJsonParameters().getFirst().getKey()).isEqualTo("key2");
+		assertThat(entity.getStatus()).isEqualTo(Status.ACTIVE);
+	}
+
+	@Test
+	void updateEntityWithIndefinitelyClearsValidTo() {
+
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var request = AssetUpdateRequest.create()
+			.withValidTo(LocalDate.of(2030, 1, 1))
+			.withIndefinitely(true);
+
+		AssetMapper.updateEntity(entity, request);
+
+		assertThat(entity.getValidTo()).isNull();
+	}
+
+	@Test
+	void updateEntityWithBlankTitleClearsTheTitle() {
+
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+
+		AssetMapper.updateEntity(entity, AssetUpdateRequest.create().withTitle(""));
+
+		assertThat(entity.getTitle()).isNull();
 	}
 
 	@Test

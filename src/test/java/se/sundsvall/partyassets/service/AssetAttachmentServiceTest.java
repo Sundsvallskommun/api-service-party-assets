@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.service;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
@@ -98,7 +99,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.ACTIVE));
 
-		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description", null);
 
 		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
 		assertThat(revisionCaptor.getValue()).satisfies(revision -> {
@@ -110,11 +111,61 @@ class AssetAttachmentServiceTest {
 	}
 
 	@Test
+	void createAttachmentReplacingAnotherMarksItDeletedInTheSameRevision() {
+		final var asset = asset(Status.ACTIVE);
+		final var replaced = attachment(Status.ACTIVE).withCategory("TILLSTANDSBEVIS").withDescription("Tillståndsbevis");
+		asset.setAttachments(new ArrayList<>(List.of(replaced)));
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(replaced));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, ATTACHMENT_ID);
+
+		verify(attachmentRepositoryMock).saveAndFlush(attachmentCaptor.capture());
+		assertThat(attachmentCaptor.getValue()).satisfies(created -> {
+			assertThat(created.getCategory()).isEqualTo("TILLSTANDSBEVIS");
+			assertThat(created.getDescription()).isEqualTo("Tillståndsbevis");
+			assertThat(created.isDeleted()).isFalse();
+		});
+		assertThat(replaced.isDeleted()).isTrue();
+		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
+		assertThat(revisionCaptor.getValue().getAttachments()).contains(ATTACHMENT_ID);
+		assertThat(asset.getRevision()).isEqualTo(3);
+	}
+
+	@Test
+	void createAttachmentReplacingAnotherKeepsGivenCategoryAndDescription() {
+		final var replaced = attachment(Status.ACTIVE).withCategory("TILLSTANDSBEVIS").withDescription("Tillståndsbevis");
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(replaced));
+		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "Ny ritning", ATTACHMENT_ID);
+
+		verify(attachmentRepositoryMock).saveAndFlush(attachmentCaptor.capture());
+		assertThat(attachmentCaptor.getValue().getCategory()).isEqualTo("LOKALRITNING");
+		assertThat(attachmentCaptor.getValue().getDescription()).isEqualTo("Ny ritning");
+	}
+
+	@Test
+	void createAttachmentReplacingAMissingAttachment() {
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, ATTACHMENT_ID))
+			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
+
+		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
+		verifyNoInteractions(assetRevisionRepositoryMock);
+	}
+
+	@Test
 	void createAttachmentWritesTheSnapshotOnlyAfterTheFlushThatChecksTheVersion() {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.ACTIVE));
 
-		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description", null);
 
 		final var inOrder = inOrder(attachmentRepositoryMock, assetRevisionRepositoryMock);
 		inOrder.verify(attachmentRepositoryMock).saveAndFlush(any(AssetAttachmentEntity.class));
@@ -127,7 +178,7 @@ class AssetAttachmentServiceTest {
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenThrow(new OptimisticLockingFailureException("conflict"));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description"))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description", null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(CONFLICT));
 
 		verifyNoInteractions(assetRevisionRepositoryMock);
@@ -164,7 +215,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.ACTIVE));
 
-		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description", null);
 
 		assertThat(result).isEqualTo(ATTACHMENT_ID);
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
@@ -189,7 +240,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(NOT_FOUND));
 
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
@@ -202,7 +253,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.EXPIRED)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
@@ -215,7 +266,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.TEMPORARY)));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.TEMPORARY));
 
-		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null);
+		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null);
 
 		assertThat(result).isEqualTo(ATTACHMENT_ID);
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
@@ -229,7 +280,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
 
-		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description");
+		final var result = service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), "LOKALRITNING", "description", null);
 
 		assertThat(result).isEqualTo(ATTACHMENT_ID);
 		assertThat(asset.getRevision()).isEqualTo(2);
@@ -244,7 +295,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset));
 		when(attachmentRepositoryMock.saveAndFlush(any(AssetAttachmentEntity.class))).thenReturn(attachment(Status.DRAFT));
 
-		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null);
+		service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null);
 
 		assertThat(asset.getActor()).isEqualTo("joe01doe");
 		verifyNoInteractions(assetRevisionRepositoryMock);
@@ -283,7 +334,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.BLOCKED)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
 		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
@@ -297,7 +348,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, new MockMultipartFile("attachment", fileName, MIME_TYPE, CONTENT), null, null))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, new MockMultipartFile("attachment", fileName, MIME_TYPE, CONTENT), null, null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
 		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
@@ -308,7 +359,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, new MockMultipartFile("attachment", FILE_NAME, MIME_TYPE, new byte[0]), null, null))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, new MockMultipartFile("attachment", FILE_NAME, MIME_TYPE, new byte[0]), null, null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
 
 		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
@@ -323,7 +374,7 @@ class AssetAttachmentServiceTest {
 		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.ACTIVE)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file, null, null))
+			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file, null, null, null))
 			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(INTERNAL_SERVER_ERROR));
 
 		verify(attachmentRepositoryMock, never()).saveAndFlush(any());

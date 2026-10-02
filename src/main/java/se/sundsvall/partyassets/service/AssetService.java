@@ -2,8 +2,11 @@ package se.sundsvall.partyassets.service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 import org.jspecify.annotations.NonNull;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
+import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
 import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
@@ -45,6 +49,7 @@ public class AssetService {
 	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
 	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
 	private static final String INVALID_SOURCE_REFERENCE_TITLE = "Invalid source reference";
+	private static final Set<Status> CONTENT_MODIFIABLE_STATUSES = EnumSet.of(ACTIVE, TEMPORARY);
 	private static final String INVALID_SOURCE_REFERENCE_DETAIL = "Provided source reference '%s' is invalid. Expected format: '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'";
 
 	private final AssetRepository repository;
@@ -143,6 +148,7 @@ public class AssetService {
 		final var entity = getAssetEntity(municipalityId, id);
 		validateNotDraft(entity);
 		validatePrecondition(entity, ifMatch);
+		validateContentModifiable(entity, request);
 		final var revision = advanceRevision(entity);
 		save(updateEntity(entity, request), revision, id);
 	}
@@ -179,6 +185,17 @@ public class AssetService {
 				.withStatus(BAD_REQUEST)
 				.withTitle("Invalid asset status")
 				.withDetail("DRAFT assets must be updated via the asset drafts resource")
+				.build();
+		}
+	}
+
+	private void validateContentModifiable(final AssetEntity entity, final AssetUpdateRequest request) {
+		final var changesContent = Stream.of(request.getValidTo(), request.getIndefinitely(), request.getTitle(), request.getAdditionalParameters(), request.getJsonParameters()).anyMatch(Objects::nonNull);
+		if (changesContent && !CONTENT_MODIFIABLE_STATUSES.contains(entity.getStatus())) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle("Asset content cannot be modified")
+				.withDetail("Content can only be modified on assets with status %s, but asset %s has status %s".formatted(CONTENT_MODIFIABLE_STATUSES, entity.getId(), entity.getStatus()))
 				.build();
 		}
 	}

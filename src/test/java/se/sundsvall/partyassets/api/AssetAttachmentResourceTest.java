@@ -63,7 +63,7 @@ class AssetAttachmentResourceTest {
 		body.part("category", "LOKALRITNING");
 		body.part("description", "Ritning");
 
-		when(serviceMock.createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq("LOKALRITNING"), eq("Ritning"))).thenReturn(ATTACHMENT_ID);
+		when(serviceMock.createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq("LOKALRITNING"), eq("Ritning"), eq(null))).thenReturn(ATTACHMENT_ID);
 
 		webTestClient.post()
 			.uri(PATH)
@@ -73,7 +73,27 @@ class AssetAttachmentResourceTest {
 			.expectStatus().isCreated()
 			.expectHeader().location(PATH + "/" + ATTACHMENT_ID);
 
-		verify(serviceMock).createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq("LOKALRITNING"), eq("Ritning"));
+		verify(serviceMock).createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq("LOKALRITNING"), eq("Ritning"), eq(null));
+	}
+
+	@Test
+	void createAttachmentReplacingAnother() {
+		final var replaces = "d4a5bd36-3d3f-4c1b-9e43-2b7d3f6f1a10";
+		final var body = new MultipartBodyBuilder();
+		body.part("attachment", file()).contentType(APPLICATION_PDF);
+		body.part("replaces", replaces);
+
+		when(serviceMock.createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq(null), eq(null), eq(replaces))).thenReturn(ATTACHMENT_ID);
+
+		webTestClient.post()
+			.uri(PATH)
+			.contentType(MULTIPART_FORM_DATA)
+			.bodyValue(body.build())
+			.exchange()
+			.expectStatus().isCreated()
+			.expectHeader().location(PATH + "/" + ATTACHMENT_ID);
+
+		verify(serviceMock).createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq(null), eq(null), eq(replaces));
 	}
 
 	@Test
@@ -81,7 +101,7 @@ class AssetAttachmentResourceTest {
 		final var body = new MultipartBodyBuilder();
 		body.part("attachment", file()).contentType(APPLICATION_PDF);
 
-		when(serviceMock.createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq(null), eq(null))).thenReturn(ATTACHMENT_ID);
+		when(serviceMock.createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq(null), eq(null), eq(null))).thenReturn(ATTACHMENT_ID);
 
 		webTestClient.post()
 			.uri(PATH)
@@ -90,7 +110,7 @@ class AssetAttachmentResourceTest {
 			.exchange()
 			.expectStatus().isCreated();
 
-		verify(serviceMock).createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq(null), eq(null));
+		verify(serviceMock).createAttachment(eq(MUNICIPALITY_ID), eq(ASSET_ID), any(MultipartFile.class), eq(null), eq(null), eq(null));
 	}
 
 	@Test
