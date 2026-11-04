@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.8"
+  version: "6.9"
 servers:
 - url: http://localhost:51822
   description: Generated server url
@@ -638,6 +638,46 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /{municipalityId}/asset-events/republish:
+    post:
+      tags:
+      - Asset events
+      summary: Publish all assets again
+      description: "Publishes every asset of the municipality as it is now, as an\
+        \ UPDATED event at its current version. Used to load a new consumer, or to\
+        \ recover one. Returns when all are published"
+      operationId: republish
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      responses:
+        "204":
+          description: No content - Successful operation
+        "503":
+          description: Service Unavailable - RabbitMQ is off
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
         "500":
           description: Internal Server Error
           content:
