@@ -4,6 +4,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import se.sundsvall.partyassets.api.model.Status;
@@ -21,6 +22,8 @@ public interface AssetRepository extends JpaRepository<AssetEntity, String>, Jpa
 	void deleteByIdAndMunicipalityId(String id, String municipalityId);
 
 	List<AssetIdProjection> findByStatusInAndValidToBefore(List<Status> statuses, LocalDate date);
+
+	List<AssetEntity> findByMunicipalityIdAndIdGreaterThanOrderById(String municipalityId, String id, Limit limit);
 
 	interface AssetIdProjection {
 		String getId();

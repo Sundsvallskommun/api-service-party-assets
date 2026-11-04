@@ -1,0 +1,18 @@
+{
+	"eventType": "CREATED",
+	"municipalityId": "2281",
+	"version": 0,
+	"occurredAt": "${json-unit.any-string}",
+	"asset": {
+		"id": "${json-unit.regex}[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+		"assetId": "CON-0000000021",
+		"origin": "CASEDATA",
+		"partyId": "a6c380f3-6d26-496d-93fe-10b1e0160354",
+		"type": "PERMIT",
+		"title": "Bygglov för fritidshus",
+		"description": "Bygglov",
+		"status": "ACTIVE",
+		"issued": "2023-01-01",
+		"validTo": "2099-12-31"
+	}
+}

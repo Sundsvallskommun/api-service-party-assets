@@ -3,6 +3,8 @@ scheduler:
     cron: '0 0 0 * * *'
     lock-at-most-for: 'PT1H'
 integration:
+  asset-events:
+    exchange: api-fabriken.party-assets
   json-schema:
     connectTimeout: 5
     readTimeout: 30

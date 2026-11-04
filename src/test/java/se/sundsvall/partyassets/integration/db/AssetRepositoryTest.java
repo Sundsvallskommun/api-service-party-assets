@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.data.domain.Limit;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.partyassets.TestFactory;
@@ -180,5 +181,26 @@ class AssetRepositoryTest {
 		final var result = repository.findByStatusInAndValidToBefore(List.of(Status.ACTIVE, Status.TEMPORARY), LocalDate.of(2022, 1, 1));
 
 		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void findByMunicipalityIdAndIdGreaterThanOrderById() {
+		final var ids = repository.findAll().stream()
+			.filter(asset -> MUNICIPALITY_ID.equals(asset.getMunicipalityId()))
+			.map(AssetEntity::getId)
+			.sorted()
+			.toList();
+
+		final var firstPage = repository.findByMunicipalityIdAndIdGreaterThanOrderById(MUNICIPALITY_ID, "", Limit.of(3));
+		final var secondPage = repository.findByMunicipalityIdAndIdGreaterThanOrderById(MUNICIPALITY_ID, firstPage.getLast().getId(), Limit.of(3));
+
+		assertThat(ids).hasSizeGreaterThan(6);
+		assertThat(firstPage).extracting(AssetEntity::getId).containsExactlyElementsOf(ids.subList(0, 3));
+		assertThat(secondPage).extracting(AssetEntity::getId).containsExactlyElementsOf(ids.subList(3, 6));
+	}
+
+	@Test
+	void findByMunicipalityIdAndIdGreaterThanOrderByIdForOtherMunicipality() {
+		assertThat(repository.findByMunicipalityIdAndIdGreaterThanOrderById("2260", "", Limit.of(3))).isEmpty();
 	}
 }
