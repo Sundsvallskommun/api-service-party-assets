@@ -9,6 +9,7 @@ _The service manages issued permits and other engagements that a stakeholder has
 - **Java 25 or higher**
 - **Maven**
 - **MariaDB**
+- **RabbitMQ**, only to publish the asset events
 - **Git**
 - **[Dependent Microservices](#dependencies)**
 
@@ -295,6 +296,55 @@ before them, even where no revision was recorded.
 
 Deleting an asset deletes its history with it, so nothing is readable afterwards through any endpoint.
 
+### Events
+
+Every change of an asset is published on RabbitMQ once it is committed, on the topic exchange
+`api-fabriken.party-assets` with the routing key `asset.created`, `asset.updated` or `asset.deleted`. The message carries
+the whole asset, not only what changed:
+
+```json
+{
+  "eventType": "UPDATED",
+  "municipalityId": "2281",
+  "version": 4,
+  "occurredAt": "2026-11-03T14:12:09.123+01:00",
+  "asset": {
+    "id": "1c8f38a6-b492-4037-b7dc-de5bc6c629f0",
+    "assetId": "PRH-123456789",
+    "origin": "CASEDATA",
+    "partyId": "123e4567-e89b-12d3-a456-426614174000",
+    "type": "PERMIT",
+    "title": "Stadigvarande tillstånd för servering av alkohol",
+    "description": "Serveringstillstånd",
+    "status": "ACTIVE",
+    "issued": "2026-01-01",
+    "validTo": "2027-12-31"
+  }
+}
+```
+
+`version` is the counter behind the `ETag`. It grows with every write, drafts and attachments included, so a consumer can
+tell which of two events is newer even when they arrive out of order. A deletion carries the version the asset had.
+Drafts are published too, and a consumer that does not want them filters on `status`. Fields without a value are left
+out.
+
+A JPA entity listener on the asset turns each write into an event, so a new way of changing assets must go through the
+entity. An update or delete by query would bypass it. A change that is rolled back publishes nothing. An event is lost if
+the service stops between the commit and the publish, or if the broker does not take it, which is logged at ERROR.
+Publishing again recovers it:
+
+```bash
+curl -X 'POST' 'http://localhost:8080/2281/asset-events/republish'
+```
+
+This publishes every asset of the municipality as it is now, as `UPDATED` at its current version, and returns
+`204 No Content` once the broker has them all. A consumer that already has an asset at that version gets the same asset
+again. It is also how a new consumer is loaded the first time.
+
+The service never declares the exchange. It is declared in
+[rabbitmq-topology](https://github.com/Sundsvallskommun/rabbitmq-topology). With `dept44.rabbitmq.enabled` off, the
+default, nothing is published and the endpoint answers `503 Service Unavailable`.
+
 ## Configuration
 
 Configuration is crucial for the application to run successfully. Ensure all necessary settings are configured in
@@ -369,6 +419,24 @@ pr3import:
       client-id: some-client-id
       client-secret: some-client-secret
       grant-type: client_credentials
+```
+
+- **RabbitMQ:**
+
+```yaml
+dept44:
+  rabbitmq:
+    enabled: true
+spring:
+  rabbitmq:
+    host: rabbitmq_host
+    port: 5672
+    virtual-host: your_vhost
+    username: your_user
+    password: your_password
+integration:
+  asset-events:
+    exchange: api-fabriken.party-assets  # The default
 ```
 
 ### Database Initialization
