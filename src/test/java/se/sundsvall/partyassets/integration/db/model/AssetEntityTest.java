@@ -49,7 +49,6 @@ class AssetEntityTest {
 		final var attachments = List.of(AssetAttachmentEntity.create());
 		final var assetId = "assetId";
 		final var municipalityId = "municipalityId";
-		final var caseReferenceIds = List.of("entry");
 		final var created = OffsetDateTime.now().minusDays(1);
 		final var description = "description";
 		final var title = "title";
@@ -77,7 +76,6 @@ class AssetEntityTest {
 			.withAttachments(attachments)
 			.withAssetId(assetId)
 			.withMunicipalityId(municipalityId)
-			.withCaseReferenceIds(caseReferenceIds)
 			.withCreated(created)
 			.withDescription(description)
 			.withTitle(title)
@@ -102,7 +100,6 @@ class AssetEntityTest {
 		assertThat(bean.getAttachments()).isEqualTo(attachments);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
 		assertThat(bean.getMunicipalityId()).isEqualTo(municipalityId);
-		assertThat(bean.getCaseReferenceIds()).isEqualTo(caseReferenceIds);
 		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getTitle()).isEqualTo(title);

@@ -30,20 +30,6 @@ values
     -- Enterprise party, PRH-12
     ('cba6f0e5-e826-4690-8776-37c69d981a2a', 'other_key', 'other_value');
 
-insert into case_reference_id (asset_id, case_reference_id)
-values
-    -- Private party, PRH-1
-    ('5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'case_reference_1'),
-    ('5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'case_reference_2'),
-    -- Private party, PRH-2
-    ('945576d3-6e92-4118-ba33-53582d338ad3', 'case_reference_3'),
-    -- Private party, PRH-3 (draft)
-    ('1bdbb931-5c6f-4ffe-bfc9-d9e5bffe48a4', 'case_reference_5'),
-    -- Private party, PRH-4 (draft)
-    ('abd6596f-45a0-4912-89e4-8cdcea9a043a', 'case_reference_5'),
-    -- Enterprise party, PRH-11
-    ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'case_reference_4');
-
 insert into `status` (name, created, municipality_id)
 values ('BLOCKED', now(), '2281');
 

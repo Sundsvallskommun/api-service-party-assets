@@ -74,13 +74,6 @@ public class AssetEntity {
 	@Enumerated(STRING)
 	private PartyType partyType;
 
-	@ElementCollection(fetch = EAGER)
-	@CollectionTable(name = "case_reference_id", joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_case_reference_id_asset_id")), indexes = {
-		@Index(name = "idx_case_reference_id_asset_id", columnList = "asset_id")
-	})
-	@Column(name = "case_reference_id", nullable = false)
-	private List<String> caseReferenceIds;
-
 	@Column(name = "`type`", nullable = false)
 	private String type;
 
@@ -252,19 +245,6 @@ public class AssetEntity {
 
 	public AssetEntity withPartyType(final PartyType partyType) {
 		this.partyType = partyType;
-		return this;
-	}
-
-	public List<String> getCaseReferenceIds() {
-		return caseReferenceIds;
-	}
-
-	public void setCaseReferenceIds(final List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-	}
-
-	public AssetEntity withCaseReferenceIds(final List<String> caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
 		return this;
 	}
 
@@ -467,7 +447,7 @@ public class AssetEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(actor, additionalParameters, assetId, caseReferenceIds, created, description, title, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo,
+		return Objects.hash(actor, additionalParameters, assetId, created, description, title, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, replacesId, revision, status, statusReason, type, updated, validTo,
 			version);
 	}
 
@@ -483,7 +463,7 @@ public class AssetEntity {
 			return false;
 		}
 		AssetEntity other = (AssetEntity) obj;
-		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(caseReferenceIds, other.caseReferenceIds) && Objects.equals(created,
+		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(created,
 			other.created) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects
 				.equals(municipalityId,
 					other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && partyType == other.partyType && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision)
@@ -493,8 +473,7 @@ public class AssetEntity {
 	@Override
 	public String toString() {
 		return "AssetEntity [id=" + id + ", revision=" + revision + ", version=" + version + ", actor=" + actor + ", municipalityId=" + municipalityId + ", origin=" + origin + ", assetId=" + assetId + ", partyId=" + partyId + ", partyType=" + partyType
-			+ ", caseReferenceIds="
-			+ caseReferenceIds + ", type=" + type + ", issued="
+			+ ", type=" + type + ", issued="
 			+ issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters
 			+ ", jsonParameters="
 			+ jsonParameters

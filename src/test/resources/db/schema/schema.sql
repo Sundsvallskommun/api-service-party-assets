@@ -81,14 +81,8 @@
         `type` varchar(255),
         additional_parameters longtext,
         attachments longtext,
-        case_reference_ids longtext,
         json_parameters longtext,
         primary key (id)
-    ) engine=InnoDB;
-
-    create table case_reference_id (
-        asset_id varchar(255) not null,
-        case_reference_id varchar(255) not null
     ) engine=InnoDB;
 
     create table status (
@@ -120,9 +114,6 @@
     alter table if exists asset_revision 
        add constraint uq_asset_revision_asset_id_revision unique (asset_id, revision);
 
-    create index idx_case_reference_id_asset_id 
-       on case_reference_id (asset_id);
-
     create index idx_status_reason_status_name 
        on status_reason (status_name, municipality_id);
 
@@ -143,11 +134,6 @@
 
     alter table if exists asset_json_parameter 
        add constraint fk_asset_json_parameter_asset_id 
-       foreign key (asset_id) 
-       references asset (id);
-
-    alter table if exists case_reference_id 
-       add constraint fk_case_reference_id_asset_id 
        foreign key (asset_id) 
        references asset (id);
 

@@ -29,7 +29,6 @@ public final class TestFactory {
 			.withAdditionalParameters(new HashMap<>(Map.of("key", "value")))
 			.withAssetId("assetId")
 			.withMunicipalityId("municipalityId")
-			.withCaseReferenceIds(new ArrayList<>(List.of("caseReferenceId")))
 			.withCreated(OffsetDateTime.now().minusDays(7))
 			.withDescription("description")
 			.withTitle("title")

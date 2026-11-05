@@ -54,7 +54,6 @@ public final class AssetRevisionMapper {
 			.withDescription(asset.getDescription())
 			.withTitle(asset.getTitle())
 			.withAdditionalParameters(toJson(ofNullable(asset.getAdditionalParameters()).orElse(emptyMap())))
-			.withCaseReferenceIds(toJson(ofNullable(asset.getCaseReferenceIds()).orElse(emptyList())))
 			.withJsonParameters(toJson(toAssetJsonParameterList(asset.getJsonParameters())))
 			.withAttachments(toJson(toAssetAttachments(presentAttachments(asset.getAttachments()))));
 	}
@@ -142,7 +141,7 @@ public final class AssetRevisionMapper {
 	private static Status toStatus(final String value) {
 		try {
 			return ofNullable(value).map(Status::valueOf).orElse(null);
-		} catch (final IllegalArgumentException e) {
+		} catch (final IllegalArgumentException _) {
 			return null;
 		}
 	}

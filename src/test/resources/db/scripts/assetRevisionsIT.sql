@@ -10,13 +10,13 @@ values
 
 insert into asset_revision (id, asset_id, revision, actor, recorded_at, municipality_id, origin, external_asset_id,
                             party_id, party_type, `type`, issued, valid_to, replaces_id, status, status_reason,
-                            description, additional_parameters, case_reference_ids, json_parameters, attachments)
+                            description, additional_parameters, json_parameters, attachments)
 values
     ('a0000000-0000-0000-0000-000000000000', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 0, null,
      '2023-02-01 10:00:00', '2281', 'CASEDATA', 'PRH-0000000001', 'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE',
      'PERMIT', '2023-01-01', '2033-12-31', null, 'ACTIVE', null, 'Serveringstillstånd',
-     '{}', '[]', '[]', '[]'),
+     '{}', '[]', '[]'),
     ('a0000000-0000-0000-0000-000000000001', 'e84b72ee-1a34-44b5-b8f6-2e0e42e99010', 1, 'second.actor',
      '2023-03-01 10:00:00', '2281', 'CASEDATA', 'PRH-0000000001', 'f2ef7992-7b01-4185-a7f8-cf97dc7f438f', 'PRIVATE',
      'PERMIT', '2023-01-01', '2033-12-31', null, 'ACTIVE', 'Förnyad', 'Serveringstillstånd',
-     '{"key":"value"}', '[]', '[]', '[]');
+     '{"key":"value"}', '[]', '[]');
