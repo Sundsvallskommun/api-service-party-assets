@@ -59,7 +59,6 @@ class AssetRevisionMapperTest {
 		final var revision = toRevision(entity);
 
 		assertThatJson(revision.getAdditionalParameters()).isEqualTo("{\"key\":\"value\"}");
-		assertThatJson(revision.getCaseReferenceIds()).isEqualTo("[\"caseReferenceId\"]");
 		assertThatJson(revision.getJsonParameters()).isEqualTo("[{\"key\":\"key1\",\"schemaId\":\"2281_person_schema_1.0.0\",\"value\":{}}]");
 		assertThatJson(revision.getAttachments()).isEqualTo("[]");
 	}
@@ -105,7 +104,6 @@ class AssetRevisionMapperTest {
 		final var revision = toRevision(entity);
 
 		assertThat(revision.getAdditionalParameters()).isEqualTo("{}");
-		assertThat(revision.getCaseReferenceIds()).isEqualTo("[]");
 		assertThat(revision.getJsonParameters()).isEqualTo("[]");
 		assertThat(revision.getAttachments()).isEqualTo("[]");
 		assertThat(revision.getStatus()).isNull();

@@ -42,16 +42,6 @@ values
     -- Enterprise party, PRH-12
     ('cba6f0e5-e826-4690-8776-37c69d981a2a', 'other_key', 'other_value');
 
-insert into case_reference_id (asset_id, case_reference_id)
-values
-    -- Private party, PRH-1
-    ('5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'case_reference_1'),
-    ('5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'case_reference_2'),
-    -- Private party, PRH-2
-    ('945576d3-6e92-4118-ba33-53582d338ad3', 'case_reference_3'),
-    -- Enterprise party, PRH-11
-    ('7c145278-da81-49b0-a011-0f8f6821e3a0', 'case_reference_4');
-
 insert into asset_json_parameter (id, asset_id, parameter_key, parameter_value, schema_id)
 values
     ('d6b3e29a-e575-47cc-90ec-22f4ffc05ef1', '5d0aa6a4-e7ee-4dd4-9c3d-2aaeb689a884', 'first_key', '{"firstName":"John", "lastName":"Doe"}', '2281_person_schema_1.0.0'),

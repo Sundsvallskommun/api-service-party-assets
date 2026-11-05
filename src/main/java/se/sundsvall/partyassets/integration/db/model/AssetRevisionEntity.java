@@ -86,9 +86,6 @@ public class AssetRevisionEntity {
 	@Column(name = "additional_parameters", length = LONG32)
 	private String additionalParameters;
 
-	@Column(name = "case_reference_ids", length = LONG32)
-	private String caseReferenceIds;
-
 	@Column(name = "json_parameters", length = LONG32)
 	private String jsonParameters;
 
@@ -351,19 +348,6 @@ public class AssetRevisionEntity {
 		return this;
 	}
 
-	public String getCaseReferenceIds() {
-		return caseReferenceIds;
-	}
-
-	public void setCaseReferenceIds(final String caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-	}
-
-	public AssetRevisionEntity withCaseReferenceIds(final String caseReferenceIds) {
-		this.caseReferenceIds = caseReferenceIds;
-		return this;
-	}
-
 	public String getJsonParameters() {
 		return jsonParameters;
 	}
@@ -392,7 +376,7 @@ public class AssetRevisionEntity {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(actor, additionalParameters, assetId, attachments, caseReferenceIds, description, title, externalAssetId, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, recordedAt, replacesId, revision, status,
+		return Objects.hash(actor, additionalParameters, assetId, attachments, description, title, externalAssetId, id, issued, jsonParameters, municipalityId, origin, partyId, partyType, recordedAt, replacesId, revision, status,
 			statusReason, type, validTo);
 	}
 
@@ -408,8 +392,8 @@ public class AssetRevisionEntity {
 			return false;
 		}
 		final AssetRevisionEntity other = (AssetRevisionEntity) obj;
-		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(attachments, other.attachments) && Objects.equals(caseReferenceIds,
-			other.caseReferenceIds) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(externalAssetId, other.externalAssetId) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued)
+		return Objects.equals(actor, other.actor) && Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(attachments, other.attachments) && Objects.equals(description,
+			other.description) && Objects.equals(title, other.title) && Objects.equals(externalAssetId, other.externalAssetId) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued)
 			&& Objects.equals(jsonParameters,
 				other.jsonParameters) && Objects.equals(municipalityId, other.municipalityId) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId) && Objects.equals(partyType, other.partyType) && Objects.equals(recordedAt,
 					other.recordedAt) && Objects.equals(replacesId, other.replacesId) && Objects.equals(revision, other.revision) && Objects.equals(status, other.status) && Objects.equals(statusReason, other.statusReason) && Objects.equals(type,
@@ -421,6 +405,6 @@ public class AssetRevisionEntity {
 		return "AssetRevisionEntity [id=" + id + ", assetId=" + assetId + ", revision=" + revision + ", actor=" + actor + ", recordedAt=" + recordedAt + ", municipalityId=" + municipalityId + ", origin=" + origin + ", externalAssetId=" + externalAssetId
 			+ ", partyId=" + partyId + ", partyType=" + partyType + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", replacesId=" + replacesId + ", status=" + status + ", statusReason=" + statusReason + ", description=" + description
 			+ ", title=" + title
-			+ ", additionalParameters=" + additionalParameters + ", caseReferenceIds=" + caseReferenceIds + ", jsonParameters=" + jsonParameters + ", attachments=" + attachments + "]";
+			+ ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", attachments=" + attachments + "]";
 	}
 }

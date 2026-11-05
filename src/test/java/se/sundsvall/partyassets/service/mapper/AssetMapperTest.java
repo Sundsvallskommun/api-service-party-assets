@@ -241,7 +241,6 @@ class AssetMapperTest {
 		assertThat(copy.getStatus()).isEqualTo(Status.DRAFT);
 		assertThat(copy.getAdditionalParameters()).isEqualTo(original.getAdditionalParameters());
 		assertThat(copy.getAssetId()).isEqualTo(original.getAssetId());
-		assertThat(copy.getCaseReferenceIds()).isEqualTo(original.getCaseReferenceIds());
 		assertThat(copy.getDescription()).isEqualTo(original.getDescription());
 		assertThat(copy.getTitle()).isEqualTo(original.getTitle());
 		assertThat(copy.getIssued()).isEqualTo(original.getIssued());

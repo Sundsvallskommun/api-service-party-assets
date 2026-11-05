@@ -54,7 +54,6 @@ class AssetRevisionRepositoryTest {
 			assertThat(revision.getExternalAssetId()).isEqualTo("PRH-0000000001");
 			assertThat(revision.getStatusReason()).isEqualTo("Stöldanmäld");
 			assertThat(revision.getAdditionalParameters()).isEqualTo("{\"foo\":\"bar\"}");
-			assertThat(revision.getCaseReferenceIds()).isEqualTo("[\"case-1\"]");
 		});
 	}
 
