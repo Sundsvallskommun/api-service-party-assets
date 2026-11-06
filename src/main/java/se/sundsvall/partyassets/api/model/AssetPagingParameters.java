@@ -62,14 +62,21 @@ public class AssetPagingParameters extends AbstractParameterPagingAndSortingBase
 	 * given. The sort always ends with {@code id} in the requested direction, so that assets with equal values for the
 	 * requested sort properties keep the same order from one page to the next.
 	 *
-	 * @return the requested page
+	 * @return                       the requested page
+	 * @throws IllegalStateException if the page is less than 1
 	 */
 	public Pageable toPageable() {
+		// The validation of the request already rejects such a page, but checking it here keeps page - 1 from underflowing
+		if (page < 1) {
+			throw new IllegalStateException("The page must be at least 1, but is " + page);
+		}
+		final var pageIndex = page - 1;
+
 		final var direction = requireNonNullElse(sortDirection, DEFAULT_DIRECTION);
 		final var requestedSort = sort();
 		final var sort = requestedSort.isSorted() ? requestedSort : Sort.by(direction, DEFAULT_SORT_PROPERTY);
 		final var stableSort = sort.getOrderFor(TIEBREAKER_SORT_PROPERTY) == null ? sort.and(Sort.by(direction, TIEBREAKER_SORT_PROPERTY)) : sort;
-		return PageRequest.of(page - 1, limit, stableSort);
+		return PageRequest.of(pageIndex, limit, stableSort);
 	}
 
 	@Override

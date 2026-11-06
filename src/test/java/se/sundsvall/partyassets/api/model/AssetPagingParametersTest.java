@@ -2,6 +2,8 @@ package se.sundsvall.partyassets.api.model;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -11,6 +13,7 @@ import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanHashCode;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanToString;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidGettersAndSetters;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -80,6 +83,18 @@ class AssetPagingParametersTest {
 			.toPageable();
 
 		assertThat(pageable.getSort()).isEqualTo(Sort.by(desc("id")));
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {
+		0, -1, Integer.MIN_VALUE
+	})
+	void toPageableWithPageLessThanOne(final int page) {
+		final var bean = AssetPagingParameters.create().withPage(page);
+
+		assertThatIllegalStateException()
+			.isThrownBy(bean::toPageable)
+			.withMessage("The page must be at least 1, but is " + page);
 	}
 
 	@Test
