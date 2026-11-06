@@ -16,6 +16,7 @@ class AssetMutationGuardTest {
 
 	private static final Set<String> ASSET_SERVICE_METHODS = Set.of(
 		"getAssets(String,AssetSearchRequest)",
+		"searchAssets(String,Specification,Pageable)",
 		"getDraftAssets(String,AssetSearchRequest)",
 		"getAsset(String,String)",
 		"createAsset(String,AssetCreateRequest,String)",

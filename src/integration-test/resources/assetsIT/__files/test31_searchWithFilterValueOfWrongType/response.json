@@ -1,0 +1,15 @@
+{
+	"type": "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
+	"status": 400,
+	"title": "Constraint Violation",
+	"violations": [
+		{
+			"field": "searchAssets.filter",
+			"message": "'NOT_A_STATUS' is not a valid value for status."
+		},
+		{
+			"field": "searchAssets.filter",
+			"message": "'tomorrow' is not a valid value for validTo."
+		}
+	]
+}

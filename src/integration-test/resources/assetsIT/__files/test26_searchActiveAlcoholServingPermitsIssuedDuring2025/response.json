@@ -1,0 +1,64 @@
+{
+	"assets": [
+		{
+			"id": "b1000000-0000-0000-0000-000000000001",
+			"assetId": "AOT-0000000001",
+			"origin": "SUPPORTMANAGEMENT",
+			"partyId": "b1000000-0000-0000-0000-000000000091",
+			"type": "AlcoholServingPermit",
+			"issued": "2025-05-01",
+			"status": "ACTIVE",
+			"description": "Serveringstillstånd",
+			"title": "Stadigvarande tillstånd för servering av alkohol",
+			"additionalParameters": {
+				"errandId": "2a4c6e80-1b3d-4f5a-8c7e-9d0f1a2b3c4d"
+			},
+			"jsonParameters": [
+				{
+					"key": "aot_alcohol_party_asset",
+					"value": {
+						"beverages": [
+							"WINE",
+							"STRONG_BEER"
+						],
+						"additionalScopes": [
+							"OUTDOOR_SERVING"
+						]
+					},
+					"schemaId": "2281_aot_alcohol_party_asset_0.1"
+				}
+			],
+			"created": "2025-05-01T10:00:00+02:00"
+		},
+		{
+			"id": "b1000000-0000-0000-0000-000000000002",
+			"assetId": "AOT-0000000002",
+			"origin": "SUPPORTMANAGEMENT",
+			"partyId": "b1000000-0000-0000-0000-000000000092",
+			"type": "AlcoholServingPermit",
+			"issued": "2025-06-01",
+			"validTo": "2026-08-31",
+			"status": "ACTIVE",
+			"description": "Serveringstillstånd",
+			"title": "Tillfälligt tillstånd för servering av alkohol",
+			"additionalParameters": {
+				"errandId": "7e1d3f5a-2b4c-4d6e-8f0a-1b2c3d4e5f6a"
+			},
+			"jsonParameters": [],
+			"created": "2025-06-01T10:00:00+02:00",
+			"updated": "2025-06-15T08:30:00+02:00"
+		}
+	],
+	"_meta": {
+		"page": 1,
+		"limit": 100,
+		"count": 2,
+		"totalRecords": 2,
+		"totalPages": 1,
+		"sortBy": [
+			"created",
+			"id"
+		],
+		"sortDirection": "ASC"
+	}
+}

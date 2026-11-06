@@ -99,11 +99,20 @@
         status_name varchar(255) not null
     ) engine=InnoDB;
 
-    create index idx_additional_parameter_asset_id 
-       on additional_parameter (asset_id);
+    create index idx_additional_parameter_key_value 
+       on additional_parameter (parameter_key, parameter_value);
 
-    create index idx_asset_municipality_id 
-       on asset (municipality_id);
+    create index idx_asset_municipality_id_party_id 
+       on asset (municipality_id, party_id);
+
+    create index idx_asset_municipality_id_asset_id 
+       on asset (municipality_id, asset_id);
+
+    create index idx_asset_municipality_id_created 
+       on asset (municipality_id, created);
+
+    create index idx_asset_status_valid_to 
+       on asset (status, valid_to);
 
     create index idx_asset_attachment_asset_id_municipality_id 
        on asset_attachment (asset_id, municipality_id);

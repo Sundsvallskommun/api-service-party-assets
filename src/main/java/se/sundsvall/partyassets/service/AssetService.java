@@ -9,15 +9,24 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.jspecify.annotations.NonNull;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.support.Relation;
-import se.sundsvall.partyassets.api.model.*;
+import se.sundsvall.partyassets.api.model.Asset;
+import se.sundsvall.partyassets.api.model.AssetCreateRequest;
+import se.sundsvall.partyassets.api.model.AssetPagedResponse;
+import se.sundsvall.partyassets.api.model.AssetSearchRequest;
+import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.AssetRepository;
 import se.sundsvall.partyassets.integration.db.AssetRevisionRepository;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
+import se.sundsvall.partyassets.integration.db.specification.InvalidFilterException;
 import se.sundsvall.partyassets.integration.party.PartyTypeProvider;
 import se.sundsvall.partyassets.integration.relation.RelationClient;
 import se.sundsvall.partyassets.service.mapper.AssetMapper;
@@ -34,8 +43,11 @@ import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
-import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecificationExcludingDraftAsssets;
+import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.excludingDrafts;
+import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.withFilter;
+import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.withMunicipalityId;
 import static se.sundsvall.partyassets.service.AssetRevisions.advanceRevision;
+import static se.sundsvall.partyassets.service.mapper.AssetMapper.toAssetPagedResponse;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toCopyEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.toEntity;
 import static se.sundsvall.partyassets.service.mapper.AssetMapper.updateEntity;
@@ -65,10 +77,19 @@ public class AssetService {
 	}
 
 	public List<Asset> getAssets(final String municipalityId, final AssetSearchRequest request) {
-		return repository.findAll(createAssetSpecification(municipalityId, request).and(createAssetSpecificationExcludingDraftAsssets()))
+		return repository.findAll(createAssetSpecification(municipalityId, request).and(excludingDrafts()))
 			.stream()
 			.map(AssetMapper::toAsset)
 			.toList();
+	}
+
+	/**
+	 * Returns a page of the assets in the municipality that match the filter, whatever their status. Throws
+	 * {@link InvalidFilterException} if the filter cannot be applied to the assets.
+	 */
+	@Transactional(readOnly = true)
+	public AssetPagedResponse searchAssets(final String municipalityId, final Specification<AssetEntity> filter, final Pageable pageable) {
+		return toAssetPagedResponse(repository.findAll(withMunicipalityId(municipalityId).and(withFilter(filter)), pageable));
 	}
 
 	public List<Asset> getDraftAssets(final String municipalityId, final AssetSearchRequest request) {

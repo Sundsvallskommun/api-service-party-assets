@@ -1,0 +1,11 @@
+{
+	"type": "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
+	"status": 400,
+	"title": "Constraint Violation",
+	"violations": [
+		{
+			"field": "searchAssets.filter",
+			"message": "The operator ~ cannot be used on issued."
+		}
+	]
+}

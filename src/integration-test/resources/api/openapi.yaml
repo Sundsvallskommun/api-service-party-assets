@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.8"
+  version: "6.9"
 servers:
 - url: http://localhost:51822
   description: Generated server url
@@ -1240,6 +1240,98 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+  /{municipalityId}/assets/search:
+    get:
+      tags:
+      - Assets
+      summary: Search assets
+      description: "Returns a page of the assets in the municipality that match the\
+        \ filter, whatever their status (including DRAFT). The filter refers to the\
+        \ attribute names of the asset model. Paging is one-based, and the assets\
+        \ are sorted by created unless sortBy is given."
+      operationId: searchAssets
+      parameters:
+      - name: municipalityId
+        in: path
+        description: Municipality ID
+        required: true
+        schema:
+          type: string
+        example: 2281
+      - name: filter
+        in: query
+        description: "Part of the [spring-filter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax)\
+          \ syntax: conditions with an attribute of the asset model on the left and\
+          \ quoted values on the right, using :, !, >, >:, <, <:, between, in, not\
+          \ in, is null and is not null, ~ and ~~ with one pattern on text attributes,\
+          \ is empty and is not empty on additionalParameters and jsonParameters,\
+          \ and exists(...), combined with and, or, not and parentheses. Dates are\
+          \ written in ISO 8601, such as 2027-01-01 and 2026-11-01T00:00:00+01:00."
+        required: false
+        schema:
+          type: string
+        example: type:'AlcoholServingPermit' and status:'ACTIVE' and validTo < '2027-01-01'
+      - name: sortBy
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+            description: The properties to sort on
+            examples:
+            - propertyName
+      - name: sortDirection
+        in: query
+        description: The sort order direction
+        required: false
+        schema:
+          $ref: "#/components/schemas/Direction"
+      - name: page
+        in: query
+        description: Page number
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 1
+          description: Page number
+          examples:
+          - 1
+          minimum: 1
+      - name: limit
+        in: query
+        description: Result size per page. Maximum allowed value is dynamically configured
+        required: false
+        schema:
+          type: integer
+          format: int32
+          description: Result size per page. Maximum allowed value is dynamically
+            configured
+          examples:
+          - 15
+          minimum: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetPagedResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                oneOf:
+                - $ref: "#/components/schemas/Problem"
+                - $ref: "#/components/schemas/ConstraintViolationProblem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
   /api-docs:
     get:
       tags:
@@ -1277,9 +1369,9 @@ components:
         type:
           type: string
           format: uri
-        title:
-          type: string
         detail:
+          type: string
+        title:
           type: string
         status:
           type: integer
@@ -1427,32 +1519,26 @@ components:
           type: boolean
         container:
           type: boolean
+        number:
+          type: boolean
+        double:
+          type: boolean
         long:
           type: boolean
         boolean:
           type: boolean
-        int:
-          type: boolean
-        binary:
-          type: boolean
-        string:
-          type: boolean
-        double:
-          type: boolean
-        pojo:
-          type: boolean
-        short:
-          type: boolean
         textual:
           type: boolean
           deprecated: true
-        bigInteger:
+        binary:
           type: boolean
-        integralNumber:
+        short:
           type: boolean
-        floatingPointNumber:
+        pojo:
           type: boolean
-        missingNode:
+        int:
+          type: boolean
+        string:
           type: boolean
         nodeType:
           type: string
@@ -1466,11 +1552,17 @@ components:
           - OBJECT
           - POJO
           - STRING
+        floatingPointNumber:
+          type: boolean
+        bigInteger:
+          type: boolean
         valueNode:
           type: boolean
         bigDecimal:
           type: boolean
-        number:
+        integralNumber:
+          type: boolean
+        missingNode:
           type: boolean
         embeddedValue:
           type: boolean
@@ -1728,6 +1820,20 @@ components:
           description: Id of the asset this asset replaces
           examples:
           - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+        created:
+          type: string
+          format: date-time
+          description: When the asset was created
+          examples:
+          - 2021-01-01T12:00:00+01:00
+          readOnly: true
+        updated:
+          type: string
+          format: date-time
+          description: When the asset was last updated
+          examples:
+          - 2021-06-01T12:00:00+02:00
+          readOnly: true
     AssetRevision:
       type: object
       description: An asset as it looked at one point in its history. The newest revision
@@ -1854,4 +1960,76 @@ components:
           items:
             $ref: "#/components/schemas/AssetAttachment"
           readOnly: true
+    Direction:
+      type: string
+      description: The sort order direction
+      enum:
+      - ASC
+      - DESC
+      examples:
+      - ASC
+    AssetPagedResponse:
+      type: object
+      description: Paged asset response
+      properties:
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Asset"
+            readOnly: true
+        _meta:
+          $ref: "#/components/schemas/PagingAndSortingMetaData"
+          readOnly: true
+    PagingAndSortingMetaData:
+      type: object
+      description: PagingAndSortingMetaData model
+      properties:
+        page:
+          type: integer
+          format: int32
+          description: Current page
+          examples:
+          - 5
+          readOnly: true
+        limit:
+          type: integer
+          format: int32
+          description: Displayed objects per page
+          examples:
+          - 20
+          readOnly: true
+        count:
+          type: integer
+          format: int32
+          description: Displayed objects on current page
+          examples:
+          - 13
+          readOnly: true
+        totalRecords:
+          type: integer
+          format: int64
+          description: Total amount of hits based on provided search parameters
+          examples:
+          - 98
+          readOnly: true
+        totalPages:
+          type: integer
+          format: int32
+          description: Total amount of pages based on provided search parameters
+          examples:
+          - 23
+          readOnly: true
+        sortBy:
+          type: array
+          items:
+            type: string
+            description: The properties to sort by
+            examples:
+            - property
+            readOnly: true
+        sortDirection:
+          $ref: "#/components/schemas/Direction"
+          description: The sort order direction
+          examples:
+          - ASC
   securitySchemes: {}

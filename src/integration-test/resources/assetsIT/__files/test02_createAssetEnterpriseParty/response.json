@@ -1,5 +1,6 @@
 {
 	"id": "${json-unit.regex}[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+	"created": "${json-unit.any-string}",
 	"assetId": "CON-0000000055",
 	"partyId": "b566819b-9133-4ba6-9ce2-f12aafbc047b",
 	"type": "PERMIT",

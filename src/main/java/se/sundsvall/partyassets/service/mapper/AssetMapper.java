@@ -3,10 +3,12 @@ package se.sundsvall.partyassets.service.mapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import org.springframework.data.domain.Page;
+import se.sundsvall.dept44.models.api.paging.PagingAndSortingMetaData;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
+import se.sundsvall.partyassets.api.model.AssetPagedResponse;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.Status;
@@ -32,6 +34,7 @@ public final class AssetMapper {
 		return Asset.create()
 			.withAdditionalParameters(entity.getAdditionalParameters())
 			.withAssetId(entity.getAssetId())
+			.withCreated(entity.getCreated())
 			.withDescription(entity.getDescription())
 			.withTitle(entity.getTitle())
 			.withId(entity.getId())
@@ -43,7 +46,14 @@ public final class AssetMapper {
 			.withStatus(entity.getStatus())
 			.withStatusReason(entity.getStatusReason())
 			.withType(entity.getType())
+			.withUpdated(entity.getUpdated())
 			.withValidTo(entity.getValidTo());
+	}
+
+	public static AssetPagedResponse toAssetPagedResponse(final Page<AssetEntity> page) {
+		return AssetPagedResponse.create()
+			.withAssets(page.map(AssetMapper::toAsset).getContent())
+			.withMetaData(PagingAndSortingMetaData.create().withPageData(page));
 	}
 
 	public static AssetEntity toCopyEntity(final AssetEntity original) {
@@ -107,32 +117,31 @@ public final class AssetMapper {
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final AssetUpdateRequest request) {
-		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
-		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
+		ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
+		ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
 		if (Boolean.TRUE.equals(request.getIndefinitely())) {
 			entity.setValidTo(null);
 		} else {
-			Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+			ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		}
-		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
-		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
-		Optional.ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
+		ofNullable(request.getStatus()).ifPresent(entity::setStatus);
+		ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
+		ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
 		return entity;
 	}
 
 	public static AssetEntity updateEntity(final AssetEntity entity, final DraftAssetUpdateRequest request) {
-		Optional.ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
-		Optional.ofNullable(request.getIssued()).ifPresent(entity::setIssued);
-		Optional.ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
+		ofNullable(request.getAdditionalParameters()).ifPresent(entity::setAdditionalParameters);
+		ofNullable(request.getIssued()).ifPresent(entity::setIssued);
+		ofNullable(request.getJsonParameters()).ifPresent(jsonParameters -> entity.addOrReplaceJsonParameters(toAssetJsonParameterEntityList(jsonParameters)));
 		if (Boolean.TRUE.equals(request.getIndefinitely())) {
 			entity.setValidTo(null);
 		} else {
-			Optional.ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
+			ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		}
-		Optional.ofNullable(request.getStatus()).ifPresent(entity::setStatus);
-		Optional.ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
-		// Why: a blank title clears it, while a missing one leaves it as it is.
-		Optional.ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
+		ofNullable(request.getStatus()).ifPresent(entity::setStatus);
+		ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
+		ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
 		return entity;
 	}
 
@@ -144,7 +153,7 @@ public final class AssetMapper {
 	}
 
 	private static AssetJsonParameter toAssetJsonParameter(AssetJsonParameterEntity assetJsonParameterEntity) {
-		return Optional.ofNullable(assetJsonParameterEntity)
+		return ofNullable(assetJsonParameterEntity)
 			.map(o -> AssetJsonParameter.create()
 				.withKey(o.getKey())
 				.withSchemaId(o.getSchemaId())
@@ -164,10 +173,10 @@ public final class AssetMapper {
 	}
 
 	private static AssetJsonParameterEntity toAssetJsonParameterEntity(AssetJsonParameter assetJsonParameter) {
-		return Optional.ofNullable(assetJsonParameter)
+		return ofNullable(assetJsonParameter)
 			.map(o -> AssetJsonParameterEntity.create()
 				.withKey(o.getKey())
-				.withSchemaId(assetJsonParameter.getSchemaId())
+				.withSchemaId(o.getSchemaId())
 				.withValue(o.getValue() != null ? o.getValue().toString() : null))
 			.orElse(null);
 	}

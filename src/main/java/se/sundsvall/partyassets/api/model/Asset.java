@@ -2,9 +2,12 @@ package se.sundsvall.partyassets.api.model;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static io.swagger.v3.oas.annotations.media.Schema.AccessMode.READ_ONLY;
 
 public class Asset {
 
@@ -49,6 +52,12 @@ public class Asset {
 
 	@Schema(description = "Id of the asset this asset replaces", examples = "1c8f38a6-b492-4037-b7dc-de5bc6c629f0")
 	private String replacesId;
+
+	@Schema(description = "When the asset was created", examples = "2021-01-01T12:00:00+01:00", accessMode = READ_ONLY)
+	private OffsetDateTime created;
+
+	@Schema(description = "When the asset was last updated", examples = "2021-06-01T12:00:00+02:00", accessMode = READ_ONLY)
+	private OffsetDateTime updated;
 
 	public static Asset create() {
 		return new Asset();
@@ -236,9 +245,35 @@ public class Asset {
 		return this;
 	}
 
+	public OffsetDateTime getCreated() {
+		return created;
+	}
+
+	public void setCreated(OffsetDateTime created) {
+		this.created = created;
+	}
+
+	public Asset withCreated(OffsetDateTime created) {
+		this.created = created;
+		return this;
+	}
+
+	public OffsetDateTime getUpdated() {
+		return updated;
+	}
+
+	public void setUpdated(OffsetDateTime updated) {
+		this.updated = updated;
+	}
+
+	public Asset withUpdated(OffsetDateTime updated) {
+		this.updated = updated;
+		return this;
+	}
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(additionalParameters, assetId, description, title, id, issued, jsonParameters, origin, partyId, replacesId, status, statusReason, type, validTo);
+		return Objects.hash(additionalParameters, assetId, created, description, title, id, issued, jsonParameters, origin, partyId, replacesId, status, statusReason, type, updated, validTo);
 	}
 
 	@Override
@@ -253,15 +288,16 @@ public class Asset {
 			return false;
 		}
 		Asset other = (Asset) obj;
-		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(description, other.description) && Objects.equals(title, other.title) && Objects.equals(id,
-			other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId)
+		return Objects.equals(additionalParameters, other.additionalParameters) && Objects.equals(assetId, other.assetId) && Objects.equals(created, other.created) && Objects.equals(description, other.description) && Objects.equals(title,
+			other.title) && Objects.equals(id, other.id) && Objects.equals(issued, other.issued) && Objects.equals(jsonParameters, other.jsonParameters) && Objects.equals(origin, other.origin) && Objects.equals(partyId, other.partyId)
 			&& Objects.equals(replacesId, other.replacesId) && status == other.status && Objects.equals(statusReason, other.statusReason) && Objects.equals(type, other.type)
-			&& Objects.equals(validTo, other.validTo);
+			&& Objects.equals(updated, other.updated) && Objects.equals(validTo, other.validTo);
 	}
 
 	@Override
 	public String toString() {
 		return "Asset [id=" + id + ", assetId=" + assetId + ", origin=" + origin + ", partyId=" + partyId + ", type=" + type + ", issued=" + issued + ", validTo=" + validTo + ", status=" + status
-			+ ", statusReason=" + statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId + "]";
+			+ ", statusReason=" + statusReason + ", description=" + description + ", title=" + title + ", additionalParameters=" + additionalParameters + ", jsonParameters=" + jsonParameters + ", replacesId=" + replacesId
+			+ ", created=" + created + ", updated=" + updated + "]";
 	}
 }
