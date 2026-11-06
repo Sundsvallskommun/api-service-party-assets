@@ -288,7 +288,7 @@ class ValidAssetFilterConstraintValidatorTest {
 			.forEach(field -> expected.put(field.getName(), field.getType()));
 
 		assertThat(TYPED_ATTRIBUTES).isEqualTo(expected);
-		assertThat(VALID_VALUES).containsOnlyKeys(TYPED_ATTRIBUTES.keySet());
+		assertThat(TYPED_ATTRIBUTES.keySet()).containsExactlyInAnyOrderElementsOf(VALID_VALUES.keySet());
 	}
 
 	private static Stream<String> filterableAttributes() {
