@@ -1,5 +1,6 @@
 {
 	"id": "${json-unit.regex}[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+	"created": "${json-unit.any-string}",
 	"assetId": "CON-0000000003",
 	"origin": "MAZEDATA",
 	"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",

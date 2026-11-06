@@ -1,0 +1,5 @@
+{
+	"status": 400,
+	"title": "Invalid Filter Content",
+	"detail": "${json-unit.any-string}"
+}

@@ -1,0 +1,11 @@
+{
+	"type": "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
+	"status": 400,
+	"title": "Constraint Violation",
+	"violations": [
+		{
+			"field": "searchAssets.filter",
+			"message": "The attributes [actor] are not filterable. Filterable attributes are [additionalParameters, additionalParameters.key, additionalParameters.value, assetId, created, description, id, issued, jsonParameters, jsonParameters.key, jsonParameters.schemaId, jsonParameters.value, origin, partyId, replacesId, status, statusReason, title, type, updated, validTo]."
+		}
+	]
+}

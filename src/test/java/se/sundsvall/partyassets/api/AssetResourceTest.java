@@ -1,16 +1,28 @@
 package se.sundsvall.partyassets.api;
 
+import com.turkraft.springfilter.converter.FilterSpecification;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import se.sundsvall.dept44.models.api.paging.PagingAndSortingMetaData;
 import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.dept44.problem.violations.Violation;
@@ -18,8 +30,10 @@ import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
+import se.sundsvall.partyassets.api.model.AssetPagedResponse;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.Status;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.service.AssetService;
 import se.sundsvall.partyassets.service.JsonSchemaValidationService;
 import se.sundsvall.partyassets.service.StatusService;
@@ -29,6 +43,7 @@ import tools.jackson.databind.JsonNode;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,8 +54,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.data.domain.Sort.Order.asc;
+import static org.springframework.data.domain.Sort.Order.desc;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
 
 @ActiveProfiles("junit")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
@@ -53,6 +71,7 @@ class AssetResourceTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
 	private static final String PATH = MUNICIPALITY_ID + "/assets";
+	private static final String SEARCH_PATH = "/" + MUNICIPALITY_ID + "/assets/search";
 	private static final String INVALID = "#invalid#";
 
 	@MockitoBean
@@ -149,6 +168,232 @@ class AssetResourceTest {
 		assertThat(response.getViolations())
 			.extracting(Violation::field, Violation::message)
 			.containsExactly(tuple("getAssets.municipalityId", "not a valid municipality ID"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithDefaults() {
+		// Arrange
+		final var response = AssetPagedResponse.create()
+			.withAssets(List.of(TestFactory.getAsset()))
+			.withMetaData(PagingAndSortingMetaData.create().withPage(1).withLimit(100).withCount(1).withTotalRecords(1).withTotalPages(1));
+
+		when(assetServiceMock.searchAssets(eq(MUNICIPALITY_ID), any(), any())).thenReturn(response);
+
+		// Act
+		final var result = webTestClient.get()
+			.uri(SEARCH_PATH)
+			.exchange()
+			.expectStatus().isOk()
+			.expectHeader().contentType(APPLICATION_JSON)
+			.expectBody(AssetPagedResponse.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		final ArgumentCaptor<Specification<AssetEntity>> filterCaptor = ArgumentCaptor.captor();
+		assertThat(result).usingRecursiveComparison().isEqualTo(response);
+		verify(assetServiceMock).searchAssets(eq(MUNICIPALITY_ID), filterCaptor.capture(), eq(PageRequest.of(0, 100, Sort.by(asc("created"), asc("id")))));
+		assertThat(filterCaptor.getValue()).isInstanceOfSatisfying(FilterSpecification.class, filter -> assertThat(filter.getFilter()).isNull());
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithFilterPagingAndSorting() {
+		// Arrange
+		when(assetServiceMock.searchAssets(eq(MUNICIPALITY_ID), any(), any())).thenReturn(AssetPagedResponse.create());
+
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.queryParam("page", 2)
+				.queryParam("limit", 10)
+				.queryParam("sortBy", "validTo", "title")
+				.queryParam("sortDirection", "DESC")
+				.build("type:'AlcoholServingPermit' and status:'ACTIVE'"))
+			.exchange()
+			.expectStatus().isOk();
+
+		// Assert
+		final ArgumentCaptor<Specification<AssetEntity>> filterCaptor = ArgumentCaptor.captor();
+		verify(assetServiceMock).searchAssets(eq(MUNICIPALITY_ID), filterCaptor.capture(), eq(PageRequest.of(1, 10, Sort.by(desc("validTo"), desc("title"), desc("id")))));
+		assertThat(filterCaptor.getValue()).isInstanceOfSatisfying(FilterSpecification.class, filter -> assertThat(filter.getFilter()).isNotNull());
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@MethodSource("scalarAssetAttributes")
+	void searchAssetsSortedByAssetAttribute(final String attribute) {
+		// Arrange
+		when(assetServiceMock.searchAssets(eq(MUNICIPALITY_ID), any(), any())).thenReturn(AssetPagedResponse.create());
+
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("sortBy", attribute).build())
+			.exchange()
+			.expectStatus().isOk();
+
+		// Assert
+		verify(assetServiceMock).searchAssets(eq(MUNICIPALITY_ID), any(), any());
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@MethodSource("sortByParameters")
+	void searchAssetsWithSortByGivenAs(final String parameter, final String value, final Sort expectedSort) {
+		// Arrange
+		when(assetServiceMock.searchAssets(eq(MUNICIPALITY_ID), any(), any())).thenReturn(AssetPagedResponse.create());
+
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam(parameter, "{value}").build(value))
+			.exchange()
+			.expectStatus().isOk();
+
+		// Assert
+		verify(assetServiceMock).searchAssets(eq(MUNICIPALITY_ID), any(), eq(PageRequest.of(0, 100, expectedSort)));
+		verifyNoMoreInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"actor", "revision", "version", "partyType", "municipalityId", "attachments", "additionalParameters", "jsonParameters", "unknown"
+	})
+	void searchAssetsSortedByAttributeOutsideTheAssetModel(final String attribute) {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("sortBy", attribute).build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations()).singleElement()
+			.satisfies(violation -> assertThat(violation.message()).startsWith("One or more of the sortBy properties [%s] are not valid.".formatted(attribute)));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"status:", "status:'ACTIVE' and", "description:'it''s'", "(status:'ACTIVE'", "foo(type)", "status : `ACTIVE`"
+	})
+	void searchAssetsWithInvalidFilterSyntax(final String filter) {
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build(filter))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectHeader().contentType(APPLICATION_PROBLEM_JSON)
+			.expectBody()
+			.jsonPath("$.status").isEqualTo(400)
+			.jsonPath("$.title").isEqualTo("Invalid Filter Content")
+			.jsonPath("$.detail").isNotEmpty();
+
+		// Assert
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithUnknownFunction() {
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build("validTo > now()"))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody()
+			.jsonPath("$.title").isEqualTo("Invalid Filter Content")
+			.jsonPath("$.detail").isEqualTo("Unrecognized function `now`");
+
+		// Assert
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"status:'ACTIVE' and actor:'joe01doe'", "'joe01doe' ~ [title, actor]"
+	})
+	void searchAssetsWithFilterOnAttributeOutsideTheAssetModel(final String filter) {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build(filter))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations()).singleElement()
+			.satisfies(violation -> {
+				assertThat(violation.field()).isEqualTo("searchAssets.filter");
+				assertThat(violation.message()).startsWith("The attributes [actor] are not filterable. Filterable attributes are [");
+			});
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithValuesThatAttributesCannotHold() {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build("status:'FOO' and validTo < 'tomorrow' and created > '2025-01-01T00:00:00+01:00'"))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactlyInAnyOrder(
+				tuple("searchAssets.filter", "'FOO' is not a valid value for status."),
+				tuple("searchAssets.filter", "'tomorrow' is not a valid value for validTo."));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithInvalidPaging() {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("page", 0).queryParam("limit", 1001).build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactlyInAnyOrder(
+				tuple("page", "must be greater than or equal to 1"),
+				tuple("limit", "Page limit cannot be greater than 1000"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsInvalidMunicipalityId() {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path("/" + INVALID + "/assets/search").build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("searchAssets.municipalityId", "not a valid municipality ID"));
 		verifyNoInteractions(assetServiceMock);
 	}
 
@@ -710,5 +955,20 @@ class AssetResourceTest {
 			.containsExactly(tuple("deleteAsset.municipalityId", "not a valid municipality ID"));
 
 		verifyNoInteractions(assetServiceMock);
+	}
+
+	private static Stream<String> scalarAssetAttributes() {
+		return Stream.of(Asset.class.getDeclaredFields())
+			.filter(field -> !Modifier.isStatic(field.getModifiers()) && !field.isSynthetic())
+			.filter(field -> !Collection.class.isAssignableFrom(field.getType()) && !Map.class.isAssignableFrom(field.getType()))
+			.map(Field::getName);
+	}
+
+	private static Stream<Arguments> sortByParameters() {
+		return Stream.of(
+			arguments("sortBy[0]", "issued", Sort.by(asc("issued"), asc("id"))),
+			arguments("sortBy", "", Sort.by(asc("created"), asc("id"))),
+			arguments("sortDirection", "", Sort.by(asc("created"), asc("id"))),
+			arguments("sortDirection", "DESC", Sort.by(desc("created"), desc("id"))));
 	}
 }

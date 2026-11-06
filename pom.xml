@@ -10,13 +10,13 @@
 	</parent>
 	<groupId>se.sundsvall</groupId>
 	<artifactId>api-service-party-assets</artifactId>
-	<version>6.8</version>
+	<version>6.9</version>
 	<name>party-assets</name>
 	<properties>
 		<!-- PR3 import dependency versions -->
 		<fastexcel.version>0.20.2</fastexcel.version>
 		<!-- Service properties -->
-		<maven-processor-plugin.version>5.0-jdk8</maven-processor-plugin.version>
+		<spring-filter.version>4.1.1</spring-filter.version>
 		<generated-sources-path>${project.build.directory}/generated-sources</generated-sources-path>
 	</properties>
 	<dependencies>
@@ -49,7 +49,16 @@
 		</dependency>
 		<dependency>
 			<groupId>se.sundsvall.dept44</groupId>
+			<artifactId>dept44-models</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>se.sundsvall.dept44</groupId>
 			<artifactId>dept44-starter-scheduler</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.turkraft.springfilter</groupId>
+			<artifactId>jpa</artifactId>
+			<version>${spring-filter.version}</version>
 		</dependency>
 		<!-- PR3 import dependencies -->
 		<dependency>

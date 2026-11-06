@@ -6,7 +6,13 @@ import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mariadb.jdbc.MariaDbBlob;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import se.sundsvall.dept44.models.api.paging.PagingAndSortingMetaData;
 import se.sundsvall.partyassets.TestFactory;
+import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
 import se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest;
@@ -17,6 +23,7 @@ import se.sundsvall.partyassets.integration.db.model.PartyType;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 class AssetMapperTest {
 
@@ -40,6 +47,40 @@ class AssetMapperTest {
 		assertThat(assetParam.getKey()).isEqualTo(entityParam.getKey());
 		assertThat(assetParam.getSchemaId()).isEqualTo(entityParam.getSchemaId());
 		assertThat(assetParam.getValue()).hasToString(entityParam.getValue());
+	}
+
+	@Test
+	void toAssetPagedResponse() {
+		final var first = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var second = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var pageable = PageRequest.of(1, 2, Sort.by(DESC, "created").and(Sort.by("id")));
+
+		final var response = AssetMapper.toAssetPagedResponse(new PageImpl<>(List.of(first, second), pageable, 5));
+
+		assertThat(response.getAssets())
+			.extracting(Asset::getId)
+			.containsExactly(first.getId(), second.getId());
+		assertThat(response.getMetaData()).isEqualTo(PagingAndSortingMetaData.create()
+			.withPage(2)
+			.withLimit(2)
+			.withCount(2)
+			.withTotalRecords(5)
+			.withTotalPages(3)
+			.withSortBy(List.of("created", "id"))
+			.withSortDirection(DESC));
+	}
+
+	@Test
+	void toAssetPagedResponseForEmptyPage() {
+		final var response = AssetMapper.toAssetPagedResponse(Page.empty(PageRequest.of(0, 20)));
+
+		assertThat(response.getAssets()).isEmpty();
+		assertThat(response.getMetaData()).isEqualTo(PagingAndSortingMetaData.create()
+			.withPage(1)
+			.withLimit(20)
+			.withCount(0)
+			.withTotalRecords(0)
+			.withTotalPages(0));
 	}
 
 	@Test

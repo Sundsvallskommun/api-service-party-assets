@@ -1,0 +1,5 @@
+{
+	"status": 400,
+	"title": "Invalid Filter Content",
+	"detail": "The filter could not be applied to the assets. Check that every operator suits the type of the attribute it is used on."
+}

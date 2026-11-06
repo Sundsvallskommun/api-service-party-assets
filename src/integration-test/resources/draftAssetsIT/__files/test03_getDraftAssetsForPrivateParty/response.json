@@ -1,6 +1,8 @@
 [
 	{
 		"id": "abd6596f-45a0-4912-89e4-8cdcea9a043a",
+		"created": "2025-01-01T00:00:00+01:00",
+		"updated": "2025-06-01T00:00:00+02:00",
 		"assetId": "PRH-0000000004",
 		"origin": "CASEDATA",
 		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",
@@ -17,6 +19,8 @@
 	},
 	{
 		"id": "1bdbb931-5c6f-4ffe-bfc9-d9e5bffe48a4",
+		"created": "2024-01-01T00:00:00+01:00",
+		"updated": "2024-06-01T00:00:00+02:00",
 		"assetId": "PRH-0000000003",
 		"origin": "CASEDATA",
 		"partyId": "f2ef7992-7b01-4185-a7f8-cf97dc7f438f",

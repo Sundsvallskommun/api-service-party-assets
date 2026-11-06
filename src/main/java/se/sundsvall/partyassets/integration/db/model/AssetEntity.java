@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.UuidGenerator;
@@ -40,7 +41,10 @@ import static org.hibernate.annotations.TimeZoneStorageType.NORMALIZE;
 @Entity
 @Table(name = "asset",
 	indexes = {
-		@Index(name = "idx_asset_municipality_id", columnList = "municipality_id")
+		@Index(name = "idx_asset_municipality_id_party_id", columnList = "municipality_id, party_id"),
+		@Index(name = "idx_asset_municipality_id_asset_id", columnList = "municipality_id, asset_id"),
+		@Index(name = "idx_asset_municipality_id_created", columnList = "municipality_id, created"),
+		@Index(name = "idx_asset_status_valid_to", columnList = "status, valid_to")
 	})
 public class AssetEntity {
 
@@ -80,6 +84,7 @@ public class AssetEntity {
 	@Column(name = "issued", nullable = false)
 	private LocalDate issued;
 
+	@Column(name = "valid_to")
 	private LocalDate validTo;
 
 	@Column(name = "replaces_id")
@@ -94,17 +99,20 @@ public class AssetEntity {
 
 	private String title;
 
+	// Batched, as each asset in a page would otherwise load its eager collections with a query of its own
 	@ElementCollection(fetch = EAGER)
+	@BatchSize(size = 100)
 	@CollectionTable(name = "additional_parameter",
 		joinColumns = @JoinColumn(name = "asset_id", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_additional_parameter_asset_id")),
 		indexes = {
-			@Index(name = "idx_additional_parameter_asset_id", columnList = "asset_id")
+			@Index(name = "idx_additional_parameter_key_value", columnList = "parameter_key, parameter_value")
 		})
 	@MapKeyColumn(name = "parameter_key")
 	@Column(name = "parameter_value", nullable = false)
 	private Map<String, String> additionalParameters;
 
 	@OneToMany(fetch = EAGER, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	@BatchSize(size = 100)
 	private List<AssetJsonParameterEntity> jsonParameters;
 
 	@OneToMany(fetch = LAZY, mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -64,6 +64,11 @@ This microservice depends on the following services:
   - **Repository:
     ** [https://github.com/Sundsvallskommun/api-service-json-schema](https://github.com/Sundsvallskommun/api-service-json-schema)
   - **Setup Instructions:** See documentation in repository above for installation and configuration steps.
+- **Relation**
+  - **Purpose:** Service is used for relating a created asset to the resource it originates from (`sourceReference`)
+  - **Repository:
+    ** [https://github.com/Sundsvallskommun/api-service-relation](https://github.com/Sundsvallskommun/api-service-relation)
+  - **Setup Instructions:** See documentation in repository above for installation and configuration steps.
 
 Ensure that these services are running and properly configured before starting this microservice.
 
@@ -79,7 +84,8 @@ Access the API documentation via Swagger UI:
 
 See [API Documentation](#api-documentation) for detailed information on available endpoints.
 
-Alternatively, see the `openapi.yml` file located in directory `src/test/resources/api` for the OpenAPI specification.
+Alternatively, see the `openapi.yaml` file located in directory `src/integration-test/resources/api` for the OpenAPI
+specification.
 
 ### Example Request
 
@@ -87,12 +93,66 @@ Alternatively, see the `openapi.yml` file located in directory `src/test/resourc
 curl -X 'GET' 'http://localhost:8080/2281/assets?assetId=PRH-123456789' -H 'accept: application/json'
 ```
 
+### Searching assets
+
+`GET /{municipalityId}/assets/search` returns a page of the assets in a municipality, whatever their status. Unlike
+`GET /assets` it needs no `partyId`, and it includes drafts; leave them out with `status ! 'DRAFT'`. Which assets come
+back is decided by a [SpringFilter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax)
+expression in `filter`. Without one, every asset in the municipality is returned.
+
+```bash
+curl -G 'http://localhost:8080/2281/assets/search' \
+  --data-urlencode "filter=type:'AlcoholServingPermit' and status:'ACTIVE' and validTo < '2027-01-01'" \
+  --data-urlencode 'sortBy=validTo' --data-urlencode 'sortDirection=DESC' \
+  --data-urlencode 'page=1' --data-urlencode 'limit=50'
+```
+
+The filter refers to the attributes by the names they have in the asset model of the API:
+
+|                                                  Attributes                                                  |                                       Example                                       |
+|--------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| `id`, `assetId`, `origin`, `partyId`, `type`, `status`, `statusReason`, `description`, `title`, `replacesId` | `type:'AlcoholServingPermit' and status in ['ACTIVE', 'TEMPORARY']`                 |
+| `issued`, `validTo`                                                                                          | `validTo < '2027-01-01' or validTo is null`                                         |
+| `created`, `updated`                                                                                         | `updated > '2026-11-01T00:00:00+01:00'`                                             |
+| `additionalParameters`, `additionalParameters.key`, `additionalParameters.value`                             | `exists(additionalParameters.key:'errandId' and additionalParameters.value:'1234')` |
+| `jsonParameters`, `jsonParameters.key`, `jsonParameters.schemaId`, `jsonParameters.value`                    | `jsonParameters.schemaId:'2281_aot_alcohol_party_asset_0.1'`                        |
+
+Dates are written as `2027-01-01`, and `created` and `updated` with time and offset as `2026-11-01T00:00:00+01:00`.
+
+Conditions that must hold for the same parameter go inside `exists(...)`, so the example above finds the assets whose
+`errandId` is `1234`, not those that have an `errandId` and some other parameter with the value `1234`. Likewise,
+`not exists(additionalParameters.key:'errandId')` finds the assets without an `errandId`, whereas `not` directly in front
+of a condition on a parameter only asks for some parameter that does not meet it. `additionalParameters` and
+`jsonParameters` on their own can be tested with `is empty` and `is not empty`.
+
+The answer is `400 Bad Request` for a filter that cannot be parsed, that refers to any other attribute, that compares an
+attribute with a value it cannot hold, such as a status that does not exist or a date in another format, or that uses an
+operator on an attribute it does not apply to, such as `issued ~ ['2025*']`. The response to an unknown attribute lists
+the attributes that can be filtered on.
+
+Paging starts at `page` 1, and `limit` is 100 assets per page unless given, at most 1000. `sortBy` takes one or more of
+the attributes above that hold a single value, and `sortDirection` (`ASC` unless given) applies to all of them. Without
+`sortBy` the assets are sorted by `created`. `id` is always added as the last sort property, in the same direction, so
+that assets with equal values keep the same order from one page to the next. The response holds the assets and the
+paging details:
+
+```json
+{
+  "assets": [ … ],
+  "_meta": { "page": 1, "limit": 50, "count": 50, "totalRecords": 120, "totalPages": 3, "sortBy": ["validTo", "id"], "sortDirection": "DESC" }
+}
+```
+
+Conditions on `partyId`, `assetId`, `status` (alone or with `validTo`) and on the key and value of an additional
+parameter are backed by indexes, as is sorting by `created`. A `~` pattern that starts with a wildcard, and any condition
+on `jsonParameters.value`, has to read every asset in the municipality.
+
 ### Title
 
 `title` is optional display text for the citizen, such as "Stadigvarande tillstånd för servering av alkohol" on Mina
 sidor. It is at most 255 characters. It can be set when an asset is created and changed while the asset is a draft,
-active or temporary. A blank title is stored as no title, so sending `"title": ""` removes it. It is not a search
-parameter; filter on `type` instead.
+active or temporary. A blank title is stored as no title, so sending `"title": ""` removes it. It is not a parameter of
+`GET /assets`, but the [search](#searching-assets) can filter on it.
 
 ### Changing a live asset
 
@@ -241,6 +301,8 @@ integration:
     url: http://dependency_service_url
   party:
     url: http://dependency_service_url
+  relation:
+    url: http://dependency_service_url
 
 spring:
   security:
@@ -251,11 +313,16 @@ spring:
             token-uri: http://token_url
           party:
             token-uri: http://token_url
+          relation:
+            token-uri: http://token_url
         registration:
           json-schema:
             client-id: some-client-id
             client-secret: some-client-secret
           party:
+            client-id: some-client-id
+            client-secret: some-client-secret
+          relation:
             client-id: some-client-id
             client-secret: some-client-secret
 

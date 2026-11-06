@@ -26,8 +26,11 @@ resilience4j:
       # breaker and turn 409 into 503 for callers who never collided with anyone.
       assetAttachmentRepository:
         ignoreExceptions: org.springframework.dao.OptimisticLockingFailureException
+      # Likewise, a search filter that cannot be applied to the assets is a client mistake and not a fault of the database.
       assetRepository:
-        ignoreExceptions: org.springframework.dao.OptimisticLockingFailureException
+        ignoreExceptions:
+          - org.springframework.dao.OptimisticLockingFailureException
+          - se.sundsvall.partyassets.integration.db.specification.InvalidFilterException
       json-schema:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       party:
