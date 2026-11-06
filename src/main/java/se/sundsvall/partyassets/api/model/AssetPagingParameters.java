@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import se.sundsvall.dept44.models.api.paging.AbstractParameterPagingAndSortingBase;
 import se.sundsvall.dept44.models.api.paging.validation.ValidSortByProperty;
+import se.sundsvall.partyassets.api.validation.ValidPageOffset;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static java.util.Objects.requireNonNullElse;
@@ -23,6 +24,7 @@ import static org.springframework.data.domain.Sort.DEFAULT_DIRECTION;
 	exclude = {
 		"actor", "additionalParameters", "municipalityId", "revision", "version"
 	})
+@ValidPageOffset
 public class AssetPagingParameters extends AbstractParameterPagingAndSortingBase {
 
 	private static final String DEFAULT_SORT_PROPERTY = "created";

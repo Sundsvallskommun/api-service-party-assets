@@ -26,11 +26,8 @@ resilience4j:
       # breaker and turn 409 into 503 for callers who never collided with anyone.
       assetAttachmentRepository:
         ignoreExceptions: org.springframework.dao.OptimisticLockingFailureException
-      # Likewise, a search filter that cannot be applied to the assets is a client mistake and not a fault of the database.
       assetRepository:
-        ignoreExceptions:
-          - org.springframework.dao.OptimisticLockingFailureException
-          - se.sundsvall.partyassets.integration.db.specification.InvalidFilterException
+        ignoreExceptions: org.springframework.dao.OptimisticLockingFailureException
       json-schema:
         ignoreExceptions: se.sundsvall.dept44.exception.ClientProblem
       party:
@@ -42,6 +39,12 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   flyway:
     enabled: false
+  # Dates in query parameters and search filters are read as ISO 8601 only. Otherwise the format would depend on the
+  # language of the request, and '27-01-01' would mean the year 27 to a caller in Sweden.
+  mvc:
+    format:
+      date: iso
+      date-time: iso-offset
   jpa:
     properties:
       jakarta:

@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -56,6 +57,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.data.domain.Sort.Order.asc;
 import static org.springframework.data.domain.Sort.Order.desc;
+import static org.springframework.http.HttpHeaders.ACCEPT_LANGUAGE;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON;
@@ -144,6 +146,25 @@ class AssetResourceTest {
 		assertThat(test.getViolations().getFirst().field()).isEqualTo("partyId");
 		assertThat(test.getTitle()).isEqualTo("Constraint Violation");
 		assertThat(test.getType()).isEqualTo(ConstraintViolationProblem.TYPE);
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+		"en-US | 1/1/27", "sv-SE | 27-01-01"
+	})
+	void getAssetsWithDateInTheFormatOfTheLanguageOfTheRequest(final String language, final String date) {
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(PATH)
+				.queryParam("partyId", randomUUID())
+				.queryParam("issued", "{date}")
+				.build(date))
+			.header(ACCEPT_LANGUAGE, language)
+			.exchange()
+			.expectStatus().isBadRequest();
+
+		// Assert
 		verifyNoInteractions(assetServiceMock);
 	}
 
@@ -314,7 +335,7 @@ class AssetResourceTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {
-		"status:'ACTIVE' and actor:'joe01doe'", "'joe01doe' ~ [title, actor]"
+		"status:'ACTIVE' and actor:'joe01doe'", "exists(actor : 'joe01doe')"
 	})
 	void searchAssetsWithFilterOnAttributeOutsideTheAssetModel(final String filter) {
 		// Act
@@ -340,7 +361,7 @@ class AssetResourceTest {
 	void searchAssetsWithValuesThatAttributesCannotHold() {
 		// Act
 		final var response = webTestClient.get()
-			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build("status:'FOO' and validTo < 'tomorrow' and created > '2025-01-01T00:00:00+01:00'"))
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build("status:'FOO' and validTo < 'tomorrow' and created > '2025-01-01T00:00:00+01:00' and issued : ''"))
 			.exchange()
 			.expectStatus().isBadRequest()
 			.expectBody(ConstraintViolationProblem.class)
@@ -353,7 +374,61 @@ class AssetResourceTest {
 			.extracting(Violation::field, Violation::message)
 			.containsExactlyInAnyOrder(
 				tuple("searchAssets.filter", "'FOO' is not a valid value for status."),
-				tuple("searchAssets.filter", "'tomorrow' is not a valid value for validTo."));
+				tuple("searchAssets.filter", "'tomorrow' is not a valid value for validTo."),
+				tuple("searchAssets.filter", "'' is not a valid value for issued."));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', value = {
+		"en-US | 1/1/27", "sv-SE | 27-01-01"
+	})
+	void searchAssetsWithDateInTheFormatOfTheLanguageOfTheRequest(final String language, final String date) {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build("validTo < '%s'".formatted(date)))
+			.header(ACCEPT_LANGUAGE, language)
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("searchAssets.filter", "'%s' is not a valid value for validTo.".formatted(date)));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@ParameterizedTest
+	@CsvSource(delimiter = '|', quoteCharacter = '"', value = {
+		"status                          | status is not a supported condition.",
+		"exp(100000) > 1                 | exp('100000') > '1' is not a supported condition.",
+		"(issued) > 5                    | (issued) > '5' is not a supported condition.",
+		"issued > status                 | issued > status is not a supported condition.",
+		"issued ~ '2025*'                | The operator ~ cannot be used on issued.",
+		"additionalParameters > 5        | The operator > cannot be used on additionalParameters.",
+		"description ~ ['Park*']         | description ~ ['Park*'] is not supported."
+	})
+	void searchAssetsWithFilterThatIsNotASupportedCondition(final String filter, final String message) {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("filter", "{filter}").build(filter))
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations()).singleElement()
+			.satisfies(violation -> {
+				assertThat(violation.field()).isEqualTo("searchAssets.filter");
+				assertThat(violation.message()).startsWith(message);
+			});
 		verifyNoInteractions(assetServiceMock);
 	}
 
@@ -376,6 +451,41 @@ class AssetResourceTest {
 				tuple("page", "must be greater than or equal to 1"),
 				tuple("limit", "Page limit cannot be greater than 1000"));
 		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithPageAfterTheLastThatCanBeFetched() {
+		// Act
+		final var response = webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("page", 2147485).queryParam("limit", 1000).build())
+			.exchange()
+			.expectStatus().isBadRequest()
+			.expectBody(ConstraintViolationProblem.class)
+			.returnResult()
+			.getResponseBody();
+
+		// Assert
+		assertThat(response).isNotNull();
+		assertThat(response.getViolations())
+			.extracting(Violation::field, Violation::message)
+			.containsExactly(tuple("page", "must be at most 2147484 when limit is 1000"));
+		verifyNoInteractions(assetServiceMock);
+	}
+
+	@Test
+	void searchAssetsWithLastPageThatCanBeFetched() {
+		// Arrange
+		when(assetServiceMock.searchAssets(eq(MUNICIPALITY_ID), any(), any())).thenReturn(AssetPagedResponse.create());
+
+		// Act
+		webTestClient.get()
+			.uri(uriBuilder -> uriBuilder.path(SEARCH_PATH).queryParam("page", 2147484).queryParam("limit", 1000).build())
+			.exchange()
+			.expectStatus().isOk();
+
+		// Assert
+		verify(assetServiceMock).searchAssets(eq(MUNICIPALITY_ID), any(), eq(PageRequest.of(2147483, 1000, Sort.by(asc("created"), asc("id")))));
+		verifyNoMoreInteractions(assetServiceMock);
 	}
 
 	@Test

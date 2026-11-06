@@ -1,11 +1,17 @@
 package se.sundsvall.partyassets.api.model;
 
+import jakarta.validation.Validation;
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import se.sundsvall.dept44.models.api.paging.validation.ValidSortByProperty;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanConstructor;
 import static com.google.code.beanmatchers.BeanMatchers.hasValidBeanEquals;
@@ -20,6 +26,8 @@ import static org.springframework.data.domain.Sort.Direction.ASC;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.data.domain.Sort.Order.asc;
 import static org.springframework.data.domain.Sort.Order.desc;
+import static se.sundsvall.partyassets.api.validation.impl.ValidAssetFilterConstraintValidator.COLLECTION_ATTRIBUTES;
+import static se.sundsvall.partyassets.api.validation.impl.ValidAssetFilterConstraintValidator.FILTERABLE_ATTRIBUTES;
 
 class AssetPagingParametersTest {
 
@@ -115,6 +123,21 @@ class AssetPagingParametersTest {
 			.toPageable();
 
 		assertThat(pageable.getSort()).isEqualTo(Sort.by(asc("created"), asc("id")));
+	}
+
+	@Test
+	void sortableAttributesAreTheFilterableAttributesThatHoldASingleValue() {
+		final var validator = Validation.buildDefaultValidatorFactory().getValidator();
+		final var candidates = new TreeSet<>(FILTERABLE_ATTRIBUTES);
+		Stream.of(AssetEntity.class.getDeclaredFields()).map(Field::getName).forEach(candidates::add);
+
+		final var sortable = candidates.stream()
+			.filter(attribute -> validator.validate(AssetPagingParameters.create().withSortBy(List.of(attribute))).stream()
+				.noneMatch(violation -> violation.getConstraintDescriptor().getAnnotation() instanceof ValidSortByProperty));
+
+		assertThat(sortable).containsExactlyInAnyOrderElementsOf(FILTERABLE_ATTRIBUTES.stream()
+			.filter(attribute -> !attribute.contains(".") && !COLLECTION_ATTRIBUTES.contains(attribute))
+			.toList());
 	}
 
 	@Test

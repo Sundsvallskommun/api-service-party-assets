@@ -89,7 +89,11 @@ class AssetResource {
 	ResponseEntity<AssetPagedResponse> searchAssets(
 		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
 		// Nullable only makes the filter optional in the API documentation; a missing filter arrives as an empty one
-		@Parameter(description = "Syntax description: [spring-filter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax)",
+		@Parameter(description = """
+			Part of the [spring-filter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax) syntax: \
+			conditions with an attribute of the asset model on the left and quoted values on the right, using :, !, >, >:, <, <:, between, in, not in, \
+			is null and is not null, ~ and ~~ with one pattern on text attributes, is empty and is not empty on additionalParameters and jsonParameters, \
+			and exists(...), combined with and, or, not and parentheses. Dates are written in ISO 8601, such as 2027-01-01 and 2026-11-01T00:00:00+01:00.""",
 			example = "type:'AlcoholServingPermit' and status:'ACTIVE' and validTo < '2027-01-01'",
 			schema = @Schema(implementation = String.class)) @Nullable @ValidAssetFilter @Filter final Specification<AssetEntity> filter,
 		@ParameterObject @Valid final AssetPagingParameters parameters) {

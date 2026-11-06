@@ -1,5 +1,11 @@
 {
+	"type": "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
 	"status": 400,
-	"title": "Invalid Filter Content",
-	"detail": "The filter could not be applied to the assets. Check that every operator suits the type of the attribute it is used on."
+	"title": "Constraint Violation",
+	"violations": [
+		{
+			"field": "searchAssets.filter",
+			"message": "The operator ~ cannot be used on issued."
+		}
+	]
 }

@@ -97,8 +97,9 @@ curl -X 'GET' 'http://localhost:8080/2281/assets?assetId=PRH-123456789' -H 'acce
 
 `GET /{municipalityId}/assets/search` returns a page of the assets in a municipality, whatever their status. Unlike
 `GET /assets` it needs no `partyId`, and it includes drafts; leave them out with `status ! 'DRAFT'`. Which assets come
-back is decided by a [SpringFilter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax)
-expression in `filter`. Without one, every asset in the municipality is returned.
+back is decided by `filter`, written in the part of the
+[SpringFilter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax)
+syntax described below. Without one, every asset in the municipality is returned.
 
 ```bash
 curl -G 'http://localhost:8080/2281/assets/search' \
@@ -117,18 +118,35 @@ The filter refers to the attributes by the names they have in the asset model of
 | `additionalParameters`, `additionalParameters.key`, `additionalParameters.value`                             | `exists(additionalParameters.key:'errandId' and additionalParameters.value:'1234')` |
 | `jsonParameters`, `jsonParameters.key`, `jsonParameters.schemaId`, `jsonParameters.value`                    | `jsonParameters.schemaId:'2281_aot_alcohol_party_asset_0.1'`                        |
 
-Dates are written as `2027-01-01`, and `created` and `updated` with time and offset as `2026-11-01T00:00:00+01:00`.
+Each condition has the attribute on the left and, for the operators that take one, a quoted value or a list of quoted
+values on the right. Conditions are combined with `and`, `or` and `not`, and grouped with parentheses:
+
+|                               Condition                               |                Applies to                |                      Example                      |
+|-----------------------------------------------------------------------|------------------------------------------|---------------------------------------------------|
+| `:` (equal), `!` (not equal), `>`, `>:`, `<`, `<:`, `between … and …` | attributes that hold a single value      | `validTo between '2026-01-01' and '2026-12-31'`   |
+| `in`, `not in` with a list                                            | attributes that hold a single value      | `status in ['ACTIVE', 'TEMPORARY']`               |
+| `is null`, `is not null`                                              | attributes that hold a single value      | `validTo is null`                                 |
+| `~`, or `~~` to ignore case, with one pattern                         | text attributes                          | `description ~~ 'park*'`                          |
+| `is empty`, `is not empty`                                            | `additionalParameters`, `jsonParameters` | `jsonParameters is not empty`                     |
+| `exists(…)` around one condition                                      | conditions                               | `not exists(additionalParameters.key:'errandId')` |
+
+The attributes that hold a single value are all but `additionalParameters` and `jsonParameters`, and the text attributes
+are those of them other than `issued`, `validTo`, `created`, `updated` and `status`. In a pattern, `*` stands for any
+text, and a pattern without `*` matches text that contains it. The rest of the SpringFilter syntax, such as `xor`,
+functions other than `exists` and parentheses around an attribute or a value, is not supported.
+
+Dates are written as `2027-01-01`, and `created` and `updated` with time and offset as `2026-11-01T00:00:00+01:00`,
+whatever the language of the request. The same goes for `issued` and `validTo` as parameters of `GET /assets`.
 
 Conditions that must hold for the same parameter go inside `exists(...)`, so the example above finds the assets whose
 `errandId` is `1234`, not those that have an `errandId` and some other parameter with the value `1234`. Likewise,
 `not exists(additionalParameters.key:'errandId')` finds the assets without an `errandId`, whereas `not` directly in front
-of a condition on a parameter only asks for some parameter that does not meet it. `additionalParameters` and
-`jsonParameters` on their own can be tested with `is empty` and `is not empty`.
+of a condition on a parameter only asks for some parameter that does not meet it.
 
-The answer is `400 Bad Request` for a filter that cannot be parsed, that refers to any other attribute, that compares an
-attribute with a value it cannot hold, such as a status that does not exist or a date in another format, or that uses an
-operator on an attribute it does not apply to, such as `issued ~ ['2025*']`. The response to an unknown attribute lists
-the attributes that can be filtered on.
+The answer is `400 Bad Request` for a filter that cannot be parsed, that refers to any other attribute, that is not made
+of the conditions above, that uses an operator on an attribute it does not apply to, such as `issued ~ '2025*'`, or that
+compares an attribute with a value it cannot hold, such as a status that does not exist, an empty value or a date in
+another format. The response names each problem, and lists the attributes that can be filtered on when one is unknown.
 
 Paging starts at `page` 1, and `limit` is 100 assets per page unless given, at most 1000. `sortBy` takes one or more of
 the attributes above that hold a single value, and `sortDirection` (`ASC` unless given) applies to all of them. Without

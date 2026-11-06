@@ -1,16 +1,20 @@
 package se.sundsvall.partyassets.integration.db;
 
+import com.turkraft.springfilter.converter.FilterSpecification;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.validation.ConstraintValidatorContext;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
@@ -19,13 +23,19 @@ import org.springframework.test.context.jdbc.Sql;
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.TestFactory;
 import se.sundsvall.partyassets.api.model.AssetPagingParameters;
+import se.sundsvall.partyassets.api.validation.impl.ValidAssetFilterConstraintValidator;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.integration.db.specification.InvalidFilterException;
 
 import static java.util.UUID.randomUUID;
+import static java.util.function.Function.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.NONE;
+import static se.sundsvall.partyassets.api.validation.impl.ValidAssetFilterConstraintValidator.COLLECTION_ATTRIBUTES;
 import static se.sundsvall.partyassets.api.validation.impl.ValidAssetFilterConstraintValidator.FILTERABLE_ATTRIBUTES;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.withFilter;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.withMunicipalityId;
@@ -46,6 +56,12 @@ import static se.sundsvall.partyassets.integration.db.specification.AssetSpecifi
 class AssetRepositoryFilterTest {
 
 	private static final String MUNICIPALITY_ID = "2281";
+	private static final Map<String, String> TYPED_VALUES = Map.of(
+		"issued", "'2023-01-01'",
+		"validTo", "'2023-12-31'",
+		"created", "'2023-01-01T00:00:00+01:00'",
+		"updated", "'2023-01-01T00:00:00Z'",
+		"status", "'ACTIVE'");
 
 	@Autowired
 	private AssetRepository repository;
@@ -54,14 +70,24 @@ class AssetRepositoryFilterTest {
 	private FilterSpecificationConverter filterSpecificationConverter;
 
 	@Autowired
+	@Qualifier("sfConversionService")
+	private ConversionService conversionService;
+
+	@Autowired
 	private EntityManagerFactory entityManagerFactory;
 
-	@ParameterizedTest
-	@MethodSource("filterableAttributes")
-	void everyFilterableAttributeIsAnAttributeOfTheEntity(final String attribute) {
-		final var filter = attribute.equals("additionalParameters") || attribute.equals("jsonParameters") ? attribute + " is not empty" : attribute + " is not null";
+	@Test
+	void everyKindOfConditionThatPassesValidationCanBeAppliedToEveryAttribute() {
+		final var validator = new ValidAssetFilterConstraintValidator(conversionService);
 
-		assertThat(search(filter, AssetPagingParameters.create().toPageable())).isNotNull();
+		assertSoftly(softly -> conditionsOfEveryKind().forEach(condition -> {
+			final FilterSpecification<AssetEntity> filter = filterSpecificationConverter.convert(condition);
+
+			softly.assertThat(validator.isValid(filter, mock(ConstraintValidatorContext.class, RETURNS_DEEP_STUBS))).as(condition).isTrue();
+			softly.assertThatCode(() -> repository.findAll(withMunicipalityId(MUNICIPALITY_ID).and(withFilter(filter)), AssetPagingParameters.create().toPageable()))
+				.as(condition)
+				.doesNotThrowAnyException();
+		}));
 	}
 
 	@ParameterizedTest
@@ -71,6 +97,9 @@ class AssetRepositoryFilterTest {
 		"validTo < '2023-07-01' or validTo is null          | 3",
 		"updated > '2023-03-01T00:00:00+01:00'              | 1",
 		"jsonParameters is empty                            | 6",
+		"jsonParameters is not empty                        | 2",
+		"validTo between '2023-01-01' and '2023-12-31'      | 4",
+		"description ~~ 'park*'                             | 4",
 		"additionalParameters is not empty                  | 4",
 		"description ~ '*tillstånd'                         | 4",
 		"exists(additionalParameters.key : 'first_key' and additionalParameters.value : 'first_value') | 1",
@@ -162,7 +191,22 @@ class AssetRepositoryFilterTest {
 		return repository.findAll(withMunicipalityId(MUNICIPALITY_ID).and(withFilter(filterSpecificationConverter.convert(filter))), pageable);
 	}
 
-	private static Stream<String> filterableAttributes() {
-		return FILTERABLE_ATTRIBUTES.stream();
+	private static Stream<String> conditionsOfEveryKind() {
+		return FILTERABLE_ATTRIBUTES.stream().flatMap(attribute -> {
+			if (COLLECTION_ATTRIBUTES.contains(attribute)) {
+				return Stream.of(attribute + " is empty", attribute + " is not empty");
+			}
+			final var value = TYPED_VALUES.getOrDefault(attribute, "'value'");
+			final var comparisons = Stream.of(":", "!", ">", ">:", "<", "<:", "in", "not in")
+				.map(operator -> operator.endsWith("in") ? "%s %s [%s]".formatted(attribute, operator, value) : "%s %s %s".formatted(attribute, operator, value));
+			final var tests = Stream.of(
+				attribute + " is null",
+				attribute + " is not null",
+				"%s between %s and %s".formatted(attribute, value, value),
+				"exists(%s : %s)".formatted(attribute, value),
+				"not exists(%s : %s)".formatted(attribute, value));
+			final var patterns = TYPED_VALUES.containsKey(attribute) ? Stream.<String>empty() : Stream.of(attribute + " ~ '*val*'", attribute + " ~~ 'VAL*'");
+			return Stream.of(comparisons, tests, patterns).flatMap(identity());
+		});
 	}
 }

@@ -466,7 +466,19 @@ class AssetsIT extends AbstractAppTest {
 			.withHttpMethod(GET)
 			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
 				.queryParam("filter", "{filter}")
-				.build("type:'AlcoholServingPermit' and issued ~ ['2025*']"))
+				.build("type:'AlcoholServingPermit' and issued ~ '2025*'"))
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test33_searchWithFilterThatIsNotACondition() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and status"))
 			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
