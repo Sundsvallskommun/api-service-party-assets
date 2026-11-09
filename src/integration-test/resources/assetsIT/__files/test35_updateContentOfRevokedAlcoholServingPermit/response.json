@@ -1,0 +1,5 @@
+{
+	"title": "Asset content cannot be modified",
+	"status": 400,
+	"detail": "Content can only be modified on assets with status [ACTIVE, TEMPORARY], but asset b1000000-0000-0000-0000-000000000001 has status REVOKED"
+}

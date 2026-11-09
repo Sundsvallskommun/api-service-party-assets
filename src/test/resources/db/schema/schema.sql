@@ -25,7 +25,7 @@
         title varchar(255),
         `type` varchar(255) not null,
         party_type enum ('ENTERPRISE','PRIVATE'),
-        status enum ('ACTIVE','BLOCKED','DRAFT','EXPIRED','REPLACED','TEMPORARY'),
+        status enum ('ACTIVE','BLOCKED','DRAFT','EXPIRED','REPLACED','REVOKED','TEMPORARY'),
         primary key (id)
     ) engine=InnoDB;
 

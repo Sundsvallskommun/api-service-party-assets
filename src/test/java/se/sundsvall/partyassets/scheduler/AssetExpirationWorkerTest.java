@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -19,6 +21,7 @@ import se.sundsvall.partyassets.integration.db.model.AssetRevisionEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -139,14 +142,17 @@ class AssetExpirationWorkerTest {
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
-	@Test
-	void expire_skipsAnAssetWhoseStatusChanged() {
-		final var asset = AssetEntity.create().withId(ASSET_ID).withStatus(Status.BLOCKED).withValidTo(VALID_TO);
+	@ParameterizedTest
+	@EnumSource(value = Status.class, mode = EXCLUDE, names = {
+		"ACTIVE", "TEMPORARY"
+	})
+	void expire_skipsAnAssetWhoseStatusChanged(final Status status) {
+		final var asset = AssetEntity.create().withId(ASSET_ID).withStatus(status).withValidTo(VALID_TO);
 		when(assetRepositoryMock.findById(ASSET_ID)).thenReturn(Optional.of(asset));
 
 		worker.expire(ASSET_ID);
 
-		assertThat(asset.getStatus()).isEqualTo(Status.BLOCKED);
+		assertThat(asset.getStatus()).isEqualTo(status);
 		verify(assetRepositoryMock).findById(ASSET_ID);
 		verifyNoMoreInteractions(assetRepositoryMock);
 		verifyNoInteractions(assetRevisionRepositoryMock);

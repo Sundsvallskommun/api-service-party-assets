@@ -1,0 +1,31 @@
+{
+	"id": "b1000000-0000-0000-0000-000000000001",
+	"created": "2025-05-01T10:00:00+02:00",
+	"updated": "${json-unit.any-string}",
+	"assetId": "AOT-0000000001",
+	"origin": "SUPPORTMANAGEMENT",
+	"partyId": "b1000000-0000-0000-0000-000000000091",
+	"type": "AlcoholServingPermit",
+	"issued": "2025-05-01",
+	"status": "REVOKED",
+	"description": "Serveringstillstånd",
+	"title": "Stadigvarande tillstånd för servering av alkohol",
+	"additionalParameters": {
+		"errandId": "2a4c6e80-1b3d-4f5a-8c7e-9d0f1a2b3c4d"
+	},
+	"jsonParameters": [
+		{
+			"key": "aot_alcohol_party_asset",
+			"value": {
+				"beverages": [
+					"WINE",
+					"STRONG_BEER"
+				],
+				"additionalScopes": [
+					"OUTDOOR_SERVING"
+				]
+			},
+			"schemaId": "2281_aot_alcohol_party_asset_0.1"
+		}
+	]
+}

@@ -178,8 +178,8 @@ active or temporary. A blank title is stored as no title, so sending `"title": "
 takes `title`, `validTo`, `indefinitely`, `additionalParameters` and `jsonParameters`, with the same rules as on a
 draft. A field left out stays as it is. `additionalParameters` replaces the whole map and `jsonParameters` the whole
 list, so send every key and parameter the asset should keep, not only the one that changed. Each change records the
-previous state as a revision (see below). Once an asset is blocked, has expired or been replaced, only its status can
-change, and a request carrying any of those fields gets `400 Bad Request`.
+previous state as a revision (see below). Once an asset is blocked, has expired, or has been replaced or revoked, only
+its status can change, and a request carrying any of those fields gets `400 Bad Request`.
 
 To change the person responsible for serving on a permit that also has serving hours, read the asset, change that one
 key and send the map back whole. Leaving out `serveringstid` here would remove it.
@@ -194,6 +194,17 @@ Use this for changes to the same permit, such as a new person responsible for se
 decision. When the permit is replaced by a new one, copy it instead with `POST /assets/{id}`. The copy is a draft with
 its own id, a `replacesId` pointing back, and every attachment. Activating it marks the original `REPLACED`.
 
+When the permit is revoked, set its status to `REVOKED`. Its content and attachments are then locked, the nightly job
+that expires permits leaves it alone, and it cannot be copied. It can be made `ACTIVE` again, for instance when a court
+overturns the revocation. A `statusReason` is accepted only when the municipality has registered reasons for `REVOKED`
+under `/{municipalityId}/metadata/statusreasons`, and is then required.
+
+```bash
+curl -X 'PATCH' 'http://localhost:8080/2281/assets/{id}' \
+  -H 'Content-Type: application/json' \
+  -d '{"status":"REVOKED"}'
+```
+
 ### Attachments
 
 An asset can carry the files that belong to the permit itself — the drawing of the premises where alcohol may be served,
@@ -206,8 +217,8 @@ accepted: callers are other services that already decide which types they allow,
 drift out of step with theirs. The `Content-Type` the client declares for the part is stored and sent back on download.
 One that is missing, cannot be parsed, is a wildcard such as `*/*`, or is longer than 255 characters is stored as
 `application/octet-stream` instead. Files can be added, changed and removed
-while the asset is `DRAFT`, `ACTIVE` or `TEMPORARY`; once it is blocked, has expired or been replaced, its attachments
-can still be listed and downloaded but no longer changed.
+while the asset is `DRAFT`, `ACTIVE` or `TEMPORARY`; once it is blocked, has expired, or has been replaced or revoked,
+its attachments can still be listed and downloaded but no longer changed.
 
 ```bash
 curl -X 'POST' 'http://localhost:8080/2281/assets/{id}/attachments' \
