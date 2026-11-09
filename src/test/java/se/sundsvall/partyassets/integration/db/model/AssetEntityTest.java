@@ -124,6 +124,26 @@ class AssetEntityTest {
 	}
 
 	@Test
+	void changeStatusSetsTheStatusAndItsReason() {
+		final var bean = AssetEntity.create().withStatus(Status.BLOCKED).withStatusReason("LOST");
+
+		bean.changeStatus(Status.REVOKED, "MISCONDUCT");
+
+		assertThat(bean.getStatus()).isEqualTo(Status.REVOKED);
+		assertThat(bean.getStatusReason()).isEqualTo("MISCONDUCT");
+	}
+
+	@Test
+	void changeStatusWithoutAReasonClearsTheReason() {
+		final var bean = AssetEntity.create().withStatus(Status.BLOCKED).withStatusReason("LOST");
+
+		bean.changeStatus(Status.ACTIVE, null);
+
+		assertThat(bean.getStatus()).isEqualTo(Status.ACTIVE);
+		assertThat(bean.getStatusReason()).isNull();
+	}
+
+	@Test
 	void testPrePersist() {
 		final var bean = AssetEntity.create();
 

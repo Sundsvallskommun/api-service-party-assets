@@ -14,7 +14,7 @@ public class AssetUpdateRequest {
 	@Schema(description = "Asset status", examples = "ACTIVE")
 	private Status status;
 
-	@Schema(description = "Status reason", examples = "Status reason")
+	@Schema(description = "Reason for the status, set together with it. A status sent without a reason clears the reason the asset had", examples = "Status reason")
 	private String statusReason;
 
 	@Schema(description = "Valid to date. Can only be changed while the asset is ACTIVE or TEMPORARY", examples = "2021-12-31")

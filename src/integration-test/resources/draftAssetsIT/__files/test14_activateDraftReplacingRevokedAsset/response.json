@@ -1,0 +1,5 @@
+{
+	"title": "Asset cannot be activated",
+	"status": 400,
+	"detail": "Asset a0000000-0000-0000-0000-000000000002 replaces asset a0000000-0000-0000-0000-000000000001, which has status REVOKED"
+}

@@ -1,0 +1,5 @@
+{
+	"title": "Invalid asset status",
+	"status": 400,
+	"detail": "A draft can only be given status [ACTIVE, DRAFT], not REVOKED"
+}

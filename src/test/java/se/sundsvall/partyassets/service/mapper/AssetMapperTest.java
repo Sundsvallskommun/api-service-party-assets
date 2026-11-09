@@ -128,6 +128,7 @@ class AssetMapperTest {
 		AssetMapper.updateEntity(entity, request);
 
 		assertThat(entity.getStatus()).isEqualTo(request.getStatus());
+		assertThat(entity.getStatusReason()).isNull();
 
 		assertThat(entity.getAssetId()).isEqualTo(original.getAssetId());
 		assertThat(entity.getDescription()).isEqualTo(original.getDescription());
@@ -162,6 +163,53 @@ class AssetMapperTest {
 		assertThat(entity.getJsonParameters()).hasSize(1);
 		assertThat(entity.getJsonParameters().getFirst().getKey()).isEqualTo("key2");
 		assertThat(entity.getStatus()).isEqualTo(Status.ACTIVE);
+		assertThat(entity.getStatusReason()).isEqualTo("statusReason");
+	}
+
+	@Test
+	void updateEntityWithAStatusAndAReasonSetsBoth() {
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString()).withStatusReason(null);
+
+		AssetMapper.updateEntity(entity, AssetUpdateRequest.create().withStatus(Status.REVOKED).withStatusReason("MISCONDUCT"));
+
+		assertThat(entity.getStatus()).isEqualTo(Status.REVOKED);
+		assertThat(entity.getStatusReason()).isEqualTo("MISCONDUCT");
+	}
+
+	@Test
+	void updateEntityWithAStatusWithoutAReasonClearsTheReason() {
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+			.withStatus(Status.REVOKED)
+			.withStatusReason("MISCONDUCT");
+
+		AssetMapper.updateEntity(entity, AssetUpdateRequest.create().withStatus(Status.ACTIVE));
+
+		assertThat(entity.getStatus()).isEqualTo(Status.ACTIVE);
+		assertThat(entity.getStatusReason()).isNull();
+	}
+
+	@Test
+	void updateEntityWithAReasonWithoutAStatusKeepsStatusAndReason() {
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+			.withStatus(Status.BLOCKED)
+			.withStatusReason("LOST");
+
+		AssetMapper.updateEntity(entity, AssetUpdateRequest.create().withStatusReason("IRREGULARITY"));
+
+		assertThat(entity.getStatus()).isEqualTo(Status.BLOCKED);
+		assertThat(entity.getStatusReason()).isEqualTo("LOST");
+	}
+
+	@Test
+	void updateEntityWithDraftRequestAndAStatusWithoutAReasonClearsTheReason() {
+		final var entity = TestFactory.getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString())
+			.withStatus(Status.DRAFT)
+			.withStatusReason("statusReason");
+
+		AssetMapper.updateEntity(entity, DraftAssetUpdateRequest.create().withStatus(Status.ACTIVE));
+
+		assertThat(entity.getStatus()).isEqualTo(Status.ACTIVE);
+		assertThat(entity.getStatusReason()).isNull();
 	}
 
 	@Test

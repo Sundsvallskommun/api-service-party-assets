@@ -48,7 +48,7 @@ public class AssetExpirationWorker {
 			.filter(asset -> asset.getValidTo() != null && asset.getValidTo().isBefore(LocalDate.now(ZoneId.systemDefault())))
 			.ifPresent(asset -> {
 				final var revision = advanceRevision(asset);
-				asset.setStatus(Status.EXPIRED);
+				asset.changeStatus(Status.EXPIRED, null);
 				assetRepository.saveAndFlush(asset);
 				ofNullable(revision).ifPresent(assetRevisionRepository::save);
 				LOG.info("Expired asset {}", asset.getId());
