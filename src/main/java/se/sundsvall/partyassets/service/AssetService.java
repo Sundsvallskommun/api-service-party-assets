@@ -60,6 +60,7 @@ import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
 public class AssetService {
 
 	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
+	private static final String INVALID_ASSET_STATUS_TITLE = "Invalid asset status";
 	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
 	private static final String INVALID_SOURCE_REFERENCE_TITLE = "Invalid source reference";
 	private static final Set<Status> CONTENT_MODIFIABLE_STATUSES = EnumSet.of(ACTIVE, TEMPORARY);
@@ -155,14 +156,14 @@ public class AssetService {
 		if (entity.getStatus() != DRAFT) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
-				.withTitle("Invalid asset status")
+				.withTitle(INVALID_ASSET_STATUS_TITLE)
 				.withDetail("Only DRAFT assets can be updated via this endpoint")
 				.build();
 		}
 		if (request.getStatus() != null && !DRAFT_TARGET_STATUSES.contains(request.getStatus())) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
-				.withTitle("Invalid asset status")
+				.withTitle(INVALID_ASSET_STATUS_TITLE)
 				.withDetail("A draft can only be given status %s, not %s".formatted(DRAFT_TARGET_STATUSES, request.getStatus()))
 				.build();
 		}
@@ -213,7 +214,7 @@ public class AssetService {
 		if (entity.getStatus() == DRAFT) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
-				.withTitle("Invalid asset status")
+				.withTitle(INVALID_ASSET_STATUS_TITLE)
 				.withDetail("DRAFT assets must be updated via the asset drafts resource")
 				.build();
 		}
