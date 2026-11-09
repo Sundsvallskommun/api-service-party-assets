@@ -36,6 +36,7 @@ import se.sundsvall.partyassets.integration.relation.RelationClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.junit.jupiter.params.provider.EnumSource.Mode.EXCLUDE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -55,6 +56,7 @@ import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.BLOCKED;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
+import static se.sundsvall.partyassets.api.model.Status.REVOKED;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 
 @ExtendWith(MockitoExtension.class)
@@ -441,17 +443,18 @@ class AssetServiceTest {
 		assertThat(result).isEqualTo(newId);
 	}
 
-	@Test
-	void copyAssetFailsWhenNotActive() {
+	@ParameterizedTest
+	@EnumSource(value = Status.class, mode = EXCLUDE, names = "ACTIVE")
+	void copyAssetFailsWhenNotActive(final Status status) {
 		final var id = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
-		final var entity = getAssetEntity(id, partyId).withStatus(DRAFT);
+		final var entity = getAssetEntity(id, partyId).withStatus(status);
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.copyAsset(MUNICIPALITY_ID, id))
-			.withMessage("Asset cannot be copied: Only ACTIVE assets can be copied, but asset " + id + " has status DRAFT");
+			.withMessage("Asset cannot be copied: Only ACTIVE assets can be copied, but asset " + id + " has status " + status);
 
 		verify(repositoryMock, never()).save(any());
 	}
@@ -713,9 +716,28 @@ class AssetServiceTest {
 		assertThat(entity.getTitle()).isEqualTo("titleUpdated");
 	}
 
+	@Test
+	void revokeAssetRecordsARevisionOfTheActiveAsset() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withRevision(2);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, AssetUpdateRequest.create().withStatus(REVOKED), null);
+
+		verify(repositoryMock).saveAndFlush(entity);
+		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
+		assertThat(revisionCaptor.getValue()).satisfies(revision -> {
+			assertThat(revision.getRevision()).isEqualTo(2);
+			assertThat(revision.getStatus()).isEqualTo("ACTIVE");
+		});
+		assertThat(entity.getStatus()).isEqualTo(REVOKED);
+		assertThat(entity.getRevision()).isEqualTo(3);
+	}
+
 	@ParameterizedTest
 	@EnumSource(value = Status.class, names = {
-		"BLOCKED", "EXPIRED", "REPLACED"
+		"BLOCKED", "EXPIRED", "REPLACED", "REVOKED"
 	})
 	void updateAssetContentOnLockedAssetThrowsBadRequest(final Status status) {
 		final var id = UUID.randomUUID().toString();
@@ -732,10 +754,13 @@ class AssetServiceTest {
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
-	@Test
-	void updateStatusOnLockedAsset() {
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = {
+		"BLOCKED", "EXPIRED", "REPLACED", "REVOKED"
+	})
+	void updateStatusOnLockedAsset(final Status status) {
 		final var id = UUID.randomUUID().toString();
-		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(BLOCKED);
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(status);
 
 		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
 

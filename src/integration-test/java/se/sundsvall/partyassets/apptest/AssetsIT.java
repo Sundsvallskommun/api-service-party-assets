@@ -483,4 +483,45 @@ class AssetsIT extends AbstractAppTest {
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();
 	}
+
+	@Test
+	void test34_revokeAlcoholServingPermit() {
+		final var id = "b1000000-0000-0000-0000-000000000001";
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + id)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(PATH + "/" + id)
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test35_updateContentOfRevokedAlcoholServingPermit() {
+		final var id = "b1000000-0000-0000-0000-000000000001";
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + id)
+			.withRequest("revoke_request.json")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + id)
+			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
 }

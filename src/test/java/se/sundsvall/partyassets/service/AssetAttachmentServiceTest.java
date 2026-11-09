@@ -7,6 +7,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mariadb.jdbc.MariaDbBlob;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -248,9 +250,12 @@ class AssetAttachmentServiceTest {
 		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 	}
 
-	@Test
-	void createAttachmentOnExpiredAsset() {
-		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.EXPIRED)));
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = {
+		"BLOCKED", "EXPIRED", "REPLACED", "REVOKED"
+	})
+	void createAttachmentOnLockedAsset(final Status status) {
+		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(status)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null))
@@ -327,19 +332,6 @@ class AssetAttachmentServiceTest {
 		assertThat(entity.getAsset().getRevision()).isEqualTo(2);
 		verify(attachmentRepositoryMock).saveAndFlush(entity);
 		verifyNoInteractions(assetRevisionRepositoryMock);
-	}
-
-	@Test
-	void createAttachmentOnBlockedAsset() {
-		when(assetRepositoryMock.findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(asset(Status.BLOCKED)));
-
-		assertThatExceptionOfType(ThrowableProblem.class)
-			.isThrownBy(() -> service.createAttachment(MUNICIPALITY_ID, ASSET_ID, file(), null, null, null))
-			.satisfies(problem -> assertThat(problem.getStatus()).isEqualTo(BAD_REQUEST));
-
-		verify(assetRepositoryMock).findByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID);
-		verify(attachmentRepositoryMock, never()).saveAndFlush(any());
-		verifyNoMoreInteractions(assetRepositoryMock, attachmentRepositoryMock);
 	}
 
 	@Test
@@ -482,10 +474,13 @@ class AssetAttachmentServiceTest {
 		assertThat(entity.getAsset().getRevision()).isEqualTo(3);
 	}
 
-	@Test
-	void updateAttachmentOnReplacedAsset() {
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = {
+		"BLOCKED", "EXPIRED", "REPLACED", "REVOKED"
+	})
+	void updateAttachmentOnLockedAsset(final Status status) {
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
-		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(Status.REPLACED)));
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(status)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.updateAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID, AssetAttachmentUpdateRequest.create()))
@@ -538,10 +533,13 @@ class AssetAttachmentServiceTest {
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
-	@Test
-	void deleteAttachmentOnExpiredAsset() {
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = {
+		"BLOCKED", "EXPIRED", "REPLACED", "REVOKED"
+	})
+	void deleteAttachmentOnLockedAsset(final Status status) {
 		when(assetRepositoryMock.existsByIdAndMunicipalityId(ASSET_ID, MUNICIPALITY_ID)).thenReturn(true);
-		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(Status.EXPIRED)));
+		when(attachmentRepositoryMock.findByIdForAsset(ATTACHMENT_ID, ASSET_ID, MUNICIPALITY_ID)).thenReturn(Optional.of(attachment(status)));
 
 		assertThatExceptionOfType(ThrowableProblem.class)
 			.isThrownBy(() -> service.deleteAttachment(MUNICIPALITY_ID, ASSET_ID, ATTACHMENT_ID))

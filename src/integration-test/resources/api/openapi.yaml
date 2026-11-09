@@ -5,7 +5,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: "6.9"
+  version: "6.10"
 servers:
 - url: http://localhost:51822
   description: Generated server url
@@ -1360,6 +1360,7 @@ components:
       - BLOCKED
       - TEMPORARY
       - REPLACED
+      - REVOKED
     Problem:
       type: object
       properties:

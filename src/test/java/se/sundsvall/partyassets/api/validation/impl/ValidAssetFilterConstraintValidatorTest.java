@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import org.springframework.test.context.ActiveProfiles;
 import se.sundsvall.partyassets.Application;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetJsonParameter;
+import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 
 import static java.util.function.Function.identity;
@@ -126,6 +128,12 @@ class ValidAssetFilterConstraintValidatorTest {
 	})
 	void combinedConditionsAreValid(final String filter) {
 		assertThat(violationsOf(filter)).isEmpty();
+	}
+
+	@ParameterizedTest
+	@EnumSource(Status.class)
+	void everyStatusIsAValidValue(final Status status) {
+		assertThat(violationsOf("status : '%s'".formatted(status))).isEmpty();
 	}
 
 	@ParameterizedTest

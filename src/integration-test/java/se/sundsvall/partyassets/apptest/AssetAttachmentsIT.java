@@ -360,6 +360,27 @@ class AssetAttachmentsIT extends AbstractAppTest {
 			.sendRequestAndVerifyResponse();
 	}
 
+	@Test
+	void test15_createAttachmentOnRevokedAsset() throws Exception {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath("/" + MUNICIPALITY_ID + "/assets/" + ACTIVE_ASSET_ID)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"REVOKED\"}")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequest();
+
+		setupCall()
+			.withHttpMethod(POST)
+			.withServicePath(path(ACTIVE_ASSET_ID))
+			.withContentType(MULTIPART_FORM_DATA)
+			.withRequestFile("attachment", FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
 	private long countRevisions(final String assetId) {
 		return jdbcTemplate.queryForObject("select count(*) from asset_revision where asset_id = ?", Long.class, assetId);
 	}
