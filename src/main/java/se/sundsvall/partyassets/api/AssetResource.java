@@ -1,5 +1,6 @@
 package se.sundsvall.partyassets.api;
 
+import com.turkraft.springfilter.boot.Filter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -9,7 +10,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,8 +31,12 @@ import se.sundsvall.dept44.problem.Problem;
 import se.sundsvall.dept44.problem.violations.ConstraintViolationProblem;
 import se.sundsvall.partyassets.api.model.Asset;
 import se.sundsvall.partyassets.api.model.AssetCreateRequest;
+import se.sundsvall.partyassets.api.model.AssetPagedResponse;
+import se.sundsvall.partyassets.api.model.AssetPagingParameters;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.api.model.AssetUpdateRequest;
+import se.sundsvall.partyassets.api.validation.ValidAssetFilter;
+import se.sundsvall.partyassets.integration.db.model.AssetEntity;
 import se.sundsvall.partyassets.service.AssetService;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -70,6 +77,28 @@ class AssetResource {
 		@ParameterObject @Valid final AssetSearchRequest request) {
 
 		return ok(service.getAssets(municipalityId, request));
+	}
+
+	@GetMapping(path = "search", produces = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Search assets", description = """
+		Returns a page of the assets in the municipality that match the filter, whatever their status (including DRAFT). \
+		The filter refers to the attribute names of the asset model. Paging is one-based, and the assets are sorted by \
+		created unless sortBy is given.""", responses = {
+		@ApiResponse(responseCode = "200", description = "OK", useReturnTypeSchema = true)
+	})
+	ResponseEntity<AssetPagedResponse> searchAssets(
+		@Parameter(name = "municipalityId", description = "Municipality ID", example = "2281") @ValidMunicipalityId @PathVariable final String municipalityId,
+		// Nullable only makes the filter optional in the API documentation; a missing filter arrives as an empty one
+		@Parameter(description = """
+			Part of the [spring-filter](https://github.com/turkraft/spring-filter/blob/85730f950a5f8623159cc0eb4d737555f9382bb7/README.md#syntax) syntax: \
+			conditions with an attribute of the asset model on the left and quoted values on the right, using :, !, >, >:, <, <:, between, in, not in, \
+			is null and is not null, ~ and ~~ with one pattern on text attributes, is empty and is not empty on additionalParameters and jsonParameters, \
+			and exists(...), combined with and, or, not and parentheses. Dates are written in ISO 8601, such as 2027-01-01 and 2026-11-01T00:00:00+01:00.""",
+			example = "type:'AlcoholServingPermit' and status:'ACTIVE' and validTo < '2027-01-01'",
+			schema = @Schema(implementation = String.class)) @Nullable @ValidAssetFilter @Filter final Specification<AssetEntity> filter,
+		@ParameterObject @Valid final AssetPagingParameters parameters) {
+
+		return ok(service.searchAssets(municipalityId, filter, parameters.toPageable()));
 	}
 
 	@GetMapping(path = "{id}", produces = APPLICATION_JSON_VALUE)

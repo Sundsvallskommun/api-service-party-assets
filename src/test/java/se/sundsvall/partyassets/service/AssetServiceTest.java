@@ -17,6 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import se.sundsvall.dept44.problem.ThrowableProblem;
 import se.sundsvall.dept44.support.Identifier;
@@ -78,10 +80,16 @@ class AssetServiceTest {
 	private Specification<AssetEntity> specificationMock;
 
 	@Mock
-	private Specification<AssetEntity> specificationExcludingDraftAsssetsMock;
+	private Specification<AssetEntity> specificationExcludingDraftsMock;
 
 	@Mock
 	private Specification<AssetEntity> combinedSpecificationMock;
+
+	@Mock
+	private Specification<AssetEntity> filterMock;
+
+	@Mock
+	private Specification<AssetEntity> appliedFilterMock;
 
 	@Captor
 	private ArgumentCaptor<AssetSearchRequest> searchRequestCaptor;
@@ -110,8 +118,8 @@ class AssetServiceTest {
 
 		try (final var _ = mockStatic(AssetSpecification.class)) {
 			when(AssetSpecification.createAssetSpecification(MUNICIPALITY_ID, request)).thenReturn(specificationMock);
-			when(AssetSpecification.createAssetSpecificationExcludingDraftAsssets()).thenReturn(specificationExcludingDraftAsssetsMock);
-			when(specificationMock.and(specificationExcludingDraftAsssetsMock)).thenReturn(combinedSpecificationMock);
+			when(AssetSpecification.excludingDrafts()).thenReturn(specificationExcludingDraftsMock);
+			when(specificationMock.and(specificationExcludingDraftsMock)).thenReturn(combinedSpecificationMock);
 			when(repositoryMock.findAll(combinedSpecificationMock)).thenReturn(List.of(entity));
 
 			final var result = service.getAssets(MUNICIPALITY_ID, request);
@@ -121,6 +129,30 @@ class AssetServiceTest {
 		}
 
 		verify(repositoryMock).findAll(combinedSpecificationMock);
+	}
+
+	@Test
+	void searchAssets() {
+		final var entity = getAssetEntity(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+		final var pageable = PageRequest.of(1, 1);
+
+		try (final var _ = mockStatic(AssetSpecification.class)) {
+			when(AssetSpecification.withMunicipalityId(MUNICIPALITY_ID)).thenReturn(specificationMock);
+			when(AssetSpecification.withFilter(filterMock)).thenReturn(appliedFilterMock);
+			when(specificationMock.and(appliedFilterMock)).thenReturn(combinedSpecificationMock);
+			when(repositoryMock.findAll(combinedSpecificationMock, pageable)).thenReturn(new PageImpl<>(List.of(entity), pageable, 3));
+
+			final var result = service.searchAssets(MUNICIPALITY_ID, filterMock, pageable);
+
+			assertThat(result.getAssets()).singleElement().usingRecursiveComparison().ignoringFields("jsonParameters").isEqualTo(entity);
+			assertThat(result.getMetaData().getPage()).isEqualTo(2);
+			assertThat(result.getMetaData().getLimit()).isEqualTo(1);
+			assertThat(result.getMetaData().getTotalRecords()).isEqualTo(3);
+		}
+
+		verify(repositoryMock).findAll(combinedSpecificationMock, pageable);
+		verifyNoMoreInteractions(repositoryMock);
+		verifyNoInteractions(filterMock);
 	}
 
 	@Test
@@ -195,7 +227,7 @@ class AssetServiceTest {
 
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
-		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftsMock, relationClientMock);
 	}
 
 	@Test
@@ -227,7 +259,7 @@ class AssetServiceTest {
 		assertThat(relationCaptor.getValue().getTarget().getResourceId()).isEqualTo(String.valueOf(id));
 		assertThat(relationCaptor.getValue().getTarget().getType()).isEqualTo("asset");
 		assertThat(relationCaptor.getValue().getTarget().getService()).isEqualTo("partyassets");
-		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftsMock, relationClientMock);
 	}
 
 	@Test
@@ -249,7 +281,7 @@ class AssetServiceTest {
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
-		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftsMock, relationClientMock);
 	}
 
 	@Test
@@ -271,7 +303,7 @@ class AssetServiceTest {
 		verify(repositoryMock).existsByAssetIdAndMunicipalityId(assetCreateRequest.getAssetId(), MUNICIPALITY_ID);
 		verify(repositoryMock).save(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.PRIVATE);
-		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftsMock, relationClientMock);
 	}
 
 	@Test
@@ -292,7 +324,7 @@ class AssetServiceTest {
 
 		assertThat(entityCaptor.getValue().getPartyType()).isEqualTo(PartyType.ENTERPRISE);
 		assertThat(result).isNotNull().isEqualTo(String.valueOf(id));
-		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftAsssetsMock, relationClientMock);
+		verifyNoMoreInteractions(repositoryMock, partyTypeProviderMock, specificationMock, specificationExcludingDraftsMock, relationClientMock);
 	}
 
 	@Test

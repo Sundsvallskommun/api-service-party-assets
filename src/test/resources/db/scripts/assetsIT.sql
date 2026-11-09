@@ -48,3 +48,25 @@ insert into asset (id, asset_id, description, municipality_id, origin, party_id,
 values
     ('a0000000-0000-0000-0000-000000000001', 'CON-TEST-0001', 'Test asset', '2281', 'TESTDATA', 'a0000000-0000-0000-0000-000000000099', 'PRIVATE', 'ACTIVE', null, 'PERMIT', '2026-01-01', null, null, '2026-01-01', null),
     ('a0000000-0000-0000-0000-000000000002', 'CON-TEST-0001', 'Test asset', '2281', 'TESTDATA', 'a0000000-0000-0000-0000-000000000099', 'PRIVATE', 'DRAFT', null, 'PERMIT', '2026-01-01', null, 'a0000000-0000-0000-0000-000000000001', '2026-01-01', null);
+
+-- Alcohol serving and tobacco sales permits for the search tests (parties of their own, does not affect other tests)
+insert into asset (id, asset_id, description, municipality_id, origin, party_id, party_type, status,
+                   status_reason, `type`, issued, valid_to, title, created, updated)
+values
+    ('b1000000-0000-0000-0000-000000000001', 'AOT-0000000001', 'Serveringstillstånd', '2281', 'SUPPORTMANAGEMENT', 'b1000000-0000-0000-0000-000000000091', 'ENTERPRISE', 'ACTIVE', null, 'AlcoholServingPermit', '2025-05-01', null, 'Stadigvarande tillstånd för servering av alkohol', '2025-05-01 10:00:00', null),
+    ('b1000000-0000-0000-0000-000000000002', 'AOT-0000000002', 'Serveringstillstånd', '2281', 'SUPPORTMANAGEMENT', 'b1000000-0000-0000-0000-000000000092', 'ENTERPRISE', 'ACTIVE', null, 'AlcoholServingPermit', '2025-06-01', '2026-08-31', 'Tillfälligt tillstånd för servering av alkohol', '2025-06-01 10:00:00', '2025-06-15 08:30:00'),
+    ('b1000000-0000-0000-0000-000000000003', 'AOT-0000000003', 'Serveringstillstånd', '2281', 'SUPPORTMANAGEMENT', 'b1000000-0000-0000-0000-000000000093', 'ENTERPRISE', 'EXPIRED', null, 'AlcoholServingPermit', '2024-03-01', '2024-09-30', 'Tillfälligt tillstånd för servering av alkohol', '2024-03-01 10:00:00', '2024-10-01 00:00:00'),
+    ('b1000000-0000-0000-0000-000000000004', 'AOT-0000000004', 'Serveringstillstånd', '2281', 'SUPPORTMANAGEMENT', 'b1000000-0000-0000-0000-000000000091', 'ENTERPRISE', 'DRAFT', null, 'AlcoholServingPermit', '2026-01-01', null, 'Stadigvarande tillstånd för servering av alkohol', '2026-01-02 10:00:00', null),
+    ('b1000000-0000-0000-0000-000000000005', 'AOT-0000000005', 'Tobakstillstånd', '2281', 'SUPPORTMANAGEMENT', 'b1000000-0000-0000-0000-000000000091', 'ENTERPRISE', 'ACTIVE', null, 'TobaccoSalesPermit', '2025-05-01', null, 'Tillstånd för försäljning av tobak', '2025-05-01 11:00:00', null),
+    -- Another municipality
+    ('b1000000-0000-0000-0000-000000000006', 'AOT-0000000006', 'Serveringstillstånd', '2262', 'SUPPORTMANAGEMENT', 'b1000000-0000-0000-0000-000000000094', 'ENTERPRISE', 'ACTIVE', null, 'AlcoholServingPermit', '2025-05-01', null, 'Stadigvarande tillstånd för servering av alkohol', '2025-05-01 09:00:00', null);
+
+insert into additional_parameter (asset_id, parameter_key, parameter_value)
+values
+    ('b1000000-0000-0000-0000-000000000001', 'errandId', '2a4c6e80-1b3d-4f5a-8c7e-9d0f1a2b3c4d'),
+    ('b1000000-0000-0000-0000-000000000002', 'errandId', '7e1d3f5a-2b4c-4d6e-8f0a-1b2c3d4e5f6a'),
+    ('b1000000-0000-0000-0000-000000000005', 'errandId', '2a4c6e80-1b3d-4f5a-8c7e-9d0f1a2b3c4d');
+
+insert into asset_json_parameter (id, asset_id, parameter_key, parameter_value, schema_id)
+values
+    ('b1000000-0000-0000-0000-000000000101', 'b1000000-0000-0000-0000-000000000001', 'aot_alcohol_party_asset', '{"beverages":["WINE","STRONG_BEER"],"additionalScopes":["OUTDOOR_SERVING"]}', '2281_aot_alcohol_party_asset_0.1');

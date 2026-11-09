@@ -29,7 +29,7 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 /**
  * Asset repository tests.
  *
- * @see src/test/resources/db/scripts/AssetRepositoryTest.sql for data setup.
+ * @see src/test/resources/db/scripts/assetRepositoryTest.sql for data setup.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)

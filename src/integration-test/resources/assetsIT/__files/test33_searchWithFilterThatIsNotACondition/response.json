@@ -1,0 +1,11 @@
+{
+	"type": "https://github.com/Sundsvallskommun/dept44/problems/constraint-violation",
+	"status": 400,
+	"title": "Constraint Violation",
+	"violations": [
+		{
+			"field": "searchAssets.filter",
+			"message": "status is not a supported condition. Conditions test an attribute, such as validTo < '2027-01-01' or validTo is null, and are combined with and, or and not."
+		}
+	]
+}

@@ -40,6 +40,7 @@ class AssetsIT extends AbstractAppTest {
 	private static final String REQUEST_FILE = "request.json";
 	private static final String RESPONSE_FILE = "response.json";
 	private static final String PATH = "/" + MUNICIPALITY_ID + "/assets";
+	private static final String SEARCH_PATH = PATH + "/search";
 
 	@Test
 	void test01_createAssetPrivateParty() {
@@ -363,6 +364,121 @@ class AssetsIT extends AbstractAppTest {
 			.withHttpMethod(PATCH)
 			.withServicePath(PATH + "/" + "1bdbb931-5c6f-4ffe-bfc9-d9e5bffe48a4")
 			.withRequest(REQUEST_FILE)
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test25_searchAlcoholServingPermits() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit'"))
+			.withJsonAssertOptions(List.of())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test26_searchActiveAlcoholServingPermitsIssuedDuring2025() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and status:'ACTIVE' and issued >: '2025-01-01' and issued <: '2025-12-31'"))
+			.withJsonAssertOptions(List.of())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test27_searchAlcoholServingPermitsSortedAndPaged() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.queryParam("sortBy", "issued")
+				.queryParam("sortDirection", "DESC")
+				.queryParam("page", 2)
+				.queryParam("limit", 2)
+				.build("type:'AlcoholServingPermit'"))
+			.withJsonAssertOptions(List.of())
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test28_searchAlcoholServingPermitByErrandId() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and exists(additionalParameters.key:'errandId' and additionalParameters.value:'2a4c6e80-1b3d-4f5a-8c7e-9d0f1a2b3c4d')"))
+			.withExpectedResponseStatus(OK)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test29_searchWithFilterOnAttributeOutsideTheAssetModel() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and actor:'joe01doe'"))
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test30_searchWithInvalidFilterSyntax() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:"))
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test31_searchWithFilterValueOfWrongType() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and status:'NOT_A_STATUS' and validTo < 'tomorrow'"))
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test32_searchWithOperatorThatDoesNotSuitTheAttribute() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and issued ~ '2025*'"))
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test33_searchWithFilterThatIsNotACondition() {
+		setupCall()
+			.withHttpMethod(GET)
+			.withServicePath(uriBuilder -> uriBuilder.path(SEARCH_PATH)
+				.queryParam("filter", "{filter}")
+				.build("type:'AlcoholServingPermit' and status"))
 			.withExpectedResponseStatus(BAD_REQUEST)
 			.withExpectedResponse(RESPONSE_FILE)
 			.sendRequestAndVerifyResponse();

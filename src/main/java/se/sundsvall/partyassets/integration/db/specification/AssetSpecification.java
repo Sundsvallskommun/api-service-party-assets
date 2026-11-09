@@ -6,7 +6,6 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 import org.springframework.data.jpa.domain.Specification;
 import se.sundsvall.partyassets.api.model.AssetSearchRequest;
 import se.sundsvall.partyassets.integration.db.model.AssetEntity;
@@ -21,16 +20,34 @@ public final class AssetSpecification {
 
 	private AssetSpecification() {}
 
-	public static Specification<AssetEntity> createAssetSpecificationExcludingDraftAsssets() {
+	public static Specification<AssetEntity> withMunicipalityId(final String municipalityId) {
+		return (root, _, criteriaBuilder) -> criteriaBuilder.equal(root.get(AssetEntity_.MUNICIPALITY_ID), municipalityId);
+	}
+
+	public static Specification<AssetEntity> excludingDrafts() {
 		return (root, _, criteriaBuilder) -> criteriaBuilder.notEqual(root.get(AssetEntity_.STATUS), DRAFT);
 	}
 
+	/**
+	 * Applies a filter from a client. The predicate throws {@link InvalidFilterException} if the filter cannot be turned
+	 * into a condition on the asset entity, such as when it uses an operator on an attribute that the operator does not
+	 * apply to.
+	 */
+	public static Specification<AssetEntity> withFilter(final Specification<AssetEntity> filter) {
+		return (root, query, criteriaBuilder) -> {
+			try {
+				return filter.toPredicate(root, query, criteriaBuilder);
+			} catch (final RuntimeException exception) {
+				throw new InvalidFilterException(exception);
+			}
+		};
+	}
+
 	public static Specification<AssetEntity> createAssetSpecification(final String municipalityId, final AssetSearchRequest request) {
-		return (root, _, criteriaBuilder) -> {
+		return withMunicipalityId(municipalityId).and((root, _, criteriaBuilder) -> {
 
 			final var predicates = new ArrayList<Predicate>();
 
-			addEqualCriteria(AssetEntity_.MUNICIPALITY_ID, municipalityId, predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.PARTY_ID, request.getPartyId(), predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.ASSET_ID, request.getAssetId(), predicates, criteriaBuilder, root);
 			addEqualCriteria(AssetEntity_.ORIGIN, request.getOrigin(), predicates, criteriaBuilder, root);
@@ -47,7 +64,7 @@ public final class AssetSpecification {
 			}
 
 			return criteriaBuilder.and(predicates);
-		};
+		});
 	}
 
 	private static List<Predicate> createParameterPredicates(final AssetSearchRequest request, final CriteriaBuilder criteriaBuilder, final MapJoin<AssetEntity, String, String> join) {
@@ -59,18 +76,9 @@ public final class AssetSpecification {
 	}
 
 	private static void addEqualCriteria(final String attribute, final Object value, final List<Predicate> predicates, final CriteriaBuilder criteriaBuilder, final Root<AssetEntity> root) {
-		Stream.of(value)
-			.filter(String.class::isInstance)
-			.findAny()
-			.map(String.class::cast)
-			.ifPresentOrElse(string -> {
-				if (isNotBlank(string)) {
-					predicates.add(criteriaBuilder.equal(root.get(attribute), string));
-				}
-			}, () -> {
-				if (nonNull(value)) {
-					predicates.add(criteriaBuilder.equal(root.get(attribute), value));
-				}
-			});
+		final var hasValue = value instanceof final String string ? isNotBlank(string) : nonNull(value);
+		if (hasValue) {
+			predicates.add(criteriaBuilder.equal(root.get(attribute), value));
+		}
 	}
 }

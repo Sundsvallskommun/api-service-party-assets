@@ -1,6 +1,7 @@
 package se.sundsvall.partyassets.api.model;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -22,6 +23,7 @@ class AssetTest {
 	@BeforeAll
 	static void setup() {
 		registerValueGenerator(() -> LocalDate.now().plusDays(new Random().nextInt()), LocalDate.class);
+		registerValueGenerator(() -> OffsetDateTime.now().plusDays(new Random().nextInt()), OffsetDateTime.class);
 	}
 
 	@Test
@@ -50,10 +52,13 @@ class AssetTest {
 		final var type = "type";
 		final var replacesId = "replacesId";
 		final var validTo = LocalDate.now();
+		final var created = OffsetDateTime.now().minusDays(1);
+		final var updated = OffsetDateTime.now();
 
 		final var bean = Asset.create()
 			.withAdditionalParameters(additionalParameters)
 			.withAssetId(assetId)
+			.withCreated(created)
 			.withDescription(description)
 			.withTitle(title)
 			.withId(id)
@@ -65,11 +70,13 @@ class AssetTest {
 			.withStatus(status)
 			.withStatusReason(statusReason)
 			.withType(type)
+			.withUpdated(updated)
 			.withValidTo(validTo);
 
 		assertThat(bean).isNotNull().hasNoNullFieldsOrProperties();
 		assertThat(bean.getAdditionalParameters()).isEqualTo(additionalParameters);
 		assertThat(bean.getAssetId()).isEqualTo(assetId);
+		assertThat(bean.getCreated()).isEqualTo(created);
 		assertThat(bean.getDescription()).isEqualTo(description);
 		assertThat(bean.getTitle()).isEqualTo(title);
 		assertThat(bean.getId()).isEqualTo(id);
@@ -81,6 +88,7 @@ class AssetTest {
 		assertThat(bean.getStatus()).isEqualTo(status);
 		assertThat(bean.getStatusReason()).isEqualTo(statusReason);
 		assertThat(bean.getType()).isEqualTo(type);
+		assertThat(bean.getUpdated()).isEqualTo(updated);
 		assertThat(bean.getValidTo()).isEqualTo(validTo);
 	}
 

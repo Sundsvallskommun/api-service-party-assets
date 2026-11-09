@@ -1,5 +1,7 @@
 {
 	"id": "647e3062-62dc-499f-9faa-e54cb97aa214",
+	"created": "2023-02-01T00:00:00+01:00",
+	"updated": "${json-unit.any-string}",
 	"assetId": "CON-0000000013",
 	"origin": "MAZEDATA",
 	"partyId": "c5d21b57-c785-4d3c-8361-940cae999ff7",

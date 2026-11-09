@@ -1,5 +1,7 @@
 {
 	"id": "a0000000-0000-0000-0000-000000000002",
+	"created": "2026-01-01T00:00:00+01:00",
+	"updated": "${json-unit.any-string}",
 	"assetId": "CON-TEST-0001",
 	"origin": "TESTDATA",
 	"partyId": "a0000000-0000-0000-0000-000000000099",
