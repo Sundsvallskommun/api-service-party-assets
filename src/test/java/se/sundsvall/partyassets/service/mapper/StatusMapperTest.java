@@ -47,6 +47,18 @@ class StatusMapperTest {
 				tuple(Status.EXPIRED, expiredReasons));
 	}
 
+	@Test
+	void toReasonsLeavesOutAStatusThisVersionDoesNotKnow() {
+		final var blockedReasons = List.of("B1", "B2");
+		final var entities = List.of(
+			StatusEntity.create().withName("SUSPENDED").withReasons(List.of("S1")),
+			StatusEntity.create().withName(Status.BLOCKED.name()).withReasons(blockedReasons));
+
+		final var reasonMap = StatusMapper.toReasons(entities);
+
+		assertThat(reasonMap).containsExactly(Map.entry(Status.BLOCKED, blockedReasons));
+	}
+
 	@ParameterizedTest
 	@MethodSource("toEntityArgumentProvider")
 	void toEntity(final List<String> reasons, final List<String> expectedReasons) {

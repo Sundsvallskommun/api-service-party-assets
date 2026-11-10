@@ -1577,7 +1577,7 @@ components:
           - ACTIVE
         statusReason:
           type: string
-          description: Status reason
+          description: "Reason for the status, set together with it. A status sent without a reason clears the reason the asset had"
           examples:
           - Status reason
         validTo:
@@ -1716,12 +1716,12 @@ components:
           - true
         status:
           $ref: "#/components/schemas/Status"
-          description: Asset status
+          description: "Asset status. DRAFT keeps the asset a draft and ACTIVE activates it; no other status is accepted"
           examples:
           - ACTIVE
         statusReason:
           type: string
-          description: Status reason
+          description: "Reason for the status, set together with it. A status sent without a reason clears the reason the asset had"
           examples:
           - Status reason
         title:

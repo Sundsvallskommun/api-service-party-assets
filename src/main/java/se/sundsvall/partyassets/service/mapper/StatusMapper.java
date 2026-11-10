@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import se.sundsvall.partyassets.api.model.Status;
 import se.sundsvall.partyassets.integration.db.model.StatusEntity;
@@ -18,6 +19,9 @@ public final class StatusMapper {
 
 	public static Map<Status, List<String>> toReasons(final List<StatusEntity> entities) {
 		return ofNullable(entities).orElse(emptyList()).stream()
+			// The reasons of a status this version does not know, written by a later one, are left out so that the
+			// reasons of every other status still apply
+			.filter(entity -> EnumUtils.isValidEnum(Status.class, entity.getName()))
 			.map(entity -> Map.entry(Status.valueOf(entity.getName()), entity.getReasons()))
 			.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 	}

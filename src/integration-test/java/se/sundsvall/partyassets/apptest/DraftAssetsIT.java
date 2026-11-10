@@ -229,6 +229,45 @@ class DraftAssetsIT extends AbstractAppTest {
 	}
 
 	@Test
+	void test13_revokeDraft() {
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + "abd6596f-45a0-4912-89e4-8cdcea9a043a")
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"REVOKED\"}")
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+	}
+
+	@Test
+	void test14_activateDraftReplacingRevokedAsset() {
+		final var draftId = "a0000000-0000-0000-0000-000000000002";
+		final var originalId = "a0000000-0000-0000-0000-000000000001";
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH.replace("asset-drafts", "assets") + "/" + originalId)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"REVOKED\"}")
+			.withExpectedResponseStatus(NO_CONTENT)
+			.withExpectedResponseBodyIsNull()
+			.sendRequestAndVerifyResponse();
+
+		setupCall()
+			.withHttpMethod(PATCH)
+			.withServicePath(PATH + "/" + draftId)
+			.withContentType(APPLICATION_JSON)
+			.withRequest("{\"status\":\"ACTIVE\"}")
+			.withExpectedResponseStatus(BAD_REQUEST)
+			.withExpectedResponse(RESPONSE_FILE)
+			.sendRequestAndVerifyResponse();
+
+		assertThat(jdbcTemplate.queryForObject("select status from asset where id = ?", String.class, draftId)).isEqualTo("DRAFT");
+		assertThat(jdbcTemplate.queryForObject("select status from asset where id = ?", String.class, originalId)).isEqualTo("REVOKED");
+	}
+
+	@Test
 	void test10_activateDraftWithPastValidTo() {
 		setupCall()
 			.withHttpMethod(PATCH)

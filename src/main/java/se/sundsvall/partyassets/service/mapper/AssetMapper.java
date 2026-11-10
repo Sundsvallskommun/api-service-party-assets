@@ -124,8 +124,7 @@ public final class AssetMapper {
 		} else {
 			ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		}
-		ofNullable(request.getStatus()).ifPresent(entity::setStatus);
-		ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
+		ofNullable(request.getStatus()).ifPresent(status -> entity.changeStatus(status, request.getStatusReason()));
 		ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
 		return entity;
 	}
@@ -139,8 +138,7 @@ public final class AssetMapper {
 		} else {
 			ofNullable(request.getValidTo()).ifPresent(entity::setValidTo);
 		}
-		ofNullable(request.getStatus()).ifPresent(entity::setStatus);
-		ofNullable(request.getStatusReason()).ifPresent(entity::setStatusReason);
+		ofNullable(request.getStatus()).ifPresent(status -> entity.changeStatus(status, request.getStatusReason()));
 		ofNullable(request.getTitle()).ifPresent(title -> entity.setTitle(defaultIfBlank(title, null)));
 		return entity;
 	}

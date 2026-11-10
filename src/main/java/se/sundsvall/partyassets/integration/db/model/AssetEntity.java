@@ -334,6 +334,18 @@ public class AssetEntity {
 		return this;
 	}
 
+	/**
+	 * Gives the asset a status together with its reason. A reason belongs to one status, so a status given without a
+	 * reason clears the one the asset had.
+	 *
+	 * @param status       the new status
+	 * @param statusReason the reason for the new status, or null when it has none
+	 */
+	public void changeStatus(final Status status, final String statusReason) {
+		this.status = status;
+		this.statusReason = statusReason;
+	}
+
 	public String getDescription() {
 		return description;
 	}

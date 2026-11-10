@@ -75,6 +75,7 @@ class AssetExpirationWorkerTest {
 			.withRevision(1)
 			.withActor("previous.actor")
 			.withStatus(Status.ACTIVE)
+			.withStatusReason("REINSTATED")
 			.withValidTo(VALID_TO);
 		when(assetRepositoryMock.findById(ASSET_ID)).thenReturn(Optional.of(asset));
 
@@ -86,8 +87,10 @@ class AssetExpirationWorkerTest {
 			assertThat(revision.getRevision()).isEqualTo(1);
 			assertThat(revision.getActor()).isEqualTo("previous.actor");
 			assertThat(revision.getStatus()).isEqualTo("ACTIVE");
+			assertThat(revision.getStatusReason()).isEqualTo("REINSTATED");
 		});
 		assertThat(asset.getStatus()).isEqualTo(Status.EXPIRED);
+		assertThat(asset.getStatusReason()).isNull();
 		assertThat(asset.getActor()).isNull();
 		assertThat(asset.getRevision()).isEqualTo(2);
 		verify(assetRepositoryMock).findById(ASSET_ID);

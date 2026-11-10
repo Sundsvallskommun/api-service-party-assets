@@ -479,8 +479,67 @@ class AssetServiceTest {
 		verify(repositoryMock, times(2)).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(REPLACED));
 		assertThat(entityCaptor.getAllValues()).anySatisfy(e -> assertThat(e.getStatus()).isEqualTo(ACTIVE));
+		assertThat(original.getStatusReason()).isNull();
 		verify(assetRevisionRepositoryMock).save(revisionCaptor.capture());
 		assertThat(revisionCaptor.getValue().getAssetId()).isEqualTo(originalId);
+	}
+
+	@Test
+	void updateDraftAssetToActiveFailsWhenTheOriginalIsRevoked() {
+		final var draftId = UUID.randomUUID().toString();
+		final var originalId = UUID.randomUUID().toString();
+		final var partyId = UUID.randomUUID().toString();
+		final var draft = getAssetEntity(draftId, partyId)
+			.withStatus(DRAFT)
+			.withReplacesId(originalId)
+			.withValidTo(java.time.LocalDate.now().plusDays(30));
+		final var original = getAssetEntity(originalId, partyId).withStatus(REVOKED);
+		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE);
+
+		when(repositoryMock.findByIdAndMunicipalityId(draftId, MUNICIPALITY_ID)).thenReturn(Optional.of(draft));
+		when(repositoryMock.findByIdAndMunicipalityId(originalId, MUNICIPALITY_ID)).thenReturn(Optional.of(original));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, draftId, request, null))
+			.withMessage("Asset cannot be activated: Asset " + draftId + " replaces asset " + originalId + ", which has status REVOKED");
+
+		verify(repositoryMock, never()).saveAndFlush(any());
+		verifyNoInteractions(assetRevisionRepositoryMock);
+		assertThat(draft.getStatus()).isEqualTo(DRAFT);
+		assertThat(original.getStatus()).isEqualTo(REVOKED);
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Status.class, mode = EXCLUDE, names = {
+		"DRAFT", "ACTIVE"
+	})
+	void updateDraftAssetToOtherStatusThanDraftOrActiveThrowsBadRequest(final Status status) {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(DRAFT);
+		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(status);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		assertThatExceptionOfType(ThrowableProblem.class)
+			.isThrownBy(() -> service.updateAsset(MUNICIPALITY_ID, id, request, null))
+			.withMessage("Invalid asset status: A draft can only be given status [ACTIVE, DRAFT], not " + status);
+
+		verify(repositoryMock, never()).saveAndFlush(any());
+		assertThat(entity.getStatus()).isEqualTo(DRAFT);
+	}
+
+	@Test
+	void updateDraftAssetWithStatusDraftKeepsItADraft() {
+		final var id = UUID.randomUUID().toString();
+		final var entity = getAssetEntity(id, UUID.randomUUID().toString()).withStatus(DRAFT);
+
+		when(repositoryMock.findByIdAndMunicipalityId(id, MUNICIPALITY_ID)).thenReturn(Optional.of(entity));
+
+		service.updateAsset(MUNICIPALITY_ID, id, new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(DRAFT).withTitle("titleUpdated"), null);
+
+		verify(repositoryMock).saveAndFlush(entity);
+		assertThat(entity.getStatus()).isEqualTo(DRAFT);
+		assertThat(entity.getTitle()).isEqualTo("titleUpdated");
 	}
 
 	@Test
@@ -522,8 +581,11 @@ class AssetServiceTest {
 		verifyNoInteractions(assetRevisionRepositoryMock);
 	}
 
-	@Test
-	void updateDraftAssetToActiveDoesNotReplaceAlreadyReplacedOriginal() {
+	@ParameterizedTest
+	@EnumSource(value = Status.class, names = {
+		"BLOCKED", "EXPIRED", "REPLACED", "TEMPORARY"
+	})
+	void updateDraftAssetToActiveLeavesAnOriginalThatIsNotActive(final Status status) {
 		final var draftId = UUID.randomUUID().toString();
 		final var originalId = UUID.randomUUID().toString();
 		final var partyId = UUID.randomUUID().toString();
@@ -531,7 +593,7 @@ class AssetServiceTest {
 			.withStatus(DRAFT)
 			.withReplacesId(originalId)
 			.withValidTo(java.time.LocalDate.now().plusDays(30));
-		final var original = getAssetEntity(originalId, partyId).withStatus(REPLACED);
+		final var original = getAssetEntity(originalId, partyId).withStatus(status);
 		final var request = new se.sundsvall.partyassets.api.model.DraftAssetUpdateRequest().withStatus(ACTIVE);
 
 		when(repositoryMock.findByIdAndMunicipalityId(draftId, MUNICIPALITY_ID)).thenReturn(Optional.of(draft));
@@ -541,7 +603,8 @@ class AssetServiceTest {
 
 		verify(repositoryMock).saveAndFlush(entityCaptor.capture());
 		assertThat(entityCaptor.getValue().getStatus()).isEqualTo(ACTIVE);
-		assertThat(original.getStatus()).isEqualTo(REPLACED);
+		assertThat(original.getStatus()).isEqualTo(status);
+		assertThat(original.getStatusReason()).isEqualTo("statusReason");
 	}
 
 	@Test
@@ -730,8 +793,10 @@ class AssetServiceTest {
 		assertThat(revisionCaptor.getValue()).satisfies(revision -> {
 			assertThat(revision.getRevision()).isEqualTo(2);
 			assertThat(revision.getStatus()).isEqualTo("ACTIVE");
+			assertThat(revision.getStatusReason()).isEqualTo("statusReason");
 		});
 		assertThat(entity.getStatus()).isEqualTo(REVOKED);
+		assertThat(entity.getStatusReason()).isNull();
 		assertThat(entity.getRevision()).isEqualTo(3);
 	}
 
@@ -768,6 +833,7 @@ class AssetServiceTest {
 
 		verify(repositoryMock).saveAndFlush(entity);
 		assertThat(entity.getStatus()).isEqualTo(ACTIVE);
+		assertThat(entity.getStatusReason()).isNull();
 	}
 
 	@Test

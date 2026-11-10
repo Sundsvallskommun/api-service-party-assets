@@ -41,6 +41,7 @@ import static org.springframework.http.HttpStatus.PRECONDITION_FAILED;
 import static se.sundsvall.partyassets.api.model.Status.ACTIVE;
 import static se.sundsvall.partyassets.api.model.Status.DRAFT;
 import static se.sundsvall.partyassets.api.model.Status.REPLACED;
+import static se.sundsvall.partyassets.api.model.Status.REVOKED;
 import static se.sundsvall.partyassets.api.model.Status.TEMPORARY;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.createAssetSpecification;
 import static se.sundsvall.partyassets.integration.db.specification.AssetSpecification.excludingDrafts;
@@ -59,9 +60,11 @@ import static se.sundsvall.partyassets.service.mapper.RelationMapper.toRelation;
 public class AssetService {
 
 	private static final String ASSET_NOT_FOUND_TITLE = "Asset not found";
+	private static final String INVALID_ASSET_STATUS_TITLE = "Invalid asset status";
 	private static final String ASSET_NOT_FOUND_DETAIL = "Asset with id %s not found for municipalityId %s";
 	private static final String INVALID_SOURCE_REFERENCE_TITLE = "Invalid source reference";
 	private static final Set<Status> CONTENT_MODIFIABLE_STATUSES = EnumSet.of(ACTIVE, TEMPORARY);
+	private static final Set<Status> DRAFT_TARGET_STATUSES = EnumSet.of(DRAFT, ACTIVE);
 	private static final String INVALID_SOURCE_REFERENCE_DETAIL = "Provided source reference '%s' is invalid. Expected format: '{relationType}|{sourceResourceId};{sourceType};{sourceService};{sourceNamespace}|'";
 
 	private final AssetRepository repository;
@@ -153,13 +156,20 @@ public class AssetService {
 		if (entity.getStatus() != DRAFT) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
-				.withTitle("Invalid asset status")
+				.withTitle(INVALID_ASSET_STATUS_TITLE)
 				.withDetail("Only DRAFT assets can be updated via this endpoint")
+				.build();
+		}
+		if (request.getStatus() != null && !DRAFT_TARGET_STATUSES.contains(request.getStatus())) {
+			throw Problem.builder()
+				.withStatus(BAD_REQUEST)
+				.withTitle(INVALID_ASSET_STATUS_TITLE)
+				.withDetail("A draft can only be given status %s, not %s".formatted(DRAFT_TARGET_STATUSES, request.getStatus()))
 				.build();
 		}
 		if (request.getStatus() == ACTIVE) {
 			validateValidTo(entity);
-			markOriginalAsReplaced(municipalityId, entity.getReplacesId());
+			replaceOriginal(municipalityId, entity);
 		}
 		final var revision = advanceRevision(entity);
 		save(updateEntity(entity, request), revision, id);
@@ -204,7 +214,7 @@ public class AssetService {
 		if (entity.getStatus() == DRAFT) {
 			throw Problem.builder()
 				.withStatus(BAD_REQUEST)
-				.withTitle("Invalid asset status")
+				.withTitle(INVALID_ASSET_STATUS_TITLE)
 				.withDetail("DRAFT assets must be updated via the asset drafts resource")
 				.build();
 		}
@@ -231,17 +241,28 @@ public class AssetService {
 		}
 	}
 
-	private void markOriginalAsReplaced(final String municipalityId, final String replacesId) {
-		if (replacesId == null) {
+	/**
+	 * Marks the asset that a draft about to be activated replaces as REPLACED when it is active, and leaves it as it is
+	 * otherwise. Throws a 400 problem, before anything is changed, when the original has been revoked.
+	 */
+	private void replaceOriginal(final String municipalityId, final AssetEntity draft) {
+		if (draft.getReplacesId() == null) {
 			return;
 		}
-		repository.findByIdAndMunicipalityId(replacesId, municipalityId)
-			.filter(original -> original.getStatus() == ACTIVE)
-			.ifPresent(original -> {
+		repository.findByIdAndMunicipalityId(draft.getReplacesId(), municipalityId).ifPresent(original -> {
+			if (original.getStatus() == REVOKED) {
+				throw Problem.builder()
+					.withStatus(BAD_REQUEST)
+					.withTitle("Asset cannot be activated")
+					.withDetail("Asset %s replaces asset %s, which has status REVOKED".formatted(draft.getId(), original.getId()))
+					.build();
+			}
+			if (original.getStatus() == ACTIVE) {
 				final var revision = advanceRevision(original);
-				original.setStatus(REPLACED);
+				original.changeStatus(REPLACED, null);
 				save(original, revision, original.getId());
-			});
+			}
+		});
 	}
 
 	private @NonNull AssetEntity getAssetEntity(String municipalityId, String id) {

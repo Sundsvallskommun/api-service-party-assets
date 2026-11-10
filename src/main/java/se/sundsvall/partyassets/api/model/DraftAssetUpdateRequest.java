@@ -21,10 +21,10 @@ public class DraftAssetUpdateRequest {
 	@Schema(description = "If true, validTo will be cleared (asset becomes indefinite). Takes precedence over validTo when both are supplied.", examples = "true")
 	private Boolean indefinitely;
 
-	@Schema(description = "Asset status", examples = "ACTIVE")
+	@Schema(description = "Asset status. DRAFT keeps the asset a draft and ACTIVE activates it; no other status is accepted", examples = "ACTIVE")
 	private Status status;
 
-	@Schema(description = "Status reason", examples = "Status reason")
+	@Schema(description = "Reason for the status, set together with it. A status sent without a reason clears the reason the asset had", examples = "Status reason")
 	private String statusReason;
 
 	@Schema(description = "Asset title, shown to the party", examples = "Stadigvarande tillstånd för servering av alkohol")

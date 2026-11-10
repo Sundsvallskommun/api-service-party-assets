@@ -192,12 +192,18 @@ curl -X 'PATCH' 'http://localhost:8080/2281/assets/{id}' \
 
 Use this for changes to the same permit, such as a new person responsible for serving or longer opening hours after a
 decision. When the permit is replaced by a new one, copy it instead with `POST /assets/{id}`. The copy is a draft with
-its own id, a `replacesId` pointing back, and every attachment. Activating it marks the original `REPLACED`.
+its own id, a `replacesId` pointing back, and every attachment. Activating it marks the original `REPLACED`. A draft
+can only stay a draft or be activated, so `PATCH /asset-drafts/{id}` takes no status but `DRAFT` and `ACTIVE`, and a
+draft whose original has since been revoked cannot be activated.
+
+A status and its `statusReason` are set together. The reasons of each status are registered per municipality under
+`/{municipalityId}/metadata/statusreasons`: a status with registered reasons needs one of them, and a status without
+has none. A new status sent without a reason therefore clears the reason the asset had, which the revision history
+keeps. The nightly job that expires assets and the activation that marks an original `REPLACED` clear it too.
 
 When the permit is revoked, set its status to `REVOKED`. Its content and attachments are then locked, the nightly job
 that expires permits leaves it alone, and it cannot be copied. It can be made `ACTIVE` again, for instance when a court
-overturns the revocation. A `statusReason` is accepted only when the municipality has registered reasons for `REVOKED`
-under `/{municipalityId}/metadata/statusreasons`, and is then required.
+overturns the revocation, which clears the reason it was revoked for.
 
 ```bash
 curl -X 'PATCH' 'http://localhost:8080/2281/assets/{id}' \
@@ -378,6 +384,11 @@ config:
 
 - **No additional setup is required** for database initialization, as long as the database connection settings are
   correctly configured.
+
+A migration that adds a status, such as `V1_18` for `REVOKED`, is not undone by deploying an earlier version: that
+version fails to read an asset with the new status. Before rolling back, give those assets a status the earlier version
+knows. Up to 6.9, a version also fails on the status reasons of every status once reasons are registered for a status
+it does not know, so remove those reasons too.
 
 ### Additional Notes
 
