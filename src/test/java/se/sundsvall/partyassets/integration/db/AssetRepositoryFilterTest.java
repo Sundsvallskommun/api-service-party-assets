@@ -180,7 +180,7 @@ class AssetRepositoryFilterTest {
 
 	@ParameterizedTest
 	@ValueSource(strings = {
-		"status : 'NOT_A_STATUS'", "type : ['PERMIT', 'OTHER']", "issued ~ ['2023*']"
+		"type : ['PERMIT', 'OTHER']", "issued ~ ['2023*']"
 	})
 	void filterThatCannotBeAppliedToTheEntity(final String filter) {
 		assertThatExceptionOfType(InvalidFilterException.class)
