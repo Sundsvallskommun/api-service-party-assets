@@ -341,6 +341,20 @@ This publishes every asset of the municipality as it is now, as `UPDATED` at its
 `204 No Content` once the broker has them all. A consumer that already has an asset at that version gets the same asset
 again. It is also how a new consumer is loaded the first time.
 
+The events are described in an AsyncAPI 3.0 document. The service serves it at `/api-docs/asyncapi.yaml`, and the
+checked-in copy is `src/integration-test/resources/api/asyncapi.yaml`. Consumers generate their models from that copy.
+`AsyncApiSpecificationIT` fails when the served document differs from it.
+
+The document has its own version, `AssetEvent.CONTRACT_VERSION`, separate from the service's version. After an intended
+change to `AssetEvent`, its routing keys or the exchange, bump `CONTRACT_VERSION` and copy `target/asyncapi.yaml` over
+the checked-in file. A new field is a minor change. A removed or renamed field, or a changed exchange or routing key, is
+a major change.
+
+`eventType` and `status` are closed enums in the document. Model generators such as jsonschema2pojo turn them into Java
+enums that throw on a value they do not know, so a new status or event type breaks a consumer built from an older copy.
+A consumer avoids that by reading both as strings, for example through a ZenWave overlay. Until every consumer does, a
+new value is a breaking change and needs a major version.
+
 The service never declares the exchange. It is declared in
 [rabbitmq-topology](https://github.com/Sundsvallskommun/rabbitmq-topology). With `dept44.rabbitmq.enabled` off, the
 default, nothing is published and the endpoint answers `503 Service Unavailable`.
