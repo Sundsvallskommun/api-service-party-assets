@@ -1,0 +1,180 @@
+asyncapi: 3.0.0
+info:
+  title: api-partyassets
+  version: "1.0"
+defaultContentType: application/json
+channels:
+  assetCreated:
+    address: asset.created
+    messages:
+      AssetEvent:
+        $ref: "#/components/messages/AssetEvent"
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: api-fabriken.party-assets
+          type: topic
+        bindingVersion: 0.3.0
+  assetUpdated:
+    address: asset.updated
+    messages:
+      AssetEvent:
+        $ref: "#/components/messages/AssetEvent"
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: api-fabriken.party-assets
+          type: topic
+        bindingVersion: 0.3.0
+  assetDeleted:
+    address: asset.deleted
+    messages:
+      AssetEvent:
+        $ref: "#/components/messages/AssetEvent"
+    bindings:
+      amqp:
+        is: routingKey
+        exchange:
+          name: api-fabriken.party-assets
+          type: topic
+        bindingVersion: 0.3.0
+operations:
+  sendAssetCreated:
+    action: send
+    channel:
+      $ref: "#/channels/assetCreated"
+    messages:
+    - $ref: "#/channels/assetCreated/messages/AssetEvent"
+  sendAssetUpdated:
+    action: send
+    channel:
+      $ref: "#/channels/assetUpdated"
+    messages:
+    - $ref: "#/channels/assetUpdated/messages/AssetEvent"
+  sendAssetDeleted:
+    action: send
+    channel:
+      $ref: "#/channels/assetDeleted"
+    messages:
+    - $ref: "#/channels/assetDeleted/messages/AssetEvent"
+components:
+  messages:
+    AssetEvent:
+      name: AssetEvent
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/AssetEvent"
+  schemas:
+    Asset:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique id of asset
+          examples:
+          - 1c8f38a6-b492-4037-b7dc-de5bc6c629f0
+        assetId:
+          type: string
+          description: External asset id (e.g. PRH-123456789) used as an identifier
+            by external systems
+          examples:
+          - PRH-123456789
+        origin:
+          type: string
+          description: Source of origin for the asset
+          examples:
+          - CASEDATA
+        partyId:
+          type: string
+          description: PartyId
+          examples:
+          - 123e4567-e89b-12d3-a456-426614174000
+        type:
+          type: string
+          description: Asset type
+          examples:
+          - PERMIT
+        title:
+          type: string
+          description: "Asset title, shown to the party"
+          examples:
+          - Stadigvarande tillstånd för servering av alkohol
+        description:
+          type: string
+          description: Asset description
+          examples:
+          - Asset description
+        status:
+          $ref: "#/components/schemas/Status"
+          description: Asset status
+          examples:
+          - ACTIVE
+        statusReason:
+          type: string
+          description: Status reason
+          examples:
+          - Status reason
+        issued:
+          type: string
+          format: date
+          description: Issued date
+          examples:
+          - 2021-01-01
+        validTo:
+          type: string
+          format: date
+          description: Valid to date
+          examples:
+          - 2021-12-31
+      required:
+      - id
+      - issued
+      - partyId
+      - type
+    AssetEvent:
+      type: object
+      description: A change of an asset
+      properties:
+        eventType:
+          type: string
+          description: What happened to the asset
+          enum:
+          - CREATED
+          - UPDATED
+          - DELETED
+        municipalityId:
+          type: string
+          description: The municipality the asset belongs to
+          examples:
+          - "2281"
+        version:
+          type: integer
+          format: int64
+          description: "The JPA version of the asset after the change. It grows with\
+            \ every change, drafts included, unlike the revision. A deletion carries\
+            \ the version the asset had"
+        occurredAt:
+          type: string
+          format: date-time
+          description: When the change happened
+        asset:
+          $ref: "#/components/schemas/Asset"
+          description: "The asset after the change, or as it was when it was deleted"
+      required:
+      - asset
+      - eventType
+      - occurredAt
+      - version
+    Status:
+      type: string
+      description: Status model
+      enum:
+      - ACTIVE
+      - DRAFT
+      - EXPIRED
+      - BLOCKED
+      - TEMPORARY
+      - REPLACED
+      - REVOKED
